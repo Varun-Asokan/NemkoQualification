@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find \"d:\\\\Neologix\\\\Projects\\\\NemkoIntranet\" -name \"*my-qualifications*\" -type f 2>nul | head -20)",
+      "Bash(find \"d:\\\\Neologix\\\\Projects\\\\NemkoIntranet\" -name \"*.css\" -type f 2>nul | grep -E \"\\(modal|nemko\\)\" | head -20)",
+      "Bash(find \"d:\\\\Neologix\\\\Projects\\\\NemkoIntranet\\\\src\" -name \"*.ts\" -type f 2>nul)",
+      "Bash(find \"d:\\\\Neologix\\\\Projects\\\\NemkoIntranet\" -type d -name \"resources\" 2>nul)",
+      "Bash(find \"d:\\\\Neologix\\\\Projects\\\\NemkoIntranet\" -type d -name \"css\" 2>nul)",
+      "Bash(find \"d:\\\\Neologix\\\\Projects\\\\NemkoIntranet\" -type d -name \"styles\" 2>nul)",
+      "Bash(find \"d:\\\\Neologix\\\\Projects\\\\NemkoIntranet\" -name \"nemko-modal.css\" -o -name \"*.css\" -path \"*/SiteAssets/*\" 2>nul | head -10)",
+      "Bash(Get-ChildItem -Path \"d:\\\\Neologix\\\\Projects\\\\NemkoIntranet\" -Recurse -Filter \"*.ts\" -o)",
+      "Bash(Select-Object -ExpandProperty FullName)"
+    ],
+    "additionalDirectories": [
+      "d:\\Neologix\\Projects\\NemkoIntranet"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/spfx-serve.schema.json",
+  "port": 4321,
+  "https": true,
+  "initialPage": "https://{tenantDomain}/_layouts/workbench.aspx",
+  "serveConfigurations": {
+    "default": {
+      "pageUrl": "https://neologixdemo.sharepoint.com/sites/NemkoDev/_layouts/workbench.aspx",
+      "customActions": {
+        "c1e6c798-2df3-437e-8980-c1bd943cb295": {
+          "location": "ClientSideExtension.ApplicationCustomizer",
+          "properties": {
+            "testMessage": "Test message"
+          }
+        }
+      }
+    },
+    "hfNemko": {
+      "pageUrl": "https://neologixdemo.sharepoint.com/sites/NemkoDev/SitePages/myPage.aspx",
+      "customActions": {
+        "c1e6c798-2df3-437e-8980-c1bd943cb295": {
+          "location": "ClientSideExtension.ApplicationCustomizer",
+          "properties": {
+            "testMessage": "Test message"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Elements xmlns="http://schemas.microsoft.com/sharepoint/">
+    <ClientSideComponentInstance
+        Title="HfNemko"
+        Location="ClientSideExtension.ApplicationCustomizer"
+        ComponentId="c1e6c798-2df3-437e-8980-c1bd943cb295"
+        Properties="{&quot;testMessage&quot;:&quot;Test message&quot;}">
+    </ClientSideComponentInstance>
+</Elements>

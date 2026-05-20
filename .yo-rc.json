@@ -1,0 +1,21 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "plusBeta": false,
+    "isCreatingSolution": false,
+    "nodeVersion": "18.20.8",
+    "sdksVersions": {
+      "@microsoft/microsoft-graph-client": "3.0.2",
+      "@microsoft/teams-js": "2.12.0"
+    },
+    "version": "1.18.2",
+    "libraryName": "nemko-intranet",
+    "libraryId": "77ff7a37-1b04-43ef-b937-cd2dca8598e0",
+    "environment": "spo",
+    "packageManager": "npm",
+    "solutionName": "nemko-intranet",
+    "solutionShortDescription": "nemko-intranet description",
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "componentType": "webpart"
+  }
+}

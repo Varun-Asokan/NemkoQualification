@@ -1,0 +1,81 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "wp-home-page-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/wpHomePage/WpHomePageWebPart.js",
+          "manifest": "./src/webparts/wpHomePage/WpHomePageWebPart.manifest.json"
+        }
+      ]
+    },
+    "hf-nemko-application-customizer": {
+      "components": [
+        {
+          "entrypoint": "./lib/extensions/hfNemko/HfNemkoApplicationCustomizer.js",
+          "manifest": "./src/extensions/hfNemko/HfNemkoApplicationCustomizer.manifest.json"
+        }
+      ]
+    },
+    "wp-my-qualifications-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/wpMyQualifications/WpMyQualificationsWebPart.js",
+          "manifest": "./src/webparts/wpMyQualifications/WpMyQualificationsWebPart.manifest.json"
+        }
+      ]
+    },
+    "wp-advanced-search-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/wpAdvancedSearch/WpAdvancedSearchWebPart.js",
+          "manifest": "./src/webparts/wpAdvancedSearch/WpAdvancedSearchWebPart.manifest.json"
+        }
+      ]
+    },
+    "wp-admin-page-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/wpAdminPage/WpAdminPageWebPart.js",
+          "manifest": "./src/webparts/wpAdminPage/WpAdminPageWebPart.manifest.json"
+        }
+      ]
+    },
+    "wp-verification-and-authorization-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/wpVerificationAndAuthorization/WpVerificationAndAuthorizationWebPart.js",
+          "manifest": "./src/webparts/wpVerificationAndAuthorization/WpVerificationAndAuthorizationWebPart.manifest.json"
+        }
+      ]
+    },
+    "wp-guidelines-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/wpGuidelines/WpGuidelinesWebPart.js",
+          "manifest": "./src/webparts/wpGuidelines/WpGuidelinesWebPart.manifest.json"
+        }
+      ]
+    },
+    "wp-employees-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/wpEmployees/WpEmployeesWebPart.js",
+          "manifest": "./src/webparts/wpEmployees/WpEmployeesWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "WpHomePageWebPartStrings": "lib/webparts/wpHomePage/loc/{locale}.js",
+    "HfNemkoApplicationCustomizerStrings": "lib/extensions/hfNemko/loc/{locale}.js",
+    "WpMyQualificationsWebPartStrings": "lib/webparts/wpMyQualifications/loc/{locale}.js",
+    "WpAdvancedSearchWebPartStrings": "lib/webparts/wpAdvancedSearch/loc/{locale}.js",
+    "WpAdminPageWebPartStrings": "lib/webparts/wpAdminPage/loc/{locale}.js",
+    "WpVerificationAndAuthorizationWebPartStrings": "lib/webparts/wpVerificationAndAuthorization/loc/{locale}.js",
+    "WpGuidelinesWebPartStrings": "lib/webparts/wpGuidelines/loc/{locale}.js",
+    "WpEmployeesWebPartStrings": "lib/webparts/wpEmployees/loc/{locale}.js"
+  }
+}

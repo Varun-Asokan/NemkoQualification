@@ -1,0 +1,52 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "nemko-intranet-client-side-solution",
+    "id": "77ff7a37-1b04-43ef-b937-cd2dca8598e0",
+    "version": "1.0.0.2",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.18.2"
+    },
+    "webApiPermissionRequests": [
+      {
+        "resource": "66eda48a-d5f9-4db0-a911-0d936f8ce92b",
+        "scope": "access_as_user"
+      }
+    ],
+    "metadata": {
+      "shortDescription": {
+        "default": "nemko-intranet description"
+      },
+      "longDescription": {
+        "default": "nemko-intranet description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "nemko-intranet Feature",
+        "description": "The feature that activates elements of the nemko-intranet solution.",
+        "id": "c305cb92-92ee-4040-8330-32567f20139c",
+        "version": "1.0.0.0",
+        "assets": {
+          "elementManifests": [
+            "elements.xml",
+            "ClientSideInstance.xml"
+          ]
+        }
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/nemko-intranet.sppkg"
+  }
+}
