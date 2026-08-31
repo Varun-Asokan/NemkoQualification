@@ -16,54 +16,51 @@ export default class employees {
                 <div class="nemko-table-top-filter-wrapper w-100 float-start">
                   <div class="nemko-filter-list d-flex flex-column gap-1">
                     <label class="font-medium text-sm text-color-3">Full name</label>
-                    <input type="text" class="nemko-filter-input" />
+                    <input type="text" class="nemko-filter-input" data-emp-column="name" />
                   </div>
                   <div class="nemko-filter-list d-flex flex-column gap-1">
                     <label class="font-medium text-sm text-color-3">quality manager</label>
-                    <input type="text" class="nemko-filter-input" />
+                    <input type="text" class="nemko-filter-input" data-emp-column="qualitymanager" />
                   </div>
                   <div class="nemko-filter-list d-flex flex-column gap-1">
                     <label class="font-medium text-sm text-color-3">personal status</label>
-                    <select class="nemko-filter-input">
-                      <option value="all">All</option>
-                      <option value="active">Active</option>
-                      <option value="retired">Retired</option>
-                      <option value="resigned">Resigned</option>
+                    <select class="nemko-filter-input" id="empStatusFilter">
+                      <option value="">All</option>
                     </select>
                   </div>
                   <div class="nemko-filter-list d-flex flex-column gap-1">
                     <label class="font-medium text-sm text-color-3">HR contact</label>
-                    <input type="text" class="nemko-filter-input" />
+                    <input type="text" class="nemko-filter-input" data-emp-column="hrcontact" />
                   </div>
                   <div class="nemko-filter-list d-flex flex-column gap-1">
                     <label class="font-medium text-sm text-color-3">office</label>
-                    <input type="text" class="nemko-filter-input" />
+                    <input type="text" class="nemko-filter-input" data-emp-column="office" />
                   </div>
                   <div class="nemko-filter-list d-flex flex-column gap-1">
                     <label class="font-medium text-sm text-color-3">approval manager</label>
-                    <input type="text" class="nemko-filter-input" />
+                    <input type="text" class="nemko-filter-input" data-emp-column="approvalmanager" />
                   </div>
                   <div class="nemko-filter-list d-flex flex-column gap-1">
                     <label class="font-medium text-sm text-color-3">direct manager</label>
-                    <input type="text" class="nemko-filter-input" />
+                    <input type="text" class="nemko-filter-input" data-emp-column="directmanager" />
                   </div>
                   <div class="nemko-filter-list d-flex flex-column gap-1">
                     <label class="font-medium text-sm text-color-3">local GM</label>
-                    <input type="text" class="nemko-filter-input" />
+                    <input type="text" class="nemko-filter-input" data-emp-column="localgm" />
                   </div>
                 </div>
                 <div class="flex-shrink-0 d-flex gap-2 ao-filter-right-btns">
-                  <button type="button" class="btn nemko-btn-default nemko-btn-save text-xs m-0">Search</button>
                   <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-xs m-0">Reset</button>
                 </div>
               </div>
               <div class="w-100 float-start d-flex align-items-center gap-2 px-4 py-4 flex-wrap ao-table-top-btn">
-                <button type="button" data-bs-toggle="modal" data-bs-target="#empNewModal" class="nemko-btn-default nemko-btn-success text-xs px-3 font-medium">new</button>
-                <!-- No data-bs-toggle/target on Edit — controlled entirely by initEditModal -->
+                <button type="button" id="emp-new-btn" class="nemko-btn-default nemko-btn-success text-xs px-3 font-medium">new</button>
+                <!-- No data-bs-toggle/target on New or Edit — controlled entirely by initNewModal / initEditModal -->
                 <button type="button" id="emp-edit-btn" class="nemko-btn-default nemko-btn-edit text-xs px-3 font-medium">Edit</button>
                 <button type="button" class="nemko-btn-default nemko-btn-cancel text-xs px-3 font-medium">Delete</button>
                 <button type="button" class="nemko-btn-default nemko-btn-reject text-xs px-3 font-medium">delete all</button>
               </div>
+              <ul class="pagination nemko-pagination justify-content-start align-items-center gap-2 w-100 float-start px-4"></ul>
               <div class="w-100 float-start d-flex flex-column position-relative px-4 pt-2">
                 <div class="col-visibility-btn d-none">
                   <div class="w-100 dropdown position-static">
@@ -84,13 +81,20 @@ export default class employees {
                       <tr></tr>
                     </thead>
                     <tbody>
-                      <tr></tr>
+                      <tr class="nemko-skeleton-row"><td colspan="20"><div class="nemko-skeleton-cell"></div></td></tr>
+                      <tr class="nemko-skeleton-row"><td colspan="20"><div class="nemko-skeleton-cell"></div></td></tr>
+                      <tr class="nemko-skeleton-row"><td colspan="20"><div class="nemko-skeleton-cell"></div></td></tr>
+                      <tr class="nemko-skeleton-row"><td colspan="20"><div class="nemko-skeleton-cell"></div></td></tr>
+                      <tr class="nemko-skeleton-row"><td colspan="20"><div class="nemko-skeleton-cell"></div></td></tr>
+                      <tr class="nemko-skeleton-row"><td colspan="20"><div class="nemko-skeleton-cell"></div></td></tr>
+                      <tr class="nemko-skeleton-row"><td colspan="20"><div class="nemko-skeleton-cell"></div></td></tr>
+                      <tr class="nemko-skeleton-row"><td colspan="20"><div class="nemko-skeleton-cell"></div></td></tr>
                     </tbody>
                   </table>
                 </div>
               </div>
               <ul
-                class="pagination nemko-pagination justify-content-end align-items-center gap-2 w-100 float-start px-4">
+                class="pagination nemko-pagination justify-content-start align-items-center gap-2 w-100 float-start px-4">
                 <li class="page-item disabled">
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M2.72266 4.53745L8.16766 0.60786L8.16766 8.46704L2.72266 4.53745Z" fill="#989898" />
@@ -133,60 +137,81 @@ export default class employees {
         <div class="modal-header">
           <div class="d-flex align-items-center flex-wrap gap-4">
             <p data-tab-title="new" class="modal-title cursor-pointer fhd-text-xl-combo modal-title-active">employee new</p>
-            // <p data-tab-title="edit" class="modal-title cursor-pointer fhd-text-xl-combo">Edit</p>
+            
           </div>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body custom-scroll-view">
           <div class="w-100 float-start d-flex flex-column gap-3 nemko-modal-frm py-2">
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="fullName" class="form-label">full name*</label>
+              <label for="fullName" class="form-label">full name <span class="text-danger">*</span></label>
               <input type="text" class="form-control" id="fullName" />
+              <div class="invalid-feedback">Full name is required.</div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="emailIp" class="form-label">email*</label>
-              <input type="email" class="form-control" id="emailIp" />
+              <label for="emailIp" class="form-label">email <span class="text-danger">*</span></label>
+              <div class="nemko-email-autocomplete position-relative">
+                <input type="text" class="form-control" id="emailIp" autocomplete="off" />
+                <ul class="nemko-email-suggestions list-unstyled position-absolute w-100" id="emailIpSuggestions" style="display:none;"></ul>
+              </div>
+              <div class="invalid-feedback">Email is required.</div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="personalStatus" class="form-label">personal status</label>
+              <label for="personalStatus" class="form-label">personal status <span class="text-danger">*</span></label>
               <select class="form-select" id="personalStatus">
                 <option value="" selected disabled></option>
-                <option value="active">Active</option>
-                <option value="retired">Retired</option>
-                <option value="resigned">Resigned</option>
               </select>
+              <div class="invalid-feedback">Personal status is required.</div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="office" class="form-label">office</label>
-              <select class="form-select" id="office">
-                <option value="" selected disabled></option>
-              </select>
+              <label for="office" class="form-label">office <span class="text-danger">*</span></label>
+              <div class="nemko-search-select position-relative">
+                <input type="text" class="form-control nemko-ss-display" data-target="office" autocomplete="off" />
+                <input type="hidden" id="office" />
+                <ul class="nemko-email-suggestions list-unstyled position-absolute w-100" style="display:none;"></ul>
+              </div>
+              <div class="invalid-feedback">Office is required.</div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
               <label for="approvalManager" class="form-label">approval manager</label>
-              <input type="text" class="form-control" id="approvalManager" />
+              <div class="nemko-search-select position-relative">
+                <input type="text" class="form-control nemko-ss-display" data-target="approvalManager" autocomplete="off" />
+                <input type="hidden" id="approvalManager" />
+                <ul class="nemko-email-suggestions list-unstyled position-absolute w-100" style="display:none;"></ul>
+              </div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="directManger" class="form-label">direct manger</label>
-              <input type="text" class="form-control" id="directManger" />
-            </div>
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="directManagerEmail" class="form-label">direct manager email</label>
-              <input type="email" class="form-control" id="directManagerEmail" />
+              <label for="directManger" class="form-label">direct manager <span class="text-danger">*</span></label>
+              <div class="nemko-search-select position-relative">
+                <input type="text" class="form-control nemko-ss-display" data-target="directManger" autocomplete="off" />
+                <input type="hidden" id="directManger" />
+                <ul class="nemko-email-suggestions list-unstyled position-absolute w-100" style="display:none;"></ul>
+              </div>
+              <div class="invalid-feedback">Direct manager is required.</div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
               <label for="localGMList" class="form-label">local GM</label>
-              <select class="form-select" id="localGMList">
-                <option value="" selected disabled></option>
-              </select>
+              <div class="nemko-search-select position-relative">
+                <input type="text" class="form-control nemko-ss-display" data-target="localGMList" autocomplete="off" />
+                <input type="hidden" id="localGMList" />
+                <ul class="nemko-email-suggestions list-unstyled position-absolute w-100" style="display:none;"></ul>
+              </div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
               <label for="qualityManger" class="form-label">quality manager</label>
-              <input type="text" class="form-control" id="qualityManger" />
+              <div class="nemko-search-select position-relative">
+                <input type="text" class="form-control nemko-ss-display" data-target="qualityManger" autocomplete="off" />
+                <input type="hidden" id="qualityManger" />
+                <ul class="nemko-email-suggestions list-unstyled position-absolute w-100" style="display:none;"></ul>
+              </div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
               <label for="HR-contact" class="form-label">HR contact</label>
-              <input type="text" class="form-control" id="HR-contact" />
+              <div class="nemko-search-select position-relative">
+                <input type="text" class="form-control nemko-ss-display" data-target="HR-contact" autocomplete="off" />
+                <input type="hidden" id="HR-contact" />
+                <ul class="nemko-email-suggestions list-unstyled position-absolute w-100" style="display:none;"></ul>
+              </div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
               <div class="form-label-cr">leadership function</div>
@@ -202,6 +227,28 @@ export default class employees {
                   <p class="form-check-label">No</p>
                 </label>
               </div>
+            </div>
+            <div class="w-100 float-start d-flex flex-column form-control-col">
+              <div class="form-label-cr">Is Admin?</div>
+              <div class="d-flex align-items-center gap-3">
+                <label class="nemko-frm-radio d-flex align-items-center gap-1">
+                  <input class="form-check-input" type="radio" name="newIsAdmin">
+                  <span class="radio-icon"></span>
+                  <p class="form-check-label">Yes</p>
+                </label>
+                <label class="nemko-frm-radio d-flex align-items-center gap-1">
+                  <input class="form-check-input" type="radio" name="newIsAdmin" checked>
+                  <span class="radio-icon"></span>
+                  <p class="form-check-label">No</p>
+                </label>
+              </div>
+            </div>
+
+            <div class="w-100 float-start d-flex flex-column form-control-col">
+              <label for="newEmployeeType" class="form-label">employee type</label>
+              <select class="form-select" id="newEmployeeType">
+                <option value=""></option>
+              </select>
             </div>
           </div>
         </div>
@@ -219,61 +266,79 @@ export default class employees {
       <div class="modal-content">
         <div class="modal-header">
           <div class="d-flex align-items-center flex-wrap gap-4">
-            <p data-tab-title="detail" class="modal-title cursor-pointer fhd-text-xl-combo modal-title-active">employee detail</p>
-            <p data-tab-title="edit" class="modal-title cursor-pointer fhd-text-xl-combo">Edit</p>
+            <p class="modal-title fhd-text-xl-combo modal-title-active">employee details edit</p>
           </div>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body custom-scroll-view">
-          <div class="w-100 float-start d-flex flex-column gap-3 nemko-modal-frm py-2">
+          <div id="empEditModalLoading" class="text-center py-4 text-color-3 text-sm font-medium" style="display:none;">Loading...</div>
+          <div id="empEditModalContent" class="w-100 float-start d-flex flex-column gap-3 nemko-modal-frm py-2">
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editFullName" class="form-label">full name*</label>
+              <label for="editFullName" class="form-label">full name <span class="text-danger">*</span></label>
               <input type="text" class="form-control" id="editFullName" />
+              <div class="invalid-feedback">Full name is required.</div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editEmailIp" class="form-label">email*</label>
-              <input type="email" class="form-control" id="editEmailIp" />
+              <label for="editEmailIp" class="form-label">email <span class="text-danger">*</span></label>
+              <input type="email" class="form-control" id="editEmailIp" readonly/>
+              <div class="invalid-feedback">Email is required.</div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editPersonalStatus" class="form-label">personal status</label>
+              <label for="editPersonalStatus" class="form-label">personal status <span class="text-danger">*</span></label>
               <select class="form-select" id="editPersonalStatus">
-                <option value="" selected disabled></option>
-                <option value="active">Active</option>
-                <option value="retired">Retired</option>
-                <option value="resigned">Resigned</option>
+                <option value="" selected disabled>Select Status</option>
               </select>
+              <div class="invalid-feedback">Personal status is required.</div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editOffice" class="form-label">office</label>
-              <select class="form-select" id="editOffice">
-                <option value="" selected disabled></option>
-              </select>
+              <label for="editOffice" class="form-label">office <span class="text-danger">*</span></label>
+              <div class="nemko-search-select position-relative">
+                <input type="text" class="form-control nemko-ss-display" data-target="editOffice" autocomplete="off" />
+                <input type="hidden" id="editOffice" />
+                <ul class="nemko-email-suggestions list-unstyled position-absolute w-100" style="display:none;"></ul>
+              </div>
+              <div class="invalid-feedback">Office is required.</div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
               <label for="editApprovalManager" class="form-label">approval manager</label>
-              <input type="text" class="form-control" id="editApprovalManager" />
+              <div class="nemko-search-select position-relative">
+                <input type="text" class="form-control nemko-ss-display" data-target="editApprovalManager" autocomplete="off" />
+                <input type="hidden" id="editApprovalManager" />
+                <ul class="nemko-email-suggestions list-unstyled position-absolute w-100" style="display:none;"></ul>
+              </div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editDirectManger" class="form-label">direct manager</label>
-              <input type="text" class="form-control" id="editDirectManger" />
-            </div>
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editDirectManagerEmail" class="form-label">direct manager email</label>
-              <input type="email" class="form-control" id="editDirectManagerEmail" />
+              <label for="editDirectManger" class="form-label">direct manager <span class="text-danger">*</span></label>
+              <div class="nemko-search-select position-relative">
+                <input type="text" class="form-control nemko-ss-display" data-target="editDirectManger" autocomplete="off" />
+                <input type="hidden" id="editDirectManger" />
+                <ul class="nemko-email-suggestions list-unstyled position-absolute w-100" style="display:none;"></ul>
+              </div>
+              <div class="invalid-feedback">Direct manager is required.</div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
               <label for="editLocalGMList" class="form-label">local GM</label>
-              <select class="form-select" id="editLocalGMList">
-                <option value="" selected disabled></option>
-              </select>
+              <div class="nemko-search-select position-relative">
+                <input type="text" class="form-control nemko-ss-display" data-target="editLocalGMList" autocomplete="off" />
+                <input type="hidden" id="editLocalGMList" />
+                <ul class="nemko-email-suggestions list-unstyled position-absolute w-100" style="display:none;"></ul>
+              </div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
               <label for="editQualityManger" class="form-label">quality manager</label>
-              <input type="text" class="form-control" id="editQualityManger" />
+              <div class="nemko-search-select position-relative">
+                <input type="text" class="form-control nemko-ss-display" data-target="editQualityManger" autocomplete="off" />
+                <input type="hidden" id="editQualityManger" />
+                <ul class="nemko-email-suggestions list-unstyled position-absolute w-100" style="display:none;"></ul>
+              </div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
               <label for="editHRContact" class="form-label">HR contact</label>
-              <input type="text" class="form-control" id="editHRContact" />
+              <div class="nemko-search-select position-relative">
+                <input type="text" class="form-control nemko-ss-display" data-target="editHRContact" autocomplete="off" />
+                <input type="hidden" id="editHRContact" />
+                <ul class="nemko-email-suggestions list-unstyled position-absolute w-100" style="display:none;"></ul>
+              </div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
               <div class="form-label-cr">leadership function</div>
@@ -291,13 +356,29 @@ export default class employees {
               </div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editLocation" class="form-label">location</label>
-              <input type="text" class="form-control" id="editLocation" placeholder="Current working location" />
+              <div class="form-label-cr">Is Admin?</div>
+              <div class="d-flex align-items-center gap-3">
+                <label class="nemko-frm-radio d-flex align-items-center gap-1">
+                  <input class="form-check-input" type="radio" name="editIsAdmin">
+                  <span class="radio-icon"></span>
+                  <p class="form-check-label">Yes</p>
+                </label>
+                <label class="nemko-frm-radio d-flex align-items-center gap-1">
+                  <input class="form-check-input" type="radio" name="editIsAdmin" checked>
+                  <span class="radio-icon"></span>
+                  <p class="form-check-label">No</p>
+                </label>
+              </div>
             </div>
+
             <div class="w-100 float-start d-flex flex-column form-control-col">
               <label for="editEmployeeType" class="form-label">employee type</label>
-              <input type="text" class="form-control" id="editEmployeeType" placeholder="e.g. Permanent, Non-Employee" />
+              <select class="form-select" id="editEmployeeType">
+                <option value=""></option>
+              </select>
             </div>
+            <!-- Hidden field — stores the employee ID for the PUT URL -->
+            <input type="hidden" id="editEmployeeId" />
           </div>
         </div>
         <div class="modal-footer">

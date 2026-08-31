@@ -1,3 +1,5 @@
+import NemkoAdminCheck from './NemkoAdminCheck';
+
 export interface ISidebarConfig {
   resourceUrl: string;
   siteUrl: string;
@@ -34,6 +36,7 @@ export default class SharedSidebar {
     let html = SharedSidebar.sidebarTemplate
       .replace(/__KEY_URL_RESOURCE__/g, config.resourceUrl)
       .replace(/__KEY_URL_RESOURCE_SITE__/g, config.siteUrl)
+      .replace(/__KEY_HOME_URL__/g, config.siteUrl + '/SitePages/HomePage.aspx?env=WebViewList')
       .replace(/__SUBMENU_QUAL_SHOW__/g, isQualTab ? 'show' : '')
       .replace(/__SUBMENU_QUAL_ARIA__/g, isQualTab ? 'true' : 'false');
 
@@ -62,10 +65,22 @@ export default class SharedSidebar {
   public static initBehavior(domElement: HTMLElement, siteUrl: string): void {
     SharedSidebar.initSubmenuButtons(domElement, siteUrl);
     SharedSidebar.initNavLinks(domElement, siteUrl);
-
-    
+    SharedSidebar.applyAddNewStandardVisibility(domElement, siteUrl);
 
     window.dispatchEvent(new CustomEvent('sidebarMounted'));
+  }
+
+  private static applyAddNewStandardVisibility(domElement: HTMLElement, siteUrl: string): void {
+    const link = domElement.querySelector<HTMLElement>('li:has(> a[data-nav-key="add-new-standard"])')
+      ?? domElement.querySelector<HTMLElement>('a[data-nav-key="add-new-standard"]');
+    if (!link) return;
+
+    // Hide by default until the admin check resolves, to avoid a flash of visible content
+    link.style.display = 'none';
+
+    NemkoAdminCheck.isAdmin(siteUrl)
+      .then(isAdminUser => { link.style.display = isAdminUser ? '' : 'none'; })
+      .catch(() => { /* keep hidden on error */ });
   }
 
   private static initNavLinks(domElement: HTMLElement, siteUrl: string): void {
@@ -77,7 +92,8 @@ export default class SharedSidebar {
       'my-authorizations': VERIF_PAGE,
       'advanced-search': `${siteUrl}/SitePages/AdvancedSearch.aspx`,
       'guidelines': `${siteUrl}/SitePages/Guidelines.aspx`,
-      'add-new-standard': `${siteUrl}/SitePages/AddNewStandard.aspx`,
+      'add-new-standard': `${siteUrl}/SitePages/AdvancedSearch.aspx?open=create-standard`,
+
     };
 
     const NAV_TAB_PARAMS: Record<string, string> = {
@@ -112,7 +128,7 @@ export default class SharedSidebar {
       if (!route || route === '#') return;
 
       
-      if (TAB_DRIVEN_KEYS.has(key) || key === 'add-qualification') return;
+      if (TAB_DRIVEN_KEYS.has(key) || key === 'add-qualification' || key === 'add-new-standard') return;
 
       try {
         const routePath = new URL(route).pathname.toLowerCase();
@@ -123,39 +139,24 @@ export default class SharedSidebar {
     });
 
     // ── Click handlers ────────────────────────────────────────────────────────
+    // href already carries the correct URL (with ?tab= where needed).
+    // Only preventDefault when a registered in-page handler takes over.
     domElement.querySelectorAll<HTMLElement>('.sidebar-nav-link[data-nav-key]').forEach(link => {
       const key = link.getAttribute('data-nav-key') ?? '';
-      const route = NAV_ROUTES[key];
-
-      if (!route || route === '#') return;
+      if (!NAV_ROUTES[key]) return;
 
       link.addEventListener('click', (e) => {
-        e.preventDefault();
-
         const handler = SharedSidebar._navHandlers[key];
         if (handler) {
+          e.preventDefault();
           domElement.querySelectorAll<HTMLElement>('.sidebar-nav-link')
             .forEach(l => l.classList.remove('active-sm-link'));
           domElement.querySelectorAll<HTMLElement>('.submenu-list-btn')
             .forEach(b => b.classList.remove('active-submenu'));
           link.classList.add('active-sm-link');
           handler(key);
-          return;
         }
-
-       
-
-// REPLACE the add-qualification block with:
-if (key === 'add-qualification') {
-  window.location.href = route;
-  return;
-}
-
-
-
-        const tabParam = NAV_TAB_PARAMS[key];
-        const destination = tabParam ? `${route}?tab=${tabParam}` : route;
-        window.location.href = destination;
+        // else: let the href navigate naturally
       });
     });
   }
@@ -175,19 +176,17 @@ if (key === 'add-qualification') {
 
     submenuBtns.forEach(btn => {
       btn.addEventListener('click', (e) => {
-        e.preventDefault();
         const tabId = btn.getAttribute('data-tab-id') ?? '';
-        const tabParam = tabId === 'requested-table' ? 'requested' : 'authorized';
 
         const currentPath = window.location.pathname.toLowerCase();
         const qualPath = new URL(MY_QUAL_PAGE).pathname.toLowerCase();
         const isOnQualPage = currentPath === qualPath;
 
         if (isOnQualPage) {
+          e.preventDefault();
           SharedSidebar.activateTab(domElement, tabId);
-        } else {
-          window.location.href = `${MY_QUAL_PAGE}?tab=${tabParam}`;
         }
+        // else: let href navigate to MyQualifications.aspx?tab=...
       });
     });
 
@@ -275,14 +274,16 @@ if (key === 'add-qualification') {
 <aside class="nemko-sidebar">
   <div class="w-100 float-start px-3">
     <div class="sidebar-brand w-100 float-start d-flex justify-content-center align-items-center">
-      <img src="__KEY_URL_RESOURCE__/resources/images/logo-white.png" alt="" />
+      <a href="__KEY_HOME_URL__">
+        <img src="__KEY_URL_RESOURCE__/resources/images/logo-white.png" alt="" />
+      </a>
     </div>
   </div>
   <div class="flex-grow-1 overflow-hidden min-w-0 d-flex py-3 px-1">
     <ul class="sidebar-nav w-100 float-start overflow-auto custom-scroll-view px-1 d-flex flex-column gap-1">
 
       <li class="w-100 float-start">
-        <a href="#" data-nav-key="add-qualification"
+        <a href="__KEY_URL_RESOURCE_SITE__/SitePages/MyQualifications.aspx?modal=addQualification" data-nav-key="add-qualification"
            class="sidebar-nav-link nemko-open-add-qualification-modal __ACTIVE_NAV__add-qualification__">
           <img class="sidemenu-icon"
                src="__KEY_URL_RESOURCE__/resources/images/icons/sidemenu/add-qualification.png"
@@ -309,13 +310,15 @@ if (key === 'add-qualification') {
       </a>
       <ul class="sidebar-submenu collapse __SUBMENU_QUAL_SHOW__" id="submenuQual">
         <li class="my-2">
-          <a data-tab-id="authorized-table"
+          <a href="__KEY_URL_RESOURCE_SITE__/SitePages/MyQualifications.aspx?tab=authorized"
+            data-tab-id="authorized-table"
             class="text-sm font-normal submenu-list-btn __ACTIVE_TAB__authorized-table__">
             Authorized
           </a>
         </li>
         <li class="my-2">
-          <a data-tab-id="requested-table"
+          <a href="__KEY_URL_RESOURCE_SITE__/SitePages/MyQualifications.aspx?tab=requested"
+            data-tab-id="requested-table"
             class="text-sm font-normal submenu-list-btn __ACTIVE_TAB__requested-table__">
             Requested
           </a>
@@ -324,7 +327,7 @@ if (key === 'add-qualification') {
     </li>
 
       <li class="w-100 float-start">
-        <a href="#" data-nav-key="my-verification" data-tab-id="verif-verification-table"
+        <a href="__KEY_URL_RESOURCE_SITE__/SitePages/VerificationAuthorization.aspx?tab=verification" data-nav-key="my-verification" data-tab-id="verif-verification-table"
           class="sidebar-nav-link __ACTIVE_NAV__my-verification__">
           <img class="sidemenu-icon"
                src="__KEY_URL_RESOURCE__/resources/images/icons/sidemenu/my-verification.png"
@@ -334,7 +337,7 @@ if (key === 'add-qualification') {
       </li>
 
       <li class="w-100 float-start">
-        <a href="#" data-nav-key="my-authorizations" data-tab-id="verif-authorization-table"
+        <a href="__KEY_URL_RESOURCE_SITE__/SitePages/VerificationAuthorization.aspx?tab=authorization" data-nav-key="my-authorizations" data-tab-id="verif-authorization-table"
           class="sidebar-nav-link __ACTIVE_NAV__my-authorizations__">
           <img class="sidemenu-icon"
                src="__KEY_URL_RESOURCE__/resources/images/icons/sidemenu/my-authorizations.png"
@@ -344,7 +347,7 @@ if (key === 'add-qualification') {
       </li>
 
       <li class="w-100 float-start">
-        <a href="#" data-nav-key="advanced-search"
+        <a href="__KEY_URL_RESOURCE_SITE__/SitePages/AdvancedSearch.aspx" data-nav-key="advanced-search"
            class="sidebar-nav-link __ACTIVE_NAV__advanced-search__">
           <img class="sidemenu-icon"
                src="__KEY_URL_RESOURCE__/resources/images/icons/sidemenu/advanced-search.png"
@@ -354,7 +357,7 @@ if (key === 'add-qualification') {
       </li>
 
       <li class="w-100 float-start">
-        <a href="#" data-nav-key="guidelines"
+        <a href="__KEY_URL_RESOURCE_SITE__/SitePages/Guidelines.aspx" data-nav-key="guidelines"
            class="sidebar-nav-link __ACTIVE_NAV__guidelines__">
           <img class="sidemenu-icon"
                src="__KEY_URL_RESOURCE__/resources/images/icons/sidemenu/guidelines.png"
@@ -364,7 +367,7 @@ if (key === 'add-qualification') {
       </li>
 
       <li class="w-100 float-start">
-        <a href="#" data-nav-key="add-new-standard"
+        <a href="__KEY_URL_RESOURCE_SITE__/SitePages/AdvancedSearch.aspx?open=create-standard" data-nav-key="add-new-standard"
            class="sidebar-nav-link __ACTIVE_NAV__add-new-standard__">
           <img class="sidemenu-icon"
                src="__KEY_URL_RESOURCE__/resources/images/icons/sidemenu/add-new-standared.png"

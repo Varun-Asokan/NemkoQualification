@@ -18,6 +18,10 @@
       {
         "resource": "66eda48a-d5f9-4db0-a911-0d936f8ce92b",
         "scope": "access_as_user"
+      },
+      {
+        "resource": "Microsoft Graph",
+        "scope": "User.Read.All"
       }
     ],
     "metadata": {

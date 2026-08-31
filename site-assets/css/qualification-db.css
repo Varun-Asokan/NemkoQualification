@@ -1,0 +1,183 @@
+.qualification-db-wrapper {
+  background-color: #fff;
+  border-radius: 12px;
+  font-family: "Inter";
+}
+
+/* ── Search operator dropdown ── */
+.search-operator-dd {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 100%;
+  z-index: 5;
+}
+.search-operator-menu {
+  min-width: 190px;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  padding: 4px 0;
+}
+.search-operator-menu .search-op-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  color: var(--color-nemko-3, #3d3d3d);
+  font-size: 13px;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.search-operator-menu .search-op-item:hover {
+  background-color: #f0f7fa;
+  color: var(--color-primary, #006e8c);
+}
+.search-operator-menu .search-op-item.active {
+  color: var(--color-primary, #006e8c);
+  font-weight: 600;
+}
+.search-operator-dd .text-transform-btn {
+  text-decoration: none;
+}
+.search-operator-menu .op-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  flex-shrink: 0;
+  text-decoration: none;
+  font-size: 12px;
+}
+.search-operator-menu .op-symbol u {
+  text-underline-offset: 2px;
+}
+.search-operator-menu .op-symbol.op-symbol-math {
+  font-weight: 600;
+  font-size: 13px;
+}
+.nemko-filter-search:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+#informationModalScheme .information-table table,
+#informationModalTestmethod .information-table table {
+  min-width: 120px;
+}
+.qualification-db-wrapper .nemko-tab-btn {
+  border-radius: 6px;
+  font-weight: 400;
+  width: min(320px, 45%);
+  min-width: initial;
+  min-height: 48px;
+  text-transform: capitalize;
+  position: relative;
+  color: var(--color-nemko-17);
+  border-color: var(--color-nemko-15);
+}
+.qualification-db-wrapper .nemko-tab-btn-active {
+  background-color: var(--color-nemko-11);
+  color: #fff;
+}
+.qualification-db-wrapper .nemko-tab-btn-active:after {
+  content: "";
+  width: 26px;
+  height: 26px;
+  background: url(../images/icons/tooltip-arrow.svg) no-repeat center center;
+  position: absolute;
+  bottom: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.qualification-db-wrapper .nemko-filter-search {
+  background-color: #fff;
+}
+
+.db-tab-title-wrapper {
+  overflow-x: auto;
+  padding-bottom: 6px;
+  display: flex;
+}
+.db-tab-title-wrapper .db-tab-title-container {
+  border-bottom: 1px solid #D1D1D1;
+  flex-basis: 100%;
+}
+.db-tab-title-wrapper .db-tab-title-container .db-tab-title {
+  color: var(--color-nemko-17);
+  font-weight: 400;
+  text-transform: capitalize;
+  border-bottom: 3px solid transparent;
+  position: relative;
+  bottom: -1px;
+  padding-bottom: 16px;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
+  transition: border 0.2s ease-in;
+}
+.db-tab-title-wrapper .db-tab-title-container .db-tab-title:hover {
+  border-color: var(--color-nemko-11);
+}
+.db-tab-title-wrapper .db-tab-title-container .db-tab-title-active {
+  border-color: var(--color-nemko-11);
+  font-weight: 500;
+}
+
+.db-tab-view {
+  display: none;
+}
+.db-tab-view .nemko-filter-input {
+  height: 40px;
+}
+
+.db-qualification-tab-wrapper .db-qualification-tab-title-container {
+  border-bottom: 1px solid var(--color-nemko-19);
+}
+.db-qualification-tab-wrapper .db-qualification-tab-title-container .db-qualification-tab-title {
+  text-transform: capitalize;
+  border: 1px solid transparent;
+  border-bottom-color: transparent;
+  padding: 4px 16px;
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  position: relative;
+  bottom: -1px;
+  cursor: pointer;
+}
+.db-qualification-tab-wrapper .db-qualification-tab-title-container .db-qualification-tab-title-active {
+  border-color: var(--color-nemko-15);
+  border-bottom-color: #fff;
+  font-weight: 700;
+}
+
+/* ── Skeleton loader for table while data is fetching ── */
+@keyframes nemko-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.nemko-skeleton-row td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #f4f4f4;
+}
+.nemko-skeleton-cell {
+  height: 16px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: nemko-shimmer 1.4s infinite;
+}
+
+
+
+/*# sourceMappingURL=qualification-db.css.map */

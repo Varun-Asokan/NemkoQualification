@@ -1,0 +1,161 @@
+/* ─── Filter / Table layout ──────────────────────────────────────────────── */
+
+.nemko-table-top-filter-wrapper {
+  display: grid;
+  gap: 20px;
+}
+@media (min-width: 992px) {
+  .nemko-table-top-filter-wrapper {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1400px) {
+  .nemko-table-top-filter-wrapper {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.ao-filter-right-btns {
+  margin-top: 10px;
+}
+@media (min-width: 992px) {
+  .ao-filter-right-btns {
+    margin-top: 22px;
+  }
+}
+.ao-filter-right-btns button {
+  height: 32px;
+}
+
+.ao-table-top-btn button {
+  height: 32px;
+  border-radius: 6px;
+  text-transform: capitalize;
+}
+.ao-table-top-btn a.nemko-btn-default {
+  height: 32px;
+}
+
+/* ─── Tab titles ──────────────────────────────────────────────────────────── */
+
+.account-overview-tab-title-container {
+  border-bottom: 1px solid var(--color-nemko-19);
+}
+.account-overview-tab-title-container .account-overview-tab-title {
+  text-transform: capitalize;
+  border: 1px solid transparent;
+  border-bottom-color: transparent;
+  padding: 4px 16px;
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  position: relative;
+  cursor: pointer;
+}
+.account-overview-tab-title-container .account-overview-tab-title-active {
+  border-color: var(--color-nemko-15);
+  border-bottom-color: #fff;
+  font-weight: 700;
+}
+
+.form-select-2 {
+  background-image: none !important;
+}
+
+
+
+.select2-container{
+    flex-grow: 1;
+}
+
+.select2-container--open{
+    z-index: 9999;
+}
+
+
+.select2-container .nemko-select-2.select2-selection--single {
+  height: 36px;
+  line-height: normal;
+  font-family: "Inter";
+  border-radius: 6px;
+  border-color: var(--color-nemko-15);
+}
+
+.select2-container .nemko-select-2.select2-selection--multiple {
+  min-height: 36px;
+  font-family: "Inter";
+  border-radius: 6px;
+  border-color: var(--color-nemko-15);
+}
+
+.select2-container--default .nemko-select-2.select2-selection--single .select2-selection__rendered {
+  line-height: normal;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  font-weight: 400;
+  font-size: 13px;
+  color: #5B5B5C;
+}
+
+.nemko-select-2.select2-selection--multiple .select2-selection__choice__display {
+  font-weight: 400;
+  font-size: 13px;
+  color: #5B5B5C;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+  border: 1px solid var(--color-nemko-15);
+  background-color: #F3F3F3;
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  gap: 2px;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice .select2-selection__choice__remove {
+  position: static;
+}
+
+.nemko-select-2 .select2-search__field {
+  min-height: 20px;
+}
+
+.select2-container .nemko-select-2 .select2-search--inline .select2-search__field {
+  margin-top: 9px;
+  margin-left: 10px;
+}
+
+.nemko-select-2 .select2-selection__arrow {
+  display: none;
+}
+
+.nemko-select-2-dropdown .select2-search--dropdown {
+  font-family: "Inter";
+}
+
+.nemko-select-2-dropdown .select2-search--dropdown .select2-search__field:focus {
+  box-shadow: none;
+  border-color: var(--color-nemko-4) !important;
+  outline: none;
+}
+
+/* ─── Skeleton loader for table while data is fetching ─────────────────────── */
+@keyframes nemko-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.nemko-skeleton-row td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #f4f4f4;
+}
+.nemko-skeleton-cell {
+  height: 16px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: nemko-shimmer 1.4s infinite;
+}

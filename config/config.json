@@ -65,6 +65,22 @@
           "manifest": "./src/webparts/wpEmployees/WpEmployeesWebPart.manifest.json"
         }
       ]
+    },
+    "wp-global-ver-auth-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/wpGlobalVerAuth/WpGlobalVerAuthWebPart.js",
+          "manifest": "./src/webparts/wpGlobalVerAuth/WpGlobalVerAuthWebPart.manifest.json"
+        }
+      ]
+    },
+    "wp-admin-override-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/wpAdminOverride/WpAdminOverrideWebPart.js",
+          "manifest": "./src/webparts/wpAdminOverride/WpAdminOverrideWebPart.manifest.json"
+        }
+      ]
     }
   },
   "externals": {},
@@ -76,6 +92,8 @@
     "WpAdminPageWebPartStrings": "lib/webparts/wpAdminPage/loc/{locale}.js",
     "WpVerificationAndAuthorizationWebPartStrings": "lib/webparts/wpVerificationAndAuthorization/loc/{locale}.js",
     "WpGuidelinesWebPartStrings": "lib/webparts/wpGuidelines/loc/{locale}.js",
-    "WpEmployeesWebPartStrings": "lib/webparts/wpEmployees/loc/{locale}.js"
+    "WpEmployeesWebPartStrings": "lib/webparts/wpEmployees/loc/{locale}.js",
+    "WpGlobalVerAuthWebPartStrings": "lib/webparts/wpGlobalVerAuth/loc/{locale}.js",
+    "WpAdminOverrideWebPartStrings": "lib/webparts/wpAdminOverride/loc/{locale}.js"
   }
 }

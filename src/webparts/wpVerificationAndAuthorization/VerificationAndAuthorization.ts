@@ -42,16 +42,6 @@ export default class VerificationAndAuthorization {
           </button>
         </div>
 
-        <!-- IMPORT BAR -->
-        <div id="import-bar" style="display:none;" class="w-100 float-start d-flex align-items-center gap-3 mb-3">
-          <button
-            id="import-qual-btn"
-            type="button"
-            class="btn nemko-btn-default nemko-btn-secondary px-3 text-base lg-text-lg">
-            Import Qualification
-          </button>
-        </div>
-
         <!-- VERIFICATION PANEL -->
         <div
           id="verif-verification-table"
@@ -64,7 +54,27 @@ export default class VerificationAndAuthorization {
               <label class="font-medium text-sm text-color-3">Search</label>
 
               <div class="d-flex position-relative">
-                <button type="button" class="text-transform-btn font-medium text-xs text-color-3">Ab</button>
+                <div class="dropdown search-operator-dd">
+                  <button type="button" class="text-transform-btn font-medium text-xs text-color-3"
+                          data-bs-toggle="dropdown" aria-expanded="false" data-operator="contains"><u>Ab</u></button>
+                  <ul class="dropdown-menu search-operator-menu py-1">
+                    <li><a class="search-op-item d-flex align-items-center gap-2 active" data-operator="contains" data-symbol="Ab" data-symbol-type="text-full" data-table="verif-verification-table" href="javascript:void(0)">
+                      <span class="op-symbol font-medium text-xs"><u>Ab</u></span><span>Contains</span>
+                    </a></li>
+                    <li><a class="search-op-item d-flex align-items-center gap-2" data-operator="startswith" data-symbol="Ab" data-symbol-type="text-start" data-table="verif-verification-table" href="javascript:void(0)">
+                      <span class="op-symbol font-medium text-xs"><u>A</u>b</span><span>Starts with</span>
+                    </a></li>
+                    <li><a class="search-op-item d-flex align-items-center gap-2" data-operator="endswith" data-symbol="Ab" data-symbol-type="text-end" data-table="verif-verification-table" href="javascript:void(0)">
+                      <span class="op-symbol font-medium text-xs">A<u>b</u></span><span>Ends with</span>
+                    </a></li>
+                    <li><a class="search-op-item d-flex align-items-center gap-2" data-operator="eq" data-symbol="=" data-symbol-type="math" data-table="verif-verification-table" href="javascript:void(0)">
+                      <span class="op-symbol op-symbol-math font-medium text-xs">=</span><span>Equal</span>
+                    </a></li>
+                    <li><a class="search-op-item d-flex align-items-center gap-2" data-operator="neq" data-symbol="≠" data-symbol-type="math" data-table="verif-verification-table" href="javascript:void(0)">
+                      <span class="op-symbol op-symbol-math font-medium text-xs">≠</span><span>Not equal</span>
+                    </a></li>
+                  </ul>
+                </div>
 
                 <input
                   id="ver-search"
@@ -73,13 +83,61 @@ export default class VerificationAndAuthorization {
                   class="nemko-filter-input nemko-filter-search" />
               </div>
             </div>
+
+            <div class="nemko-filter-list d-flex flex-column gap-1">
+              <label class="font-medium text-sm text-color-3">Type</label>
+              <select id="ver-type-filter" class="nemko-filter-input" data-table-id="verif-verification-table" data-filter-key="qualificationType">
+                <option value="">All</option>
+                <option value="standard">Standard</option>
+                <option value="scheme">Scheme</option>
+                <option value="test-method">Test Method</option>
+              </select>
+            </div>
+            <div class="nemko-filter-list d-flex flex-column gap-1">
+              <label class="font-medium text-sm text-color-3">Status</label>
+              <select id="ver-status-filter" class="nemko-filter-input" data-table-id="verif-verification-table" data-filter-key="active">
+                <option value="">All</option>
+                <option value="Yes">Active</option>
+                <option value="No">Inactive</option>
+              </select>
+            </div>
+            <div class="nemko-filter-list d-flex flex-column gap-1">
+              <label class="font-medium text-sm text-color-3">Report Approver</label>
+              <select id="ver-report-filter" class="nemko-filter-input" data-table-id="verif-verification-table" data-filter-key="report">
+                <option value="">All</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+            <div class="nemko-filter-list d-flex flex-column gap-1">
+              <label class="font-medium text-sm text-color-3">Conformity Statement</label>
+              <select id="ver-conformity-filter" class="nemko-filter-input" data-table-id="verif-verification-table" data-filter-key="conformity">
+                <option value="">All</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+            <div class="nemko-filter-list d-flex flex-column gap-1">
+              <label class="font-medium text-sm text-color-3">Certification Decision</label>
+              <select id="ver-certification-filter" class="nemko-filter-input" data-table-id="verif-verification-table" data-filter-key="certificationDecision">
+                <option value="">All</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+            <div class="nemko-filter-list d-flex flex-column gap-1">
+              <label class="font-medium text-sm text-color-3">Level</label>
+              <select id="ver-level-filter" class="nemko-filter-input" data-table-id="verif-verification-table" data-filter-key="level">
+                <option value="">All</option>
+              </select>
+            </div>
           </div>
 
           <!-- ACTION BAR -->
           <div id="ver-action-bar" style="display:none;" class="w-100 float-start d-flex align-items-center gap-2 px-4 py-2 flex-wrap">
-    <button type="button" class="nemko-btn-default nemko-btn-success verify-selected text-sm lg-text-base px-3">Verify Selected</button>
-    <button type="button" class="nemko-btn-default nemko-btn-reject reject-selected text-sm lg-text-base px-3" data-panel="verification">Reject Selected</button>
-</div>
+            <button type="button" class="nemko-btn-default nemko-btn-success verify-selected text-sm lg-text-base px-3">Verify Selected</button>
+            <button type="button" class="nemko-btn-default nemko-btn-reject reject-selected text-sm lg-text-base px-3" data-panel="verification">Reject Selected</button>
+          </div>
 
           <!-- TABLE -->
           <div class="w-100 float-start d-flex flex-column position-relative px-4 pt-2">
@@ -103,6 +161,8 @@ export default class VerificationAndAuthorization {
               </div>
             </div>
 
+            <ul class="pagination nemko-pagination justify-content-start align-items-center gap-2 w-100 float-start px-4"></ul>
+
             <div class="table-responsive nemko-table-container my-qualifcation-table">
               <table id="ver-table" class="table">
                 <thead><tr></tr></thead>
@@ -112,7 +172,7 @@ export default class VerificationAndAuthorization {
 
           </div>
 
-          <ul class="pagination nemko-pagination justify-content-end align-items-center gap-2 w-100 float-start px-4">
+          <ul class="pagination nemko-pagination justify-content-start align-items-center gap-2 w-100 float-start px-4">
               <li class="page-item disabled">
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M2.72266 4.53745L8.16766 0.60786L8.16766 8.46704L2.72266 4.53745Z" fill="#989898" />
@@ -155,7 +215,27 @@ export default class VerificationAndAuthorization {
               <label class="font-medium text-sm text-color-3">Search</label>
 
               <div class="d-flex position-relative">
-                <button type="button" class="text-transform-btn font-medium text-xs text-color-3">Ab</button>
+                <div class="dropdown search-operator-dd">
+                  <button type="button" class="text-transform-btn font-medium text-xs text-color-3"
+                          data-bs-toggle="dropdown" aria-expanded="false" data-operator="contains"><u>Ab</u></button>
+                  <ul class="dropdown-menu search-operator-menu py-1">
+                    <li><a class="search-op-item d-flex align-items-center gap-2 active" data-operator="contains" data-symbol="Ab" data-symbol-type="text-full" data-table="verif-authorization-table" href="javascript:void(0)">
+                      <span class="op-symbol font-medium text-xs"><u>Ab</u></span><span>Contains</span>
+                    </a></li>
+                    <li><a class="search-op-item d-flex align-items-center gap-2" data-operator="startswith" data-symbol="Ab" data-symbol-type="text-start" data-table="verif-authorization-table" href="javascript:void(0)">
+                      <span class="op-symbol font-medium text-xs"><u>A</u>b</span><span>Starts with</span>
+                    </a></li>
+                    <li><a class="search-op-item d-flex align-items-center gap-2" data-operator="endswith" data-symbol="Ab" data-symbol-type="text-end" data-table="verif-authorization-table" href="javascript:void(0)">
+                      <span class="op-symbol font-medium text-xs">A<u>b</u></span><span>Ends with</span>
+                    </a></li>
+                    <li><a class="search-op-item d-flex align-items-center gap-2" data-operator="eq" data-symbol="=" data-symbol-type="math" data-table="verif-authorization-table" href="javascript:void(0)">
+                      <span class="op-symbol op-symbol-math font-medium text-xs">=</span><span>Equal</span>
+                    </a></li>
+                    <li><a class="search-op-item d-flex align-items-center gap-2" data-operator="neq" data-symbol="≠" data-symbol-type="math" data-table="verif-authorization-table" href="javascript:void(0)">
+                      <span class="op-symbol op-symbol-math font-medium text-xs">≠</span><span>Not equal</span>
+                    </a></li>
+                  </ul>
+                </div>
 
                 <input
                   id="auth-search"
@@ -163,6 +243,54 @@ export default class VerificationAndAuthorization {
                   placeholder="Search here..."
                   class="nemko-filter-input nemko-filter-search" />
               </div>
+            </div>
+
+            <div class="nemko-filter-list d-flex flex-column gap-1">
+              <label class="font-medium text-sm text-color-3">Type</label>
+              <select id="auth-type-filter" class="nemko-filter-input" data-table-id="verif-authorization-table" data-filter-key="qualificationType">
+                <option value="">All</option>
+                <option value="standard">Standard</option>
+                <option value="scheme">Scheme</option>
+                <option value="test-method">Test Method</option>
+              </select>
+            </div>
+            <div class="nemko-filter-list d-flex flex-column gap-1">
+              <label class="font-medium text-sm text-color-3">Status</label>
+              <select id="auth-status-filter" class="nemko-filter-input" data-table-id="verif-authorization-table" data-filter-key="active">
+                <option value="">All</option>
+                <option value="Yes">Active</option>
+                <option value="No">Inactive</option>
+              </select>
+            </div>
+            <div class="nemko-filter-list d-flex flex-column gap-1">
+              <label class="font-medium text-sm text-color-3">Report Approver</label>
+              <select id="auth-report-filter" class="nemko-filter-input" data-table-id="verif-authorization-table" data-filter-key="report">
+                <option value="">All</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+            <div class="nemko-filter-list d-flex flex-column gap-1">
+              <label class="font-medium text-sm text-color-3">Conformity Statement</label>
+              <select id="auth-conformity-filter" class="nemko-filter-input" data-table-id="verif-authorization-table" data-filter-key="conformity">
+                <option value="">All</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+            <div class="nemko-filter-list d-flex flex-column gap-1">
+              <label class="font-medium text-sm text-color-3">Certification Decision</label>
+              <select id="auth-certification-filter" class="nemko-filter-input" data-table-id="verif-authorization-table" data-filter-key="certificationDecision">
+                <option value="">All</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+            <div class="nemko-filter-list d-flex flex-column gap-1">
+              <label class="font-medium text-sm text-color-3">Level</label>
+              <select id="auth-level-filter" class="nemko-filter-input" data-table-id="verif-authorization-table" data-filter-key="level">
+                <option value="">All</option>
+              </select>
             </div>
           </div>
 
@@ -194,6 +322,8 @@ export default class VerificationAndAuthorization {
               </div>
             </div>
 
+            <ul class="pagination nemko-pagination justify-content-start align-items-center gap-2 w-100 float-start px-4"></ul>
+
             <div class="table-responsive nemko-table-container my-qualifcation-table-requested">
               <table id="auth-table" class="table">
                 <thead><tr></tr></thead>
@@ -203,7 +333,7 @@ export default class VerificationAndAuthorization {
 
           </div>
 
-          <ul class="pagination nemko-pagination justify-content-end align-items-center gap-2 w-100 float-start px-4">
+          <ul class="pagination nemko-pagination justify-content-start align-items-center gap-2 w-100 float-start px-4">
               <li class="page-item disabled">
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M2.72266 4.53745L8.16766 0.60786L8.16766 8.46704L2.72266 4.53745Z" fill="#989898" />
@@ -242,106 +372,6 @@ export default class VerificationAndAuthorization {
   </div>
 </div>
 
-<!-- IMPORT MODAL -->
- <div class="modal nemko-modal nemko-modal-default edit-temp-doc-modal" id="editTempDocModal" tabindex="-1" aria-labelledby="editTempDocModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title fhd-text-xl-combo">Edit template document</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="info-modal-close-btn"></button>
-        </div>
-        <div class="modal-body custom-scroll-view">
-          <div class="w-100 float-start d-flex flex-column gap-3 nemko-modal-frm py-2">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="tempNameIp" class="form-label">name*</label>
-              <input type="text" class="form-control" id="tempNameIp" />
-            </div>
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="template" class="form-label">template</label>
-              <select class="form-select" id="import-template-select">
-              <option value="" selected disabled></option>
-              <option value="1">Template 1</option>
-              <option value="2">Template 2</option>
-            </select>
-            </div>
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <div class="form-label">file</div>
-              <div class="d-flex flex-wrap align-items-center gap-2">
-                <div class="d-flex align-items-center flex-grow-1 overflow-hidden gap-2">
-                  <input type="text" class="form-control flex-grow-1" disabled>
-                  <label class="nemko-btn-default nemko-btn-browse d-flex flex-shrink-0 align-items-center justify-content-center text-center px-2">
-                    <input type="file" class="d-none" />
-                    <span>Browse</span>
-                  </label>
-                </div>
-                <button type="button" class="nemko-btn-default nemko-btn-download flex-shrink-0 px-2">Download</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="nemko-btn-default nemko-btn-save text-base md-text-lg">Upload</button>
-          <button type="button" class="nemko-btn-default nemko-btn-cancel text-base md-text-lg" data-bs-dismiss="modal">Cancel</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal fade nemko-modal nemko-modal-default information-modal" id="informationModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="informationModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title fhd-text-xl-combo">Information</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body custom-scroll-view">
-          <div class="w-100 float-start d-flex flex-column gap-4">
-            <p class="text-color-17 font-medium text-base lg-text-lg xxl-text-size-20 text-capitalize">before uploading the file, make sure its format meets the requirements. the column headers must exactly match the sample below. any deviations may result in import errors.</p>
-            <div class="table-responsive w-100 float-start information-table custom-scroll-view custom-scroll-h-view">
-              <table class="table table-borderless align-middle table-fixed text-center">
-                <thead>
-                  <tr>
-                    <th class="text-base md-text-lg">A</th>
-                    <th class="text-base md-text-lg">B</th>
-                    <th class="text-base md-text-lg">C</th>
-                    <th class="text-base md-text-lg">D</th>
-                    <th class="text-base md-text-lg">E</th>
-                    <th class="text-base md-text-lg">F</th>
-                    <th class="text-base md-text-lg">G</th>
-                    <th class="text-base md-text-lg">H</th>
-                    <th class="text-base md-text-lg">I</th>
-                    <th class="text-base md-text-lg">J</th>
-                    <th class="text-base md-text-lg">K</th>
-                    <th class="text-base md-text-lg">L</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>import helper</td>
-                    <td>e-mail</td>
-                    <td>requester office</td>
-                    <td>qualification type</td>
-                    <td>verified email</td>
-                    <td>authorized by email</td>
-                    <td>is approved</td>
-                    <td>is rejected</td>
-                    <td>qualification</td>
-                    <td>qualification level</td>
-                    <td>name level</td>
-                    <td>date</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer justify-content-end border-top-0">
-          <button type="button" class="nemko-btn-default nemko-btn-save text-base md-text-lg" data-bs-dismiss="modal">Ok</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
 <!-- QUALIFICATION DETAILS MODAL -->
 <div class="modal nemko-modal qualification-details-modal" id="qualificationDetailsModal" tabindex="-1" aria-labelledby="qualificationDetailsModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -355,67 +385,76 @@ export default class VerificationAndAuthorization {
       <div class="modal-body custom-scroll-view">
         <div class="w-100 float-start d-flex flex-column gap-3 nemko-modal-frm py-2">
 
-          <!-- Qualification ID — readonly -->
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">Qualification ID</label>
-              <p class="frm-readonly-val" id="qd-qual-id"></p>
+          <div class="row gy-3">
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Qualification ID</label>
+                <input type="text" class="form-control" id="qd-qual-id" readonly />
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Requested by</label>
+                <input type="text" class="form-control" id="qd-requested-by" readonly />
+              </div>
             </div>
           </div>
 
-        <!-- Requested By — readonly -->
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">Requested by</label>
-              <p class="frm-readonly-val" id="qd-requested-by"></p>
+          <div class="row gy-3">
+            <div class="col-12 col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Qualification</label>
+                <input type="text" class="form-control" id="qd-qualification" readonly />
+              </div>
+            </div>
+            <div class="col-12 col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Qualification Type</label>
+                <input type="text" class="form-control" id="qd-qualification-type" readonly />
+              </div>
+            </div>
+            <div class="col-12 col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex frm-readonly-row flex-column form-control-col">
+                <label class="form-label font-semibold">Status</label>
+                <input type="text" class="form-control" id="qd-status" readonly />
+              </div>
             </div>
           </div>
 
-          <!-- Qualification — readonly -->
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">Qualification</label>
-              <p class="frm-readonly-val" id="qd-qualification"></p>
+          <div class="row gy-3">
+            <div class="col-12 col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Qualification level</label>
+                <input type="text" class="form-control" id="qd-qual-level" readonly />
+              </div>
             </div>
-          </div>
-
-          <!-- Qualification Level / Conformity Statement / Report Approver — readonly -->
-          <div class="w-100 float-start d-flex flex-wrap gap-3 frm-readonly-row justify-content-between py-1">
-            <div class="d-flex flex-column form-control-col min-w-0">
-              <label class="form-label font-semibold">Qualification level</label>
-              <p class="frm-readonly-val" id="qd-qual-level"></p>
+            <div class="col-12 col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Conformity statement</label>
+                <input type="text" class="form-control" id="qd-conformity" readonly />
+              </div>
             </div>
-            <div class="d-flex flex-column form-control-col min-w-0">
-              <label class="form-label font-semibold">Conformity statement</label>
-              <p class="frm-readonly-val" id="qd-conformity"></p>
-            </div>
-            <div class="d-flex flex-column form-control-col min-w-0">
-              <label class="form-label font-semibold">Report approver</label>
-              <p class="frm-readonly-val" id="qd-report-approver"></p>
-            </div>
-          </div>
-
-          <!-- Updated Qualification Level — readonly -->
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">Updated Qualification Level</label>
-              <p class="frm-readonly-val" id="qd-updated-level"></p>
+            <div class="col-12 col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Report approver</label>
+                <input type="text" class="form-control" id="qd-report-approver" readonly />
+              </div>
             </div>
           </div>
 
           <!-- Remarks — readonly -->
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
+          <div class="w-100 float-start d-flex  py-1">
             <div class="w-100 float-start d-flex flex-column form-control-col">
               <label class="form-label font-semibold">Remarks</label>
-              <p class="frm-readonly-val" id="qd-remarks"></p>
+              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="qd-remarks"></p>
             </div>
           </div>
 
           <!-- Limitations (Requester) — readonly -->
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
+          <div class="w-100 float-start d-flex  py-1">
             <div class="w-100 float-start d-flex flex-column form-control-col">
               <label class="form-label font-semibold">Limitations (Requester)</label>
-              <p class="frm-readonly-val" id="qd-limitations-requester"></p>
+              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="qd-limitations-requester"></p>
             </div>
           </div>
 
@@ -425,33 +464,144 @@ export default class VerificationAndAuthorization {
             <textarea class="form-control h-px-98 custom-scroll-view" id="qd-limitations-textarea"></textarea>
           </div>
 
-          <!-- Target Achieve Date — editable -->
-          <div class="col-12 col-sm-6 col-md-6">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="targetAchieveDate" class="form-label font-semibold">target achieve date</label>
-              <div class="d-flex align-items-center position-relative" id="targetAchieveDateWrapper">
-                <input type="text" class="form-control" id="targetAchieveDate" placeholder="YYYY-MM-DD" readonly style="cursor:pointer;" />
-                <div id="nemko-cal-popup" style="display:none;position:absolute;top:100%;left:0;z-index:9999;background:#fff;border:1px solid #ccc;border-radius:6px;padding:10px;min-width:280px;box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
+          <div class="row gy-3">
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label for="targetAchieveDate" class="form-label font-semibold">target achieve date</label>
+                <div class="d-flex align-items-center gap-2 date-picker-input-row position-relative" id="targetAchieveDateWrapper">
+                  <input type="text" class="form-control flex-grow-1 date-picker-input" id="targetAchieveDate" placeholder="YYYY-MM-DD" readonly style="cursor:pointer;" />
+                  <button type="button" class="date-picker-icon" id="targetAchieveDateIcon">
+                    <svg xmlns="https://protect.checkpoint.com/v2/r02/___http://www.w3.org/7555dxAl&vzty___.YzJlOm5lbWtvZ3JvdXA6YzpvOmVjYjg0NGE4YzUyMDgyM2JmNDFkNTkyNjY2YjIzOGZkOjc6Zjk0MTpmYzZiODhkYTE0MDk1MzliZWZjMDc3MGMzYmZiYWM3YjRmMmI1NDI3NzZmN2VhODZkZmE5OGZiNThmZDU0NTYwOnQ6VDpU; width="16" height="16" fill="currentColor" class="bi bi-calendar2-fill" viewBox="0 0 16 16">
+                      <path d="M4 .5a.5.5 0 0 0-1 0V1H2a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-1V.5a.5.5 0 0 0-1 0V1H4z"/>
+                    </svg>
+                  </button>
+                  <div id="nemko-cal-popup" style="display:none;position:absolute;top:100%;left:0;z-index:9999;background:#fff;border:1px solid #ccc;border-radius:6px;padding:10px;min-width:280px;box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Authorizer</label>
+                <div class="d-flex align-items-center gap-2">
+                  <input type="text" class="form-control flex-grow-1" id="qd-authorizer" placeholder="Select authorizer..." readonly />
+                  <button type="button" class="frm-right-arrow-btn" id="qd-authorizer-pick-btn"></button>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Authorizer — editable input + arrow pick button -->
-          <div class="w-100 float-start d-flex flex-column form-control-col">
-            <label class="form-label font-semibold">Authorizer</label>
-            <div class="d-flex align-items-center gap-2">
-              <input type="text" class="form-control flex-grow-1" id="qd-authorizer" placeholder="Select authorizer..." readonly />
-              <button type="button" class="frm-right-arrow-btn" id="qd-authorizer-pick-btn"></button>
+
+
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button type="button" id="qd-verify-btn" class="nemko-btn-default nemko-btn-save text-base md-text-lg">Verify</button>
+        <button type="button" id="qd-reject-btn" class="nemko-btn-default nemko-btn-reject text-base md-text-lg">Reject</button>
+        <button type="button" id="qd-withdraw-btn" class="btn btn-danger nemko-btn-default nemko-btn-withdraw text-base md-text-lg" style="display:none;">Withdraw</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- VERIFIED DETAILS MODAL (READONLY) — "Verified by me" tab -->
+<div class="modal nemko-modal qualification-details-modal" id="verifiedDetailsModal" tabindex="-1" aria-labelledby="verifiedDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title fhd-text-xl-combo">Qualification Details</h5>
+        <button type="button" class="btn-close" id="vd-close-btn" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body custom-scroll-view">
+        <div class="w-100 float-start d-flex flex-column gap-3 nemko-modal-frm py-2">
+
+          <div class="w-100 float-start d-flex frm-readonly-row py-1">
+            <div class="w-100 float-start d-flex flex-column form-control-col">
+              <label class="form-label font-semibold">Qualification ID</label>
+              <p class="frm-readonly-val" id="vd-qual-id"></p>
+            </div>
+          </div>
+
+          <div class="w-100 float-start d-flex frm-readonly-row py-1">
+            <div class="w-100 float-start d-flex flex-column form-control-col">
+              <label class="form-label font-semibold">Requested by</label>
+              <p class="frm-readonly-val" id="vd-requested-by"></p>
+            </div>
+          </div>
+
+          <div class="w-100 float-start d-flex frm-readonly-row py-1">
+            <div class="w-100 float-start d-flex flex-column form-control-col">
+              <label class="form-label font-semibold">Qualification</label>
+              <p class="frm-readonly-val" id="vd-qualification"></p>
+            </div>
+          </div>
+
+          <div class="w-100 float-start d-flex flex-wrap gap-3 frm-readonly-row justify-content-between py-1">
+            <div class="d-flex flex-column form-control-col min-w-0">
+              <label class="form-label font-semibold">Qualification level</label>
+              <p class="frm-readonly-val" id="vd-qual-level"></p>
+            </div>
+            <div class="d-flex flex-column form-control-col min-w-0">
+              <label class="form-label font-semibold">Conformity statement</label>
+              <p class="frm-readonly-val" id="vd-conformity"></p>
+            </div>
+            <div class="d-flex flex-column form-control-col min-w-0">
+              <label class="form-label font-semibold">Report approver</label>
+              <p class="frm-readonly-val" id="vd-report-approver"></p>
+            </div>
+          </div>
+
+          <div class="w-100 float-start d-flex py-1">
+            <div class="w-100 float-start d-flex flex-column form-control-col">
+              <label class="form-label font-semibold">Remarks</label>
+              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="vd-remarks"></p>
+            </div>
+          </div>
+
+          <div class="w-100 float-start d-flex py-1">
+            <div class="w-100 float-start d-flex flex-column form-control-col">
+              <label class="form-label font-semibold">Limitations (Requester)</label>
+              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="vd-limitations-requester"></p>
+            </div>
+          </div>
+
+          <div class="w-100 float-start d-flex py-1">
+            <div class="w-100 float-start d-flex flex-column form-control-col">
+              <label class="form-label font-semibold">Limitations (Verifier)</label>
+              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="vd-limitations-verifier"></p>
+            </div>
+          </div>
+
+          <div class="w-100 float-start d-flex frm-readonly-row py-1">
+            <div class="w-100 float-start d-flex flex-column form-control-col">
+              <label class="form-label font-semibold">Target achieve date</label>
+              <p class="frm-readonly-val" id="vd-target-date"></p>
+            </div>
+          </div>
+
+          <div class="w-100 float-start d-flex frm-readonly-row py-1">
+            <div class="w-100 float-start d-flex flex-column form-control-col">
+              <label class="form-label font-semibold">Authorizer</label>
+              <p class="frm-readonly-val" id="vd-authorizer"></p>
+            </div>
+          </div>
+
+          <div class="w-100 float-start d-flex frm-readonly-row py-1">
+            <div class="w-100 float-start d-flex flex-column form-control-col">
+              <label class="form-label font-semibold">Verified by</label>
+              <p class="frm-readonly-val" id="vd-verified-by"></p>
             </div>
           </div>
 
         </div>
       </div>
 
-      <!-- Footer — same button classes as existing modal -->
       <div class="modal-footer">
-        <button type="button" id="qd-verify-btn" class="nemko-btn-default nemko-btn-save text-base md-text-lg">Verify</button>
-        <button type="button" id="qd-reject-btn" class="nemko-btn-default nemko-btn-reject text-base md-text-lg">Reject</button>
+        <button type="button" id="vd-back-btn" class="nemko-btn-default nemko-btn-secondary text-base md-text-lg" data-dismiss-modal="verifiedDetailsModal">Back</button>
       </div>
 
     </div>
@@ -505,150 +655,113 @@ export default class VerificationAndAuthorization {
       <div class="modal-body custom-scroll-view">
         <div class="w-100 float-start d-flex flex-column gap-3 nemko-modal-frm py-2">
           <div class="row gy-3">
-            <div class="col-12 col-sm-6 col-md-7">
+            <div class="col-12 col-sm-4 col-md-4">
               <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label for="reqEmail" class="form-label font-semibold">Req email</label>
-                <input type="email" class="form-control" id="reqEmail" />
+                <label for="auth-req-email" class="form-label font-semibold">Requester email</label>
+                <input type="email" class="form-control" id="auth-req-email" readonly />
               </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-5">
+            <div class="col-12 col-sm-4 col-md-4">
               <div class="w-100 float-start d-flex flex-column form-control-col">
-                <div class="form-label-cr font-semibold">approval is rejected</div>
-                <div class="d-flex align-items-center gap-3 mt-1">
-                  <label class="nemko-frm-radio d-flex align-items-center gap-1">
-                    <input class="form-check-input" type="radio" name="radioDefault3">
-                    <span class="radio-icon"></span>
-                    <p class="form-check-label">Yes</p>
-                  </label>
-                  <label class="nemko-frm-radio d-flex align-items-center gap-1">
-                    <input class="form-check-input" type="radio" name="radioDefault3" checked>
-                    <span class="radio-icon active"></span>
-                    <p class="form-check-label">No</p>
-                  </label>
-                </div>
+                <label for="auth-ver-email" class="form-label font-semibold">Verifier email</label>
+                <input type="email" class="form-control" id="auth-ver-email" readonly/>
+              </div>
+            </div>
+            <div class="col-12 col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label for="auth-auth-email" class="form-label font-semibold">Authorizer email</label>
+                <input type="email" class="form-control" id="auth-auth-email" readonly/>
               </div>
             </div>
           </div>
           <div class="row gy-3">
-            <div class="col-12 col-sm-6 col-md-7">
+            <div class="col-12 col-sm-6 col-md-6">
               <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label for="verEmail" class="form-label font-semibold">Ver email</label>
-                <input type="email" class="form-control" id="verEmail" />
+                <label class="form-label font-semibold">Qualification ID</label>
+                <input type="text" class="form-control" id="auth-qual-id" readonly />
               </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-5">
+            <div class="col-12 col-sm-6 col-md-6">
               <div class="w-100 float-start d-flex flex-column form-control-col">
-                <div class="form-label-cr font-semibold">authorization is rejected</div>
-                <div class="d-flex align-items-center gap-3 mt-1">
-                  <label class="nemko-frm-radio d-flex align-items-center gap-1">
-                    <input class="form-check-input" type="radio" name="radioDefault4">
-                    <span class="radio-icon"></span>
-                    <p class="form-check-label">Yes</p>
-                  </label>
-                  <label class="nemko-frm-radio d-flex align-items-center gap-1">
-                    <input class="form-check-input" type="radio" name="radioDefault4" checked>
-                    <span class="radio-icon active"></span>
-                    <p class="form-check-label">No</p>
-                  </label>
-                </div>
+                <label class="form-label font-semibold">Requested by</label>
+                <input type="text" class="form-control" id="auth-requested-by" readonly />
               </div>
             </div>
           </div>
+
           <div class="row gy-3">
-            <div class="col-12 col-sm-6 col-md-7">
+            <div class="col-12 col-sm-4 col-md-4">
               <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label for="authEmail" class="form-label font-semibold">Auth email</label>
-                <input type="email" class="form-control" id="authEmail" />
+                <label class="form-label font-semibold">Qualification</label>
+                <input type="text" class="form-control" id="auth-qualification" readonly />
               </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-5">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-
-              <label for="approvalDate" class="form-label font-semibold">
-                approval date
-              </label>
-
-              <div
-                class="d-flex align-items-center gap-2 date-picker-input-row position-relative"
-                id="approvalDateWrapper">
-
-                <input
-                  type="text"
-                  readonly
-                  class="form-control flex-grow-1 date-picker-input"
-                  id="approvalDate" />
-
-                <button
-                  type="button"
-                  class="date-picker-icon"
-                  id="approvalDateIcon">
-
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"  fill="currentColor" class="bi bi-calendar2-fill"
-                      viewBox="0 0 16 16">
-                    <path d="M4 .5a.5.5 0 0 0-1 0V1H2a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-1V.5a.5.5 0 0 0-1 0V1H4z"/>
-                  </svg>
-                </button>
-
-                <div id="approval-cal-popup" class="position-absolute bg-white border rounded p-3 shadow" hidden></div>
+            <div class="col-12 col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Qualification Type</label>
+                <input type="text" class="form-control" id="auth-qualification-type" readonly />
               </div>
+            </div>
+            <div class="col-12 col-sm-4 col-md-4">
+            <div class="w-100 float-start d-flex  frm-readonly-row flex-column form-control-col">
+              <label class="form-label font-semibold">Status</label>
+              <input type="text" class="form-control" id="auth-status" readonly />
+            </div>
+          </div>
+          </div>
 
+          <div class="row gy-3">
+            <div class="col-12 col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Qualification level</label>
+                <input type="text" class="form-control" id="auth-qual-level" readonly />
+              </div>
+            </div>
+            <div class="col-12 col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Conformity statement</label>
+                <input type="text" class="form-control" id="auth-conformity" readonly />
+              </div>
+            </div>
+            <div class="col-12 col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Report approver</label>
+                <input type="text" class="form-control" id="auth-report-approver" readonly />
+              </div>
             </div>
           </div>
-          </div>
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">qualification ID</label>
-              <p class="frm-readonly-val" id="auth-qual-id">—</p>
-            </div>
-          </div>
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">requested by</label>
-              <p class="frm-readonly-val" id="auth-requested-by">—</p>
-            </div>
-          </div>
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">qualification</label>
-              <p class="frm-readonly-val" id="auth-qualification">—</p>
-            </div>
-          </div>
-          <div class="w-100 float-start d-flex flex-wrap gap-3 frm-readonly-row justify-content-between py-1">
-            <div class="d-flex flex-column form-control-col min-w-0">
-              <label class="form-label font-semibold">qualification level</label>
-              <p class="frm-readonly-val" id="auth-qual-level">—</p>
-            </div>
-            <div class="d-flex flex-column form-control-col min-w-0">
-              <label class="form-label font-semibold">conformity statement</label>
-              <p class="frm-readonly-val" id="auth-conformity">—</p>
-            </div>
-            <div class="d-flex flex-column form-control-col min-w-0">
-              <label class="form-label font-semibold">report approver</label>
-              <p class="frm-readonly-val" id="auth-report-approver">—</p>
-            </div>
-          </div>
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
+
+          
+
+          <div class="w-100 float-start d-flex py-1">
             <div class="w-100 float-start d-flex flex-column form-control-col">
               <label class="form-label font-semibold">remarks</label>
-              <p class="frm-readonly-val" id="auth-remarks">—</p>
+              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="auth-remarks">—</p>
             </div>
           </div>
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
+          <div class="w-100 float-start d-flex py-1">
+            <div class="w-100 float-start d-flex flex-column form-control-col">
+              <label class="form-label font-semibold">limitations (requester)</label>
+              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="auth-limitations-requester">—</p>
+            </div>
+          </div>
+          <div class="w-100 float-start d-flex py-1">
             <div class="w-100 float-start d-flex flex-column form-control-col">
               <label class="form-label font-semibold">limitations (verifier)</label>
-              <p class="frm-readonly-val" id="auth-limitations-verifier">—</p>
+              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="auth-limitations-verifier">—</p>
             </div>
           </div>
           <div class="w-100 float-start d-flex flex-column form-control-col">
             <label for="limitationsTxtarea" class="form-label font-semibold">limitations</label>
             <textarea class="form-control h-px-98 custom-scroll-view" id="limitationsTxtarea"></textarea>
           </div>
+
           <div class="w-100 float-start d-flex frm-readonly-row py-1">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">Approval date</label>
-              <p class="frm-readonly-val" id="auth-approval-date-readonly">—</p>
-            </div>
-          </div>
+            <!--     <div class="w-100 float-start d-flex flex-column form-control-col"> -->
+              <!--     <label class="form-label font-semibold">Approval date</label> -->
+              <!--     <p class="frm-readonly-val" id="auth-approval-date-readonly">—</p> -->
+            <!--     </div>-->
+        </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -658,7 +771,27 @@ export default class VerificationAndAuthorization {
     </div>
   </div>
 </div>
+<!-- REJECT REASON MODAL -->
+<div class="modal nemko-modal qualification-details-modal" id="rejectReasonModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fhd-text-xl-combo">Add Rejection Reason</h5>
+        <button type="button" class="btn-close" id="reject-reason-close-btn" aria-label="Close"></button>
+      </div>
+      <div class="modal-body custom-scroll-view">
+        <div class="w-100 float-start d-flex flex-column form-control-col">
+          <textarea class="form-control h-px-98 custom-scroll-view" id="reject-reason-textarea" placeholder="Please provide a reason for rejecting this request!"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="nemko-btn-default nemko-btn-reject text-base md-text-lg" id="reject-reason-confirm-btn">Reject</button>
+      </div>
+    </div>
+  </div>
+</div>
 <!-- WITHDRAWN DETAILS MODAL -->
+
 <div class="modal nemko-modal qualification-details-modal" id="withdrawDetailsModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
@@ -668,142 +801,130 @@ export default class VerificationAndAuthorization {
       </div>
       <div class="modal-body custom-scroll-view">
         <div class="w-100 float-start d-flex flex-column gap-3 nemko-modal-frm py-2">
-          <div class="row gy-3">
-            <div class="col-12 col-sm-6 col-md-7">
+           <div class="row gy-3">
+            <div class="col-12 col-sm-4 col-md-4">
               <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label for="reqEmail" class="form-label font-semibold">Req email</label>
-                <input type="email" class="form-control" id="reqEmail" />
+                <label for="wd-req-email" class="form-label font-semibold">Requester email</label>
+                <input type="email" class="form-control" id="wd-req-email" />
               </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-5">
+            <div class="col-12 col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column  form-control-col">
+                <label for="wd-ver-email" class="form-label font-semibold">Ver email</label>
+                <input type="email" class="form-control" id="wd-ver-email" />
+              </div>
+            </div>
+            <div class="col-12 col-sm-4 col-md-4">
               <div class="w-100 float-start d-flex flex-column form-control-col">
-                <div class="form-label-cr font-semibold">approval is rejected</div>
-                <div class="d-flex align-items-center gap-3 mt-1">
-                  <label class="nemko-frm-radio d-flex align-items-center gap-1">
-                    <input class="form-check-input" type="radio" name="radioDefault3">
-                    <span class="radio-icon"></span>
-                    <p class="form-check-label">Yes</p>
-                  </label>
-                  <label class="nemko-frm-radio d-flex align-items-center gap-1">
-                    <input class="form-check-input" type="radio" name="radioDefault3" checked>
-                    <span class="radio-icon active"></span>
-                    <p class="form-check-label">No</p>
-                  </label>
-                </div>
+                <label for="wd-auth-email" class="form-label font-semibold">Authorizer email</label>
+                <input type="email" class="form-control" id="wd-auth-email" />
               </div>
             </div>
           </div>
-          <div class="row gy-3">
-            <div class="col-12 col-sm-6 col-md-7">
-              <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label for="verEmail" class="form-label font-semibold">Ver email</label>
-                <input type="email" class="form-control" id="verEmail" />
-              </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-5">
-              <div class="w-100 float-start d-flex flex-column form-control-col">
-                <div class="form-label-cr font-semibold">authorization is rejected</div>
-                <div class="d-flex align-items-center gap-3 mt-1">
-                  <label class="nemko-frm-radio d-flex align-items-center gap-1">
-                    <input class="form-check-input" type="radio" name="radioDefault4">
-                    <span class="radio-icon"></span>
-                    <p class="form-check-label">Yes</p>
-                  </label>
-                  <label class="nemko-frm-radio d-flex align-items-center gap-1">
-                    <input class="form-check-input" type="radio" name="radioDefault4" checked>
-                    <span class="radio-icon active"></span>
-                    <p class="form-check-label">No</p>
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="row gy-3">
-            <div class="col-12 col-sm-6 col-md-7">
-              <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label for="authEmail" class="form-label font-semibold">Auth email</label>
-                <input type="email" class="form-control" id="authEmail" />
-              </div>
-            </div>
           
-          </div>
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">qualification ID</label>
-              <p class="frm-readonly-val" id="auth-qual-id">—</p>
+          <div class="row gy-3">
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Qualification ID</label>
+                <input type="text" class="form-control" id="wd-qual-id" readonly />
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Requested by</label>
+                <input type="text" class="form-control" id="wd-requested-by" readonly />
+              </div>
             </div>
           </div>
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">requested by</label>
-              <p class="frm-readonly-val" id="wd-requested-by">—</p>
+
+          <div class="row gy-3">
+            <div class="col-12 col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Qualification</label>
+                <input type="text" class="form-control" id="wd-qualification" readonly />
+              </div>
+            </div>
+            <div class="col-12 col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Qualification Type</label>
+                <input type="text" class="form-control" id="wd-qualification-type" readonly />
+              </div>
+            </div>
+            
+          <div class="col-12 col-sm-4 col-md-4">
+            <div class="w-100 float-start d-flex frm-readonly-row flex-column form-control-col">
+              <label class="form-label font-semibold">Status</label>
+              <input type="text" class="form-control" id="wd-status" readonly />
             </div>
           </div>
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">qualification</label>
-              <p class="frm-readonly-val" id="wd-qualification">—</p>
+          </div>
+
+          <div class="row gy-3">
+            <div class="col-12 col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Qualification level</label>
+                <input type="text" class="form-control" id="wd-level" readonly />
+              </div>
+            </div>
+            <div class="col-12 col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Conformity statement</label>
+                <input type="text" class="form-control" id="wd-conformity" readonly />
+              </div>
+            </div>
+            <div class="col-12 col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Report approver</label>
+                <input type="text" class="form-control" id="wd-report-approver" readonly />
+              </div>
             </div>
           </div>
-          <div class="w-100 float-start d-flex flex-wrap gap-3 frm-readonly-row justify-content-between py-1">
-            <div class="d-flex flex-column form-control-col min-w-0">
-              <label class="form-label font-semibold">qualification level</label>
-              <p class="frm-readonly-val" id="wd-level">—</p>
-            </div>
-            <div class="d-flex flex-column form-control-col min-w-0">
-              <label class="form-label font-semibold">conformity statement</label>
-              <p class="frm-readonly-val" id="wd-conformity">—</p>
-            </div>
-            <div class="d-flex flex-column form-control-col min-w-0">
-              <label class="form-label font-semibold">report approver</label>
-              <p class="frm-readonly-val" id="wd-report-approver">—</p>
-            </div>
-          </div>
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">Updated Qualification Level</label>
-              <p class="frm-readonly-val" id="wd-updated-level">—</p>
-            </div>
-          </div>
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
+
+
+          <div class="w-100 float-start d-flex py-1">
             <div class="w-100 float-start d-flex flex-column form-control-col">
               <label class="form-label font-semibold">remarks</label>
-              <p class="frm-readonly-val" id="wd-remarks">—</p>
+              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="wd-remarks">—</p>
             </div>
           </div>
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
+          <div class="w-100 float-start d-flex py-1">
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">updated remarks</label>
-              <p class="frm-readonly-val" id="wd-updated-remarks">—</p>
+              <label class="form-label font-semibold">limitations (requester)</label>
+              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="wd-limitations">—</p>
             </div>
           </div>
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
+          <div class="w-100 float-start d-flex py-1">
             <div class="w-100 float-start d-flex flex-column form-control-col">
               <label class="form-label font-semibold">limitations (verifier)</label>
-              <p class="frm-readonly-val" id="wd-limitations-verifier">—</p>
+              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="wd-limitations-verifier">—</p>
             </div>
           </div>
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
+          <div class="w-100 float-start d-flex py-1">
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">limitations</label>
-              <p class="frm-readonly-val" id="wd-limitations">—</p>
+              <label class="form-label font-semibold">limitations (authorizer)</label>
+              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="wd-limitations-authorizer">—</p>
             </div>
           </div>
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">Qualified date</label>
-              <p class="frm-readonly-val" id="wd-qualified-date-readonly">—</p>
+
+          <div class="row gy-3">
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Qualified date</label>
+                <input type="text" class="form-control" id="wd-qualified-date-readonly" readonly />
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Withdrawn date</label>
+                <input type="text" class="form-control" id="wd-withdrawn-date-readonly" readonly />
+              </div>
             </div>
           </div>
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">Withdrawn date</label>
-              <p class="frm-readonly-val" id="wd-withdrawn-date-readonly">—</p>
-            </div>
-          </div>
+
         </div>
       </div>
       <div class="modal-footer">
+        <button type="button" id="wd-withdraw-btn" class="btn btn-danger nemko-btn-default nemko-btn-withdraw text-base md-text-lg" style="display:none;">Withdraw</button>
         <button type="button" class="nemko-btn-default nemko-btn-save text-base md-text-lg withdraw-back-btn" >Back</button>
       </div>
     </div>

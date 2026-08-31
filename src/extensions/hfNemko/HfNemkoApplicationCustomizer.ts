@@ -9,8 +9,10 @@ import * as strings from 'HfNemkoApplicationCustomizerStrings';
 
 import HfNemkoHeader from './Header';
 import HfNemkoFooter from './Footer';
-import HfNemkoChatbot from './Chatbot';
+// import HfNemkoChatbot from './Chatbot';
+import NemkoAdminCheck from '../../NemkoAdminCheck';
 import { SPComponentLoader } from '@microsoft/sp-loader';
+import { SPHttpClient } from '@microsoft/sp-http';
 
 const LOG_SOURCE: string = 'HfNemkoApplicationCustomizer';
 
@@ -28,6 +30,13 @@ export default class HfNemkoApplicationCustomizer
 private _sidebarObserver: MutationObserver | null = null; // add as class property
 
 public async onInit(): Promise<void> {
+
+   const currentPage = window.location.pathname.toLowerCase();
+ 
+  if (currentPage.indexOf('/sitepages/copilot.aspx') !== -1) {
+    return Promise.resolve();
+  }
+
   Log.info(LOG_SOURCE, `Initialized ${strings.Title}`);
   const basePath = this.context.pageContext.web.serverRelativeUrl + "/SiteAssets/resources";
 
@@ -68,7 +77,8 @@ public async onInit(): Promise<void> {
     await SPComponentLoader.loadScript(basePath + "/js/home.js");
   }
 
-private _headerInitialized: boolean = false; // add this as a class property
+private _headerInitialized: boolean = false;
+private _footerLinks: Array<{ Title: string; RedirectUrl: string }> = [];
 
 private _renderPlaceHolders(): void {
 
@@ -86,10 +96,12 @@ private _renderPlaceHolders(): void {
           /__KEY_RESOURCE_URL__/g,
           this.context.pageContext.web.absoluteUrl + "/SiteAssets"
         )
-        .replace(/__KEY_HOME_URL__/g, this.context.pageContext.web.absoluteUrl + "/SitePages/HomePage.aspx")
-        .replace("__KEY_ADMIN_URL__", this.context.pageContext.web.absoluteUrl + "/SitePages/AdminPage.aspx");
+        .replace(/__KEY_HOME_URL__/g, this.context.pageContext.web.absoluteUrl + "/SitePages/HomePage.aspx?env=WebViewList")
+        .replace("__KEY_ADMIN_URL__", this.context.pageContext.web.absoluteUrl + "/SitePages/AdminPage.aspx?env=WebViewList");
 
       document.body.style.paddingTop = "80px";
+
+      this._loadHeaderUserData().catch(() => { /* silent fallback */ });
 
       // Wait for DOM to settle before attaching
       setTimeout(() => {
@@ -104,28 +116,33 @@ private _renderPlaceHolders(): void {
   this._renderFooter();
 
   /** CHATBOT */
-if (!document.getElementById('nemko-chatbot')) {
-  const div = document.createElement('div');
-  div.innerHTML =
-    HfNemkoChatbot.chatbotHTML.replace(
-      /__KEY_RESOURCE_URL__/g,
-      this.context.pageContext.web.absoluteUrl + "/SiteAssets"
-    );
-  document.body.appendChild(div);
+// if (!document.getElementById('nemko-chatbot')) {
+//   const div = document.createElement('div');
+//   div.innerHTML =
+//     HfNemkoChatbot.chatbotHTML
+//     .replace(
+//       /__KEY_RESOURCE_URL__/g,
+//       this.context.pageContext.web.absoluteUrl + "/SiteAssets"
+//     )
+//     .replace(
+//         /__KEY_COPILOT_URL__/g,
+//         this.context.pageContext.web.absoluteUrl + "/SitePages/Copilot.aspx"
+//       );
+//   document.body.appendChild(div);
 
-  // ── Homepage: open chatbot by default, hide FAB ──
-  const isHomePage = window.location.pathname.toLowerCase()
-  .indexOf('/sitepages/homepage.aspx') !== -1;
-  if (isHomePage) {
-    const chat = div.querySelector('#nemko-chatbot');
-    const fab = div.querySelector('#chatFab');
-    chat?.classList.add('open');
-    fab?.classList.remove('d-flex');
-    fab?.classList.add('d-none');
-  }
+//   // ── Homepage: open chatbot by default, hide FAB ──
+//   const isHomePage = window.location.pathname.toLowerCase()
+//   .indexOf('/sitepages/homepage.aspx') !== -1;
+//   if (isHomePage) {
+//     const chat = div.querySelector('#nemko-chatbot');
+//     const fab = div.querySelector('#chatFab');
+//     chat?.classList.add('open');
+//     fab?.classList.remove('d-flex');
+//     fab?.classList.add('d-none');
+//   }
 
-  this._attachChatEvents();
-}
+//   this._attachChatEvents();
+// }
 }
 
 private _initNavbarToggler(): void {
@@ -178,6 +195,8 @@ private _initNavbarToggler(): void {
           this.context.pageContext.web.absoluteUrl + "/SiteAssets"
         );
 
+      this._loadFooterLinks().catch(() => { /* silent fallback */ });
+
       // Move footer into the SP canvas so it flows naturally
       // with page content instead of being stuck in the viewport
       const spCanvasElement = document.querySelector('.SPCanvas div');
@@ -192,37 +211,37 @@ private _initNavbarToggler(): void {
     }
   }
 
-  private _attachChatEvents(): void {
+  // private _attachChatEvents(): void {
 
-    const chat = document.getElementById('nemko-chatbot');
-    const toggle = document.getElementById('chatFab');
-    const close = document.getElementById('chat-close');
+  //   const chat = document.getElementById('nemko-chatbot');
+  //   const toggle = document.getElementById('chatFab');
+  //   const close = document.getElementById('chat-close');
 
-    if (!chat) return;
+  //   if (!chat) return;
 
-    toggle?.addEventListener('click', () => {
-      chat.classList.toggle('open');
-      toggle.classList.toggle('d-none');
-    });
+  //   toggle?.addEventListener('click', () => {
+  //     chat.classList.toggle('open');
+  //     toggle.classList.toggle('d-none');
+  //   });
 
-    close?.addEventListener('click', () => {
-      chat.classList.remove('open');
-      toggle?.classList.remove('d-none');
-    });
+  //   close?.addEventListener('click', () => {
+  //     chat.classList.remove('open');
+  //     toggle?.classList.remove('d-none');
+  //   });
 
-    document.querySelectorAll('.nm-suggestion-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const input = document.getElementById('chatInput') as HTMLTextAreaElement;
-        const counter = document.getElementById('charCount');
+  //   document.querySelectorAll('.nm-suggestion-btn').forEach(btn => {
+  //     btn.addEventListener('click', () => {
+  //       const input = document.getElementById('chatInput') as HTMLTextAreaElement;
+  //       const counter = document.getElementById('charCount');
 
-        if (input && counter) {
-          input.value = (btn as HTMLElement).innerText.trim();
-          counter.innerText = `${input.value.length}/2000`;
-          input.focus();
-        }
-      });
-    });
-  }
+  //       if (input && counter) {
+  //         input.value = (btn as HTMLElement).innerText.trim();
+  //         counter.innerText = `${input.value.length}/2000`;
+  //         input.focus();
+  //       }
+  //     });
+  //   });
+  // }
 
   private _detectSidebar(): void {
   // Disconnect any previous observer before starting a new one
@@ -269,26 +288,35 @@ private _applySidebarMode(hasSidebar: boolean): void {
     header.classList.toggle('has-nemko-sidebar', hasSidebar);
   }
 
-  if (navbarMobTop) {
-    
-    const existing = navbarMobTop.querySelector('.navbar-brand, .btn-hamburger');
-    existing?.remove();
+  if (!navbarMobTop) return;
 
-    const baseUrl = this.context.pageContext.web.absoluteUrl;
-    const tmp = document.createElement('div');
+  const baseUrl = this.context.pageContext.web.absoluteUrl;
+  const tmp = document.createElement('div');
 
-    if (hasSidebar) {
-      tmp.innerHTML = HfNemkoHeader.sidebarModeLeft;
-    } else {
-      tmp.innerHTML = HfNemkoHeader.homeModeLeft
-        .replace('__KEY_HOME_URL__', baseUrl + '/SitePages/HomePage.aspx')
-        .replace('__KEY_RESOURCE_URL__', baseUrl + '/SiteAssets');
+  if (hasSidebar) {
+    // If the hamburger button already exists, do not replace it — any direct
+    // click listeners attached by external JS (common.js) would be lost on
+    // element recreation. Only remove the brand if it's there in its place.
+    if (navbarMobTop.querySelector('.btn-hamburger')) {
+      navbarMobTop.querySelector('.navbar-brand')?.remove();
+      return;
     }
-
-    // Prepend as first child, matching your static HTML structure
+    navbarMobTop.querySelector('.navbar-brand')?.remove();
+    tmp.innerHTML = HfNemkoHeader.sidebarModeLeft;
     navbarMobTop.insertBefore(tmp.firstElementChild!, navbarMobTop.firstChild);
 
     
+  } else {
+    // Guard: if brand already present, just remove a stray hamburger if any.
+    if (navbarMobTop.querySelector('.navbar-brand')) {
+      navbarMobTop.querySelector('.btn-hamburger')?.remove();
+      return;
+    }
+    navbarMobTop.querySelector('.btn-hamburger')?.remove();
+    tmp.innerHTML = HfNemkoHeader.homeModeLeft
+      .replace('__KEY_HOME_URL__', baseUrl + '/SitePages/HomePage.aspx?env=WebViewList')
+      .replace('__KEY_RESOURCE_URL__', baseUrl + '/SiteAssets');
+    navbarMobTop.insertBefore(tmp.firstElementChild!, navbarMobTop.firstChild);
   }
 }
 
@@ -303,6 +331,74 @@ private _applySidebarMode(hasSidebar: boolean): void {
   }
   super.onDispose();
 }
+  private async _loadHeaderUserData(): Promise<void> {
+    const container = this._topPlaceholder?.domElement;
+    if (!container) return;
+
+    try {
+      const graphClient = await this.context.msGraphClientFactory.getClient('3');
+      const user = await graphClient.api('/me').select('displayName').get();
+      const nameEl = container.querySelector<HTMLElement>('#nav-user-name');
+      if (nameEl) nameEl.textContent = user.displayName ?? '';
+    } catch (err) {
+      console.error('[HfNemko] Failed to load display name:', err);
+    }
+
+    try {
+      const graphClient = await this.context.msGraphClientFactory.getClient('3');
+      const photo = await graphClient.api('/me/photo/$value').get();
+      const blob = photo instanceof Blob ? photo : new Blob([photo], { type: 'image/jpeg' });
+      const blobUrl = URL.createObjectURL(blob);
+      container.querySelectorAll<HTMLImageElement>('.nav-avatar').forEach(img => {
+        img.src = blobUrl;
+      });
+    } catch {
+      // keep avatar.png fallback
+    }
+
+    try {
+      const isAdmin = await NemkoAdminCheck.isAdmin(this.context.pageContext.web.absoluteUrl);
+      const adminLi = container.querySelector<HTMLElement>('#nav-admin-li');
+      if (adminLi) adminLi.style.display = isAdmin ? '' : 'none';
+    } catch (err) {
+      console.error('[HfNemko] Failed to check Admin group:', err);
+    }
+  }
+
+  private async _loadFooterLinks(): Promise<void> {
+    if (this._footerLinks.length === 0) {
+      const listUrl = `${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('FooterUrl')/items?$select=Title,RedirectUrl&$orderby=Id`;
+      const response = await this.context.spHttpClient.get(listUrl, SPHttpClient.configurations.v1);
+      const data = await response.json();
+      this._footerLinks = data.value ?? [];
+    }
+
+    this._populateFooterLinks();
+  }
+
+  private _populateFooterLinks(): void {
+    const columns = [
+      document.getElementById('footer-col-0'),
+      document.getElementById('footer-col-1'),
+      document.getElementById('footer-col-2'),
+      document.getElementById('footer-col-3')
+    ];
+
+    columns.forEach(col => { if (col) col.innerHTML = ''; });
+
+    this._footerLinks.forEach((item, index) => {
+      const col = columns[index % 4];
+      if (!col) return;
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = item.RedirectUrl || '#';
+      a.textContent = item.Title;
+      a.target = '_blank';
+      li.appendChild(a);
+      col.appendChild(li);
+    });
+  }
+
   private _onDispose(): void {
     console.log('[HfNemko] Disposed custom placeholders');
   }
