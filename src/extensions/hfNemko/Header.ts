@@ -23,13 +23,13 @@ export default class HfNemkoHeader {
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav ms-auto me-0 my-2 my-lg-0 mt-lg-0 mt-3">
           <li class="nav-item me-lg-3">
-            <a class="nav-link fhd-text-lg-combo" href="__KEY_HOME_URL__">Home</a>
+            <a class="nav-link text-sm" href="__KEY_HOME_URL__">Home</a>
           </li>
           <li id="nav-admin-li" class="nav-item me-lg-3" style="display:none">
-            <a class="nav-link fhd-text-lg-combo" href="__KEY_ADMIN_URL__">Admin</a>
+            <a class="nav-link text-sm" href="__KEY_ADMIN_URL__">Admin</a>
           </li>
           <li class="nav-item me-lg-3">
-            <a class="nav-link fhd-text-lg-combo" href="/_layouts/15/SignOut.aspx">Signout</a>
+            <a class="nav-link text-sm" href="/_layouts/15/SignOut.aspx">Sign Out</a>
           </li>
         </ul>
         <div class="d-none d-lg-flex align-items-center gap-3">
@@ -37,7 +37,7 @@ export default class HfNemkoHeader {
             <div class="nav-avatar-wrapper border rounded-circle">
               <img class="nav-avatar" src="__KEY_RESOURCE_URL__/resources/images/avatar.png" />
             </div>
-            <p id="nav-user-name" class="text-color-6 font-medium fhd-text-lg-combo"></p>
+            <p id="nav-user-name" class="text-color-6 font-medium text-sm"></p>
           </div>
         </div>
       </div>

@@ -9,12 +9,6 @@ import AdminPage from './AdminPageUi';
 import { SPComponentLoader } from '@microsoft/sp-loader';
 import * as strings from 'WpAdminPageWebPartStrings';
 import SharedSidebar from '../../SharedSidebar';
-// Bundled at build time via webpack (run `npm install xlsx --save` first) —
-// avoids all runtime script-loading issues (CDN blocking, CSP, AMD conflicts).
-// Same library + same header-validation pattern used by WpAdvancedSearchWebPart
-// and (previously) WpVerificationAndAuthorizationWebPart, which this Import
-// Qualification tile + modal was moved over from.
-import * as XLSX from 'xlsx';
 
 export interface IWpAdminPageWebPartProps {
   description: string;
@@ -24,8 +18,8 @@ export interface IWpAdminPageWebPartProps {
 const API_BASE_URL =
   'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net';
 
-// ✅ AAD App ID — same as the AdvancedSearch / Verification & Authorization webparts
-const AAD_APP_ID = 'api://66eda48a-d5f9-4db0-a911-0d936f8ce92b';
+//  AAD App ID — same as the AdvancedSearch / Verification & Authorization webparts
+const AAD_APP_ID = 'api://a341e8d3-c8cb-4cc8-8e25-5a37386ac482';
 
 export default class WpAdminPageWebPart extends BaseClientSideWebPart<IWpAdminPageWebPartProps> {
 
@@ -35,24 +29,18 @@ private apiClient!: AadHttpClient;
 // ── Import modal state ──────────────────────────────────────────────────────
 private _pendingImportFile: File | null = null;
 
-// ── Import template column definitions (name + position, used for both the
-//    downloadable template and client-side validation of uploaded files) ────
-// Same pattern as WpAdvancedSearchWebPart.TEMPLATE_COLUMNS — there's only one
-// import type here ("qualification"), so the map has a single key.
-private readonly TEMPLATE_COLUMNS: Record<string, string[]> = {
-  qualification: [
-    'ExternalQualificationID', 'Employee Email Address', 'Qualification', 'Level',
-    'Type', 'Qualified Date', 'Verifier Email Address', 'Authorizer Email Address',
-    'Limitations', 'Remarks', 'Status', 'IsRejected', 'Withdrawn Date',
-    'Report Approver', 'Conformity Statement', 'Certification Decision'
-  ]
-};
+// ── Cache of the qualification import type's column names, populated on
+//    demand from GET /api/ImportMetadata/columns/qualification (used to
+//    render the information modal table). Same pattern as
+//    WpAdvancedSearchWebPart._importColumnsCache. ───────────────────────────
+private _importColumnsCache: Record<string, string[]> = {};
 
   public render(): void {
       const resourceUrl = `${this.siteUrl}/SiteAssets`;
       const metadataUrl = `${this.siteUrl}/SitePages/AdvancedSearch.aspx?env=WebViewList`;
       const employeeUrl = `${this.siteUrl}/SitePages/Employees.aspx?env=WebViewList`;
       const globalUrl = `${this.siteUrl}/SitePages/GlobalVerifier.aspx?env=WebViewList`;
+      const overrideRulesUrl = `${this.siteUrl}/SitePages/AdminOverride.aspx?env=WebViewList`;
 
       this.domElement.innerHTML =
         SharedSidebar.getHtml({
@@ -66,6 +54,7 @@ private readonly TEMPLATE_COLUMNS: Record<string, string[]> = {
         .replace("__KEY_MASTERDATA_URL__", metadataUrl)
         .replace("__KEY_EMPLOYEES_URL__", employeeUrl)
         .replace("__KEY_GLOBALAUTH_URL__", globalUrl)
+        .replace("__KEY_OVERRIDE_RULES_URL__", overrideRulesUrl)
         
         
       // ── Sidebar init — no timeout needed ─────────────────────────────────
@@ -118,136 +107,85 @@ protected onInit(): Promise<void> {
 
    private loadCSS(): void {
       SPComponentLoader.loadCss(`${this.siteUrl}/SiteAssets/resources/css/jquery-ui.css`);
-      SPComponentLoader.loadCss(`${this.siteUrl}/SiteAssets/resources/css/qualification-db.css`);
+      SPComponentLoader.loadCss(`${this.siteUrl}/SiteAssets/resources/css/nemko-modal.css`);
+      SPComponentLoader.loadCss(`${this.siteUrl}/SiteAssets/resources/css/qualification-db.css`)
       SPComponentLoader.loadCss(`${this.siteUrl}/SiteAssets/resources/css/admin.css`);
       // ← removed setTimeout loadHomeScripts — render() calls it directly
     }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // IMPORT QUALIFICATION — moved over from WpVerificationAndAuthorizationWebPart.
-  // Header validation uses the bundled XLSX (SheetJS) library +
-  // validateTemplateColumns() to check both column names AND their position
-  // before uploading.
+  // IMPORT QUALIFICATION — moved over from WpVerificationAndAuthorizationWebPart,
+  // now using the same ImportMetadata-driven pattern as
+  // WpAdvancedSearchWebPart (Standard / Scheme / Test Method / Employee):
+  // column names for the information modal and the downloadable template
+  // both come live from the backend. All validation (file type, column
+  // names/positions, data) is done solely by the backend — the client just
+  // uploads the raw file and surfaces whatever error/success response the
+  // API returns.
   // ══════════════════════════════════════════════════════════════════════════
 
-  /** Basic RFC4180-ish CSV line parser (handles quoted fields containing commas). */
-  private parseCsvHeaderLine(line: string): string[] {
-    const result: string[] = [];
-    let cur = '';
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (inQuotes) {
-        if (ch === '"') {
-          if (line[i + 1] === '"') { cur += '"'; i++; }
-          else { inQuotes = false; }
-        } else {
-          cur += ch;
-        }
-      } else {
-        if (ch === '"') { inQuotes = true; }
-        else if (ch === ',') { result.push(cur); cur = ''; }
-        else { cur += ch; }
-      }
-    }
-    result.push(cur);
-    return result.map(s => s.trim());
-  }
-
-  /** Reads a File as text using FileReader (broader browser support than Blob.text()). */
-  private readFileAsText(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
-      reader.onerror = () => reject(reader.error || new Error('Failed to read the file as text.'));
-      reader.readAsText(file);
-    });
-  }
-
-  /** Reads a File as an ArrayBuffer using FileReader (broader browser support than Blob.arrayBuffer()). */
-  private readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as ArrayBuffer);
-      reader.onerror = () => reject(reader.error || new Error('Failed to read the file as binary data.'));
-      reader.readAsArrayBuffer(file);
-    });
-  }
-
-  /** Reads just the header (first) row from a .csv / .xls / .xlsx file. */
-  private async readFileHeaderRow(file: File): Promise<string[]> {
-    const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-
-    if (ext === '.csv') {
-      const text = await this.readFileAsText(file);
-      const lines = text.split(/\r\n|\n|\r/);
-      let firstLine = '';
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].trim().length > 0) { firstLine = lines[i]; break; }
-      }
-      // Strip a leading UTF-8 BOM if present, same as the previous CSV path.
-      return this.parseCsvHeaderLine(firstLine.replace(/^\uFEFF/, ''));
-    }
-
-    // .xls / .xlsx — XLSX is the bundled npm module imported at the top of this file.
-    // Handles legacy binary .xls AND modern zip/deflate .xlsx, so hand-rolled
-    // zip/inflate parsing is not needed.
-    const buffer = await this.readFileAsArrayBuffer(file);
-    const workbook = XLSX.read(buffer, { type: 'array' });
-    const firstSheetName = workbook && workbook.SheetNames ? workbook.SheetNames[0] : null;
-    if (!firstSheetName) {
-      throw new Error('The file does not contain any readable sheets.');
-    }
-    const sheet = workbook.Sheets[firstSheetName];
-    const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false, defval: '' });
-    const headerRow = (rows && rows.length) ? rows[0] : [];
-    return headerRow.map((c: any) => String(c ?? '').trim());
+  /** Converts a 0-based index into a spreadsheet-style column letter (0→A, 25→Z, 26→AA, ...). */
+  private getColumnLetter(index: number): string {
+    let n = index;
+    let letter = '';
+    do {
+      letter = String.fromCharCode(65 + (n % 26)) + letter;
+      n = Math.floor(n / 26) - 1;
+    } while (n >= 0);
+    return letter;
   }
 
   /**
-   * Compares the uploaded header row against the expected template column
-   * names + positions for the given import type. Same contract as
-   * WpAdvancedSearchWebPart.validateTemplateColumns — returns null when valid,
-   * or a human-readable error message otherwise.
+   * Fetches an import type's column names from
+   * GET /api/ImportMetadata/columns/{importType}, caching the result per
+   * importType so re-opening the information modal doesn't re-fetch.
    */
-  private validateTemplateColumns(headerRow: string[], importType: string): string | null {
-    const expected = this.TEMPLATE_COLUMNS[importType] || [];
-    if (!expected.length) return null;
+  private async fetchImportColumns(importType: string): Promise<string[]> {
+    if (this._importColumnsCache[importType]) {
+      return this._importColumnsCache[importType];
+    }
+    if (!this.apiClient) { throw new Error('API client not ready. Please try again.'); }
 
-    const trimVal = (s: string) => (s ?? '').toString().trim();
-    let actual = (headerRow || []).map(trimVal);
+    const url = `${API_BASE_URL}/api/ImportMetadata/columns/${importType}`;
+    const response = await this.apiClient.fetch(url, AadHttpClient.configurations.v1, { method: 'GET' });
+    const raw = await response.text();
+    let json: any = null;
+    try { json = raw ? JSON.parse(raw) : null; } catch { json = null; }
 
-    if (actual.length === 0 || actual.every(c => !c)) {
-      return 'The file has no header row. Please use the provided template and do not remove the column headings.';
+    if (!response.ok) {
+      throw new Error(json?.message || ('API ' + response.status + ': ' + raw));
     }
 
-    // Ignore trailing phantom columns — Excel/Sheets can inflate the sheet's
-    // used range with empty, formatting-only columns beyond the real data
-    // (e.g. a stray fill/border applied to column Q). Only strip blanks that
-    // come AFTER the last non-blank header so a genuine extra named column
-    // still fails validation as expected.
-    let lastNonBlank = actual.length - 1;
-    while (lastNonBlank >= 0 && !actual[lastNonBlank]) {
-      lastNonBlank--;
-    }
-    actual = actual.slice(0, lastNonBlank + 1);
+    const columns: string[] = Array.isArray(json?.data) ? json.data : [];
+    this._importColumnsCache[importType] = columns;
+    return columns;
+  }
 
-    if (actual.length !== expected.length) {
-      return `Expected ${expected.length} column(s) but found ${actual.length}. Expected columns (in order): ${expected.join(', ')}.`;
-    }
+  /** Minimal HTML-escaping for column names inserted via innerHTML. */
+  private escapeHtml(value: string): string {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
 
-    const mismatches: string[] = [];
-    for (let i = 0; i < expected.length; i++) {
-      if (trimVal(expected[i]) !== actual[i]) {
-        mismatches.push(`position ${i + 1}: expected "${expected[i]}" but found "${headerRow[i] || '(blank)'}"`);
-      }
-    }
+  /**
+   * Renders the given import type's information-modal table header (A, B, C...)
+   * and single data row from the given column names, e.g.
+   * #info-modal-table-head-qualification / -body-qualification.
+   */
+  private populateInformationModalColumns(importType: string, columns: string[]): void {
+    const thead = this.domElement.querySelector(`#info-modal-table-head-${importType}`) as HTMLElement;
+    const tbody = this.domElement.querySelector(`#info-modal-table-body-${importType}`) as HTMLElement;
+    if (!thead || !tbody) return;
 
-    if (mismatches.length) {
-      return `Column heading mismatch — ${mismatches.join('; ')}. Please check the column names, capitalization, and their order match the template exactly.`;
-    }
+    const headerCells = columns.map((_, i) =>
+      `<th class="text-sm">${this.getColumnLetter(i)}</th>`
+    ).join('');
+    const dataCells = columns.map(col => `<td>${this.escapeHtml(col)}</td>`).join('');
 
-    return null;
+    thead.innerHTML = `<tr>${headerCells}</tr>`;
+    tbody.innerHTML = `<tr>${dataCells}</tr>`;
   }
 
   // ── Bind Import Modal ──────────────────────────────────────────────────────
@@ -258,12 +196,6 @@ protected onInit(): Promise<void> {
       self.resetImportModal();
       self.openModal('editTempDocModal');
     });
-
-    this.domElement.querySelectorAll('#informationModal [data-bs-dismiss="modal"]').forEach(btn =>
-      btn.addEventListener('click', () => {
-        self.closeThenOpenModal('informationModal', 'editTempDocModal');
-      })
-    );
 
     const fileInput = this.domElement.querySelector(
       '#editTempDocModal input[type="file"]'
@@ -282,43 +214,74 @@ protected onInit(): Promise<void> {
       });
     }
 
-    // ── Download Template — same pattern as WpAdvancedSearchWebPart's
-    //    downloadBtn handler: build an .xlsx workbook from TEMPLATE_COLUMNS
-    //    using the bundled XLSX (SheetJS) library. ─────────────────────────
+    // ── Download Template — fetches the actual file straight from the
+    //    backend (GET /api/ImportMetadata/file/qualification), same pattern
+    //    as WpAdvancedSearchWebPart's downloadBtn handler. ─────────────────
     const downloadBtn = this.domElement.querySelector(
       '#editTempDocModal .nemko-btn-download'
     ) as HTMLButtonElement;
 
     if (downloadBtn) {
-      downloadBtn.addEventListener('click', () => {
-        const cols = this.TEMPLATE_COLUMNS['qualification'] || [];
+      downloadBtn.addEventListener('click', async () => {
+        if (!self.apiClient) { self.setImportError('API client not ready. Please try again.'); return; }
 
-        const worksheet = XLSX.utils.aoa_to_sheet([cols]);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Template');
-        const wbout: ArrayBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        const originalLabel = downloadBtn.textContent;
+        downloadBtn.disabled = true;
+        downloadBtn.textContent = 'Downloading...';
 
-        const blob = new Blob([wbout], {
-          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'qualification-template.xlsx';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        try {
+          const url = `${API_BASE_URL}/api/ImportMetadata/file/qualification`;
+          const response = await self.apiClient.fetch(url, AadHttpClient.configurations.v1, { method: 'GET' });
+
+          if (!response.ok) {
+            const raw = await response.text();
+            throw new Error('API ' + response.status + ': ' + raw);
+          }
+
+          const blob = await response.blob();
+
+          // Prefer the filename from Content-Disposition (if the API sends one),
+          // falling back to a sensible default.
+          let fileName = 'qualification-template.xlsx';
+          const disposition = response.headers?.get?.('content-disposition');
+          const match = disposition ? /filename\*?=(?:UTF-8'')?"?([^;"]+)"?/i.exec(disposition) : null;
+          if (match && match[1]) { fileName = decodeURIComponent(match[1].trim()); }
+
+          const blobUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(blobUrl);
+        } catch (err) {
+          console.error('[NEMKO] Template download failed:', err);
+          self.setImportError('Could not download the template: ' + (err as Error).message);
+        } finally {
+          downloadBtn.disabled = false;
+          downloadBtn.textContent = originalLabel;
+        }
       });
     }
 
-    // ── Info icon — same pattern as WpAdvancedSearchWebPart's
-    //    templateInfoBtn handler: closes the import modal and opens the
-    //    information modal (no dropdown/value check needed anymore). ──────
+    // ── Info icon — fetches the current column list from the backend
+    //    (GET /api/ImportMetadata/columns/qualification), renders the
+    //    A/B/C... header + data row from it, then opens the info modal.
+    //    Same pattern as WpAdvancedSearchWebPart's templateInfoBtn handler. ──
     const templateInfoBtn = this.domElement.querySelector('#import-template-info-btn') as HTMLButtonElement;
     if (templateInfoBtn) {
-      templateInfoBtn.addEventListener('click', () => {
-        self.closeThenOpenModal('editTempDocModal', 'informationModal');
+      templateInfoBtn.addEventListener('click', async () => {
+        try {
+          const columns = await self.fetchImportColumns('qualification');
+          self.populateInformationModalColumns('qualification', columns);
+        } catch (err) {
+          console.error('[NEMKO] Fetching template columns failed:', err);
+          self.setImportError('Could not load column information: ' + (err as Error).message);
+          return;
+        }
+        self.closeModal('editTempDocModal');
+        self.openModal('informationModalQualification');
       });
     }
 
@@ -330,12 +293,34 @@ protected onInit(): Promise<void> {
       uploadBtn.addEventListener('click', () => self.handleImportUpload(fileInput));
     }
 
-    this.domElement.querySelectorAll('#editTempDocModal [data-bs-dismiss="modal"]').forEach(btn =>
-      btn.addEventListener('click', () => {
-        self.resetImportModal();
-        self.closeModal('editTempDocModal');
-      })
-    );
+    // ── Ok / dismiss on the information modal — closes it and returns to
+    //    the import modal, same as WpAdvancedSearchWebPart. ────────────────
+    this.domElement.addEventListener('click', function (e: Event) {
+      const target = e.target as HTMLElement;
+      const btn = target.closest('.info-modal-ok-btn') as HTMLElement;
+      if (!btn) return;
+      const modalId = btn.dataset.modalId ?? '';
+      if (modalId) self.closeModal(modalId);
+      self.openModal('editTempDocModal');
+    });
+
+    this.domElement.addEventListener('click', function (e: Event) {
+      const target = e.target as HTMLElement;
+      const btn = target.closest('.info-modal-dismiss-btn') as HTMLElement;
+      if (!btn) return;
+      const modalId = btn.dataset.modalId ?? '';
+      if (modalId) self.closeModal(modalId);
+      self.openModal('editTempDocModal');
+    });
+
+    // ── Close / cancel on the import modal itself. ─────────────────────────
+    this.domElement.addEventListener('click', function (e: Event) {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.import-modal-close-btn')) return;
+      e.preventDefault();
+      self.resetImportModal();
+      self.closeModal('editTempDocModal');
+    });
   }
 
   private resetImportModal(): void {
@@ -348,10 +333,10 @@ protected onInit(): Promise<void> {
   }
 
   /**
-   * Upload handler — mirrors WpAdvancedSearchWebPart.uploadBtn's click handler:
-   * 1) basic file-presence / extension checks
-   * 2) client-side header validation via readFileHeaderRow() + validateTemplateColumns()
-   * 3) POST to the API only if validation passes
+   * Upload handler. No client-side file-type or column validation — the file
+   * is sent to the backend as-is, and any validation error the API returns
+   * (type, columns, data, ...) is surfaced to the user as-is. Same contract
+   * as WpAdvancedSearchWebPart's uploadBtn handler.
    */
   private async handleImportUpload(fileInput?: HTMLInputElement): Promise<void> {
     this.setImportError('');
@@ -360,47 +345,14 @@ protected onInit(): Promise<void> {
     const file = (input?.files && input.files.length > 0 ? input.files[0] : null) ?? this._pendingImportFile;
     if (!file) { this.setImportError('Please select a file before uploading.'); return; }
 
-    const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-    const allowed = ['.csv', '.xlsx', '.xls'];
-    if (allowed.indexOf(ext) === -1) {
-      this.setImportError('Only .csv, .xlsx, and .xls files are supported. Received: ' + ext);
-      return;
-    }
     if (!this.apiClient) { this.setImportError('API client not ready. Please try again.'); return; }
 
     const uploadBtn = this.domElement.querySelector('#editTempDocModal .nemko-btn-save') as HTMLButtonElement;
     const originalLabel = uploadBtn ? uploadBtn.textContent : null;
 
-    // Give feedback the instant the user clicks — for large .xlsx/.xls files,
-    // readFileHeaderRow() below has to parse the ENTIRE workbook client-side
-    // just to read row 1 (that's how the XLSX library works), which can take
-    // several seconds on its own, before the upload request is even sent.
-    // Without this, the button just sits there looking unresponsive during
-    // that window. "Uploading..." stays up through both the validation pass
-    // and the actual network request/response, right up to the finally below.
     if (uploadBtn) { uploadBtn.disabled = true; uploadBtn.textContent = 'Uploading...'; }
 
     try {
-      // ── Client-side validation: header row column names + position must match the template ──
-      // Same pattern/error messages as WpAdvancedSearchWebPart.validateTemplateColumns.
-      try {
-        const headerRow = await this.readFileHeaderRow(file);
-        const columnError = this.validateTemplateColumns(headerRow, 'qualification');
-        if (columnError) {
-          this.setImportError(columnError);
-          return;
-        }
-      } catch (err) {
-        console.error('[NEMKO] Template header validation error:', err);
-        const detail = (err && (err as Error).message) ? (err as Error).message : '';
-        this.setImportError(
-          detail
-            ? `Could not read the file to validate its columns: ${detail}`
-            : 'Could not read the file to validate its columns. Please check the file and try again.'
-        );
-        return;
-      }
-
       const formData = new FormData();
       formData.append('file', file, file.name);
 
@@ -483,17 +435,6 @@ protected onInit(): Promise<void> {
     const el = this.domElement.querySelector('#' + id) as HTMLElement;
     if (!el) return;
     (window as any).$(el).modal('hide');
-  }
-
-  // Close one modal and only open the next once the first has fully finished
-  // its hide transition (waits for hidden.bs.modal) — same handoff pattern
-  // my-qualifications.js uses when moving between modals, so two backdrops
-  // never end up stacked on top of each other.
-  private closeThenOpenModal(closeId: string, openId: string): void {
-    const current = this.domElement.querySelector('#' + closeId) as HTMLElement;
-    if (!current) { this.openModal(openId); return; }
-    current.addEventListener('hidden.bs.modal', () => this.openModal(openId), { once: true });
-    this.closeModal(closeId);
   }
 
   protected get dataVersion(): Version {

@@ -12,8 +12,8 @@ export default class HomePage {
         </div>
         <div class="w-100 float-start py-3 mt-5">
           <div class="row gy-4">
-            <div class="col-12 col-xl-8 d-flex flex-column gap-px-32">
-              <p class="text-center font-semibold fhd-text-size-48-combo text-color-9">Qualification Matrix</p>
+            <div class="col-12 col-xl-8 d-flex flex-column offset-xl-2 gap-px-32">
+              <h1 class="nm-page-title text-center">Qualification Matrix</h1>
               <div class="w-100 float-start">
                 <div class="row justify-content-center qm-link-row">
                   <div class="col-12 col-xs-6 col-sm-4 col-md-3 px-3">
@@ -21,7 +21,7 @@ export default class HomePage {
                         <a href="__KEY_ADD_QUALIFICATION_URL__" class="w-100 float-start qm-grid-item d-flex flex-column justify-content-between">
                           <img class="qm-grid-img" src="__KEY_URL_RESOURCE__/resources/images/qualification-matrix/add-qualification.png"/>
                           <div class="w-100 float-start d-flex justify-content-between qm-grid-bottom-content align-self-end p-3 align-items-center gap-1">
-                            <p class="text-sm lg-text-base font-medium text-white">Add Qualification</p>
+                            <p class="text-sm font-medium text-white">Add Qualification</p>
                             <img class="flex-shrink-0" src="__KEY_URL_RESOURCE__/resources/images/icons/readmore-arrow.svg" alt="" />
                           </div>
                       </a>
@@ -32,7 +32,7 @@ export default class HomePage {
                         <a href="__KEY_MY_QUALIFICATION_URL__" class="w-100 float-start qm-grid-item d-flex flex-column justify-content-between">
                           <img class="qm-grid-img" src="__KEY_URL_RESOURCE__/resources/images/qualification-matrix/my-qualifications.png"/>
                           <div class="w-100 float-start d-flex justify-content-between qm-grid-bottom-content align-self-end p-3 align-items-center gap-1">
-                            <p class="text-sm lg-text-base font-medium text-white">My Qualifications</p>
+                            <p class="text-sm font-medium text-white">My Qualifications</p>
                             <img class="flex-shrink-0" src="__KEY_URL_RESOURCE__/resources/images/icons/readmore-arrow.svg" alt="" />
                           </div>
                       </a>
@@ -45,7 +45,7 @@ export default class HomePage {
                           <img class="qm-grid-img" src="__KEY_URL_RESOURCE__/resources/images/qualification-matrix/my-verification.png"/>
                           __KEY_VERIFICATION_PENDING__
                           <div class="w-100 float-start d-flex justify-content-between qm-grid-bottom-content align-self-end p-3 align-items-center gap-1">
-                            <p class="text-sm lg-text-base font-medium text-white">My Verification</p>
+                            <p class="text-sm font-medium text-white">My Verification</p>
                             <img class="flex-shrink-0" src="__KEY_URL_RESOURCE__/resources/images/icons/readmore-arrow.svg" alt="" />
                           </div>
                       </a>
@@ -58,7 +58,7 @@ export default class HomePage {
                           __KEY_AUTHORIZATION_PENDING__
                           <img class="qm-grid-img" src="__KEY_URL_RESOURCE__/resources/images/qualification-matrix/my-authorizations.png"/>
                           <div class="w-100 float-start d-flex justify-content-between qm-grid-bottom-content align-self-end p-3 align-items-center gap-1">
-                            <p class="text-sm lg-text-base font-medium text-white">My Authorizations</p>
+                            <p class="text-sm font-medium text-white">My Authorizations</p>
                             <img class="flex-shrink-0" src="__KEY_URL_RESOURCE__/resources/images/icons/readmore-arrow.svg" alt="" />
                           </div>
                       </a>
@@ -69,7 +69,7 @@ export default class HomePage {
                         <a href="__KEY_ADVANCED_SEARCH_URL__" class="w-100 float-start qm-grid-item d-flex flex-column justify-content-between">
                           <img class="qm-grid-img" src="__KEY_URL_RESOURCE__/resources/images/qualification-matrix/advanced-search.png"/>
                           <div class="w-100 float-start d-flex justify-content-between qm-grid-bottom-content align-self-end p-3 align-items-center gap-1">
-                            <p class="text-sm lg-text-base font-medium text-white">Advanced Search</p>
+                            <p class="text-sm font-medium text-white">Advanced Search</p>
                             <img class="flex-shrink-0" src="__KEY_URL_RESOURCE__/resources/images/icons/readmore-arrow.svg" alt="" />
                           </div>
                       </a>
@@ -80,7 +80,7 @@ export default class HomePage {
                         <a href="__KEY_GUIDELINES_URL__" class="w-100 float-start qm-grid-item d-flex flex-column justify-content-between">
                           <img class="qm-grid-img" src="__KEY_URL_RESOURCE__/resources/images/qualification-matrix/guidelines.png"/>
                           <div class="w-100 float-start d-flex justify-content-between qm-grid-bottom-content align-self-end p-3 align-items-center gap-1">
-                            <p class="text-sm lg-text-base font-medium text-white">Guidelines</p>
+                            <p class="text-sm font-medium text-white">Guidelines</p>
                             <img class="flex-shrink-0" src="__KEY_URL_RESOURCE__/resources/images/icons/readmore-arrow.svg" alt="" />
                           </div>
                       </a>
@@ -91,7 +91,7 @@ export default class HomePage {
                         <a href="__KEY_ADD_NEW_STANDARD_URL__" class="w-100 float-start qm-grid-item d-flex flex-column justify-content-between">
                           <img class="qm-grid-img" src="__KEY_URL_RESOURCE__/resources/images/qualification-matrix/add-new-standared.png"/>
                           <div class="w-100 float-start d-flex justify-content-between qm-grid-bottom-content align-self-end p-3 align-items-center gap-1">
-                            <p class="text-sm lg-text-base font-medium text-white">Add new Standard</p>
+                            <p class="text-sm font-medium text-white">Add New Standard</p>
                             <img class="flex-shrink-0" src="__KEY_URL_RESOURCE__/resources/images/icons/readmore-arrow.svg" alt="" />
                           </div>
                       </a>

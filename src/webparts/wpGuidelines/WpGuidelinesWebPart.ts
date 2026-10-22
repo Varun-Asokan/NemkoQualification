@@ -92,20 +92,15 @@ export default class WpGuidelinesWebPart extends BaseClientSideWebPart<IWpGuidel
   }
 
   private loadScripts(): void {
-    const base = `${this.siteUrl}/SiteAssets/resources/js`;
-    SPComponentLoader.loadScript(`${base}/jquery-3.6.0.js`, { globalExportsName: 'jQuery' })
-      
-      .then(() => {
-        const $ = (window as any).$;
-        if (!$) return;
-        $('#guidelines-accordion').on('show.bs.collapse', function (e: any) {
-          $(e.target).closest('.accordion-item').addClass('is-open');
-        });
-        $('#guidelines-accordion').on('hide.bs.collapse', function (e: any) {
-          $(e.target).closest('.accordion-item').removeClass('is-open');
-        });
-      })
-      .catch((err: any) => console.error(err));
+    const accordion = this.domElement.querySelector('#guidelines-accordion');
+    if (!accordion) return;
+
+    accordion.addEventListener('show.bs.collapse', (e: Event) => {
+      (e.target as HTMLElement).closest('.accordion-item')?.classList.add('is-open');
+    });
+    accordion.addEventListener('hide.bs.collapse', (e: Event) => {
+      (e.target as HTMLElement).closest('.accordion-item')?.classList.remove('is-open');
+    });
   }
 
   protected get dataVersion(): Version {

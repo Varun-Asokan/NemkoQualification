@@ -8,7 +8,7 @@ export default class VerificationAndAuthorization {
 
       <div class="w-100 float-start nemko-inner-page-wrapper py-5 ps-xl-4">
 
-        <h2 class="inner-page-main-title font-bold mb-3" style="font-size:2.8rem;">
+        <h2 class="inner-page-main-title nm-page-title">
           Verify & Authorize Qualifications
         </h2>
 
@@ -18,14 +18,14 @@ export default class VerificationAndAuthorization {
             <button
               data-tab-id="verif-verification-table"
               type="button"
-              class="btn nemko-tab-btn nemko-tab-btn-active px-3 text-base md-text-lg">
+              class="btn nemko-tab-btn nemko-tab-btn-active px-3 text-sm">
               Verification
             </button>
 
             <button
               data-tab-id="verif-authorization-table"
               type="button"
-              class="btn nemko-tab-btn px-3 text-base md-text-lg">
+              class="btn nemko-tab-btn px-3 text-sm">
               Authorization
             </button>
           </div>
@@ -33,12 +33,12 @@ export default class VerificationAndAuthorization {
 
         <!-- SUB TABS -->
         <div class="w-100 float-start d-flex align-items-center gap-3 mb-3">
-          <button type="button" class="tab-link-btn tab-link-btn-active text-sm lg-text-base">
-            Pending verification
+          <button type="button" class="tab-link-btn tab-link-btn-active text-sm">
+            Pending Verification
           </button>
 
-          <button type="button" class="tab-link-btn text-sm lg-text-base">
-            Verified by me
+          <button type="button" class="tab-link-btn text-sm">
+            Verified by Me
           </button>
         </div>
 
@@ -135,8 +135,8 @@ export default class VerificationAndAuthorization {
 
           <!-- ACTION BAR -->
           <div id="ver-action-bar" style="display:none;" class="w-100 float-start d-flex align-items-center gap-2 px-4 py-2 flex-wrap">
-            <button type="button" class="nemko-btn-default nemko-btn-success verify-selected text-sm lg-text-base px-3">Verify Selected</button>
-            <button type="button" class="nemko-btn-default nemko-btn-reject reject-selected text-sm lg-text-base px-3" data-panel="verification">Reject Selected</button>
+            <button type="button" class="nemko-btn-default nemko-btn-success verify-selected text-sm px-3">Verify Selected</button>
+            <button type="button" class="nemko-btn-default nemko-btn-reject reject-selected text-sm px-3" data-panel="verification">Reject Selected</button>
           </div>
 
           <!-- TABLE -->
@@ -296,8 +296,8 @@ export default class VerificationAndAuthorization {
 
           <!-- ACTION BAR -->
           <div id="auth-action-bar" style="display:none;" class="w-100 float-start d-flex align-items-center gap-2 px-4 py-2 flex-wrap">
-    <button type="button" class="nemko-btn-default nemko-btn-success authorize-selected text-sm lg-text-base px-3">Authorize Selected</button>
-    <button type="button" class="nemko-btn-default nemko-btn-reject reject-selected text-sm lg-text-base px-3" data-panel="authorization">Reject Selected</button>
+    <button type="button" class="nemko-btn-default nemko-btn-success authorize-selected text-sm px-3">Authorize Selected</button>
+    <button type="button" class="nemko-btn-default nemko-btn-reject reject-selected text-sm px-3" data-panel="authorization">Reject Selected</button>
 </div>
 
           <!-- TABLE -->
@@ -378,7 +378,7 @@ export default class VerificationAndAuthorization {
     <div class="modal-content">
 
       <div class="modal-header">
-        <h5 class="modal-title fhd-text-xl-combo">Qualification Details</h5>
+        <h5 class="modal-title text-lg font-semibold">Qualification Details</h5>
         <button type="button" class="btn-close" id="qd-close-btn" aria-label="Close"></button>
       </div>
 
@@ -399,84 +399,158 @@ export default class VerificationAndAuthorization {
               </div>
             </div>
           </div>
+          <div class="row gy-3">
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Local Unit</label>
+                <input type="text" class="form-control" id="qd-local-unit" readonly />
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Email Address</label>
+                <input type="email" class="form-control" id="qd-email-address" readonly />
+              </div>
+            </div>
+          </div>
+
 
           <div class="row gy-3">
-            <div class="col-12 col-sm-4 col-md-4">
+            <div class="col-12 col-sm-6 col-md-6">
               <div class="w-100 float-start d-flex flex-column form-control-col">
                 <label class="form-label font-semibold">Qualification</label>
                 <input type="text" class="form-control" id="qd-qualification" readonly />
               </div>
             </div>
-            <div class="col-12 col-sm-4 col-md-4">
+            <div class="col-12 col-sm-6 col-md-6">
               <div class="w-100 float-start d-flex flex-column form-control-col">
                 <label class="form-label font-semibold">Qualification Type</label>
                 <input type="text" class="form-control" id="qd-qualification-type" readonly />
               </div>
             </div>
+           
+          </div>
+
+
+          <div class="row gy-3">
             <div class="col-12 col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Qualification Level</label>
+                <input type="text" class="form-control" id="qd-qual-level" readonly />
+              </div>
+            </div>
+          </div>
+
+          <!-- Status / Report approver / Conformity statement / Certification Decision — one grouped row, 4-up on md+, 2-up on small screens -->
+          <div class="row gy-3">
+            <div class="col-sm-4 col-md-4">
               <div class="w-100 float-start d-flex frm-readonly-row flex-column form-control-col">
                 <label class="form-label font-semibold">Status</label>
                 <input type="text" class="form-control" id="qd-status" readonly />
               </div>
             </div>
-          </div>
-
-          <div class="row gy-3">
-            <div class="col-12 col-sm-4 col-md-4">
+            <div class="col-sm-4 col-md-4">
               <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label class="form-label font-semibold">Qualification level</label>
-                <input type="text" class="form-control" id="qd-qual-level" readonly />
+                <label class="form-label font-semibold">Report Approver</label>
+                <input type="text" class="form-control" id="qd-report-approver" readonly />
               </div>
             </div>
-            <div class="col-12 col-sm-4 col-md-4">
+            <div class="col-sm-4 col-md-4">
               <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label class="form-label font-semibold">Conformity statement</label>
+                <label class="form-label font-semibold">Conformity Statement</label>
                 <input type="text" class="form-control" id="qd-conformity" readonly />
               </div>
             </div>
-            <div class="col-12 col-sm-4 col-md-4">
+            <div class="col-sm-4 col-md-4">
               <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label class="form-label font-semibold">Report approver</label>
-                <input type="text" class="form-control" id="qd-report-approver" readonly />
+                <label class="form-label font-semibold">Certification Decision</label>
+                <input type="text" class="form-control" id="qd-certification" readonly />
               </div>
             </div>
           </div>
 
           <!-- Remarks — readonly -->
-          <div class="w-100 float-start d-flex  py-1">
+          <div class="w-100 float-start d-flex  py-1" id="qd-remarks-row">
             <div class="w-100 float-start d-flex flex-column form-control-col">
               <label class="form-label font-semibold">Remarks</label>
-              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="qd-remarks"></p>
+              <textarea class="form-control h-px-98 custom-scroll-view" id="qd-remarks"></textarea>
+              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="qd-remarks-para" style="display:none;"></p>
             </div>
           </div>
 
-          <!-- Limitations (Requester) — readonly -->
-          <div class="w-100 float-start d-flex  py-1">
+          <!-- Limitations by Applicant — readonly -->
+          <div class="w-100 float-start d-flex  py-1" id="qd-limitations-requester-row">
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">Limitations (Requester)</label>
+              <label class="form-label font-semibold">Limitations by Applicant (reference only)</label>
               <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="qd-limitations-requester"></p>
+              <textarea class="form-control h-px-98 custom-scroll-view" id="qd-limitations-requester-textarea" readonly style="display:none;"></textarea>
             </div>
           </div>
 
-          <!-- Limitations (Verifier) — editable textarea (same as limitationsTxtarea pattern) -->
-          <div class="w-100 float-start d-flex flex-column form-control-col">
-            <label for="qd-limitations-textarea" class="form-label font-semibold">Limitations (Verifier)</label>
+          <!-- Limitations-->
+          <div class="w-100 float-start d-flex flex-column form-control-col" id="qd-limitations-textarea-row">
+            <label for="qd-limitations-textarea" class="form-label font-semibold">Final Limitations</label>
             <textarea class="form-control h-px-98 custom-scroll-view" id="qd-limitations-textarea"></textarea>
+            <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="qd-limitations-textarea-para" style="display:none;"></p>
           </div>
 
+           <!-- Withdrawn By — always shown in "Verified by me" -->
           <div class="row gy-3">
+            <div class="col-12 col-sm-6 col-md-6" id="qd-withdrawn-by-row">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Withdrawn by</label>
+                <input type="text" class="form-control" id="qd-withdrawn-by" readonly />
+              </div>
+            </div>
+          </div>
+
+          <!-- Withdrawn Reason — always shown in "Verified by me" -->
+          <div class="w-100 float-start d-flex py-1" id="qd-withdrawn-reason-row">
+            <div class="w-100 float-start d-flex flex-column form-control-col">
+              <label class="form-label font-semibold">Withdrawn Reason</label>
+              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="qd-withdrawn-reason-para">—</p>
+              <textarea class="form-control h-px-98 custom-scroll-view" id="qd-withdrawn-reason-textarea" readonly style="display:none;"></textarea>
+            </div>
+          </div>
+
+           <div class="row gy-3">
             <div class="col-12 col-sm-6 col-md-6">
               <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label for="targetAchieveDate" class="form-label font-semibold">target achieve date</label>
+                <label for="targetAchieveDate" class="form-label font-semibold">Target Achieve Date</label>
                 <div class="d-flex align-items-center gap-2 date-picker-input-row position-relative" id="targetAchieveDateWrapper">
                   <input type="text" class="form-control flex-grow-1 date-picker-input" id="targetAchieveDate" placeholder="YYYY-MM-DD" readonly style="cursor:pointer;" />
                   <button type="button" class="date-picker-icon" id="targetAchieveDateIcon">
-                    <svg xmlns="https://protect.checkpoint.com/v2/r02/___http://www.w3.org/7555dxAl&vzty___.YzJlOm5lbWtvZ3JvdXA6YzpvOmVjYjg0NGE4YzUyMDgyM2JmNDFkNTkyNjY2YjIzOGZkOjc6Zjk0MTpmYzZiODhkYTE0MDk1MzliZWZjMDc3MGMzYmZiYWM3YjRmMmI1NDI3NzZmN2VhODZkZmE5OGZiNThmZDU0NTYwOnQ6VDpU; width="16" height="16" fill="currentColor" class="bi bi-calendar2-fill" viewBox="0 0 16 16">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-calendar2-fill" viewBox="0 0 16 16">
                       <path d="M4 .5a.5.5 0 0 0-1 0V1H2a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-1V.5a.5.5 0 0 0-1 0V1H4z"/>
                     </svg>
                   </button>
                   <div id="nemko-cal-popup" style="display:none;position:absolute;top:100%;left:0;z-index:9999;background:#fff;border:1px solid #ccc;border-radius:6px;padding:10px;min-width:280px;box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Qualified date — always shown in "Verified by me" -->
+          <div class="row gy-3">
+            <div class="col-12 col-sm-6 col-md-6" id="qd-qualified-date-row">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Qualified Date</label>
+                <input type="text" class="form-control" id="qd-qualified-date-readonly" readonly />
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-6" id="qd-withdrawn-date-row">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Withdrawn Date</label>
+                <input type="text" class="form-control" id="qd-withdrawn-date-readonly" readonly />
+              </div>
+            </div>
+          </div>
+
+          <div class="row gy-3">
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Verifier</label>
+                <input type="text" class="form-control" id="qd-verifier" readonly />
               </div>
             </div>
             <div class="col-12 col-sm-6 col-md-6">
@@ -497,9 +571,9 @@ export default class VerificationAndAuthorization {
 
       <!-- Footer -->
       <div class="modal-footer">
-        <button type="button" id="qd-verify-btn" class="nemko-btn-default nemko-btn-save text-base md-text-lg">Verify</button>
-        <button type="button" id="qd-reject-btn" class="nemko-btn-default nemko-btn-reject text-base md-text-lg">Reject</button>
-        <button type="button" id="qd-withdraw-btn" class="btn btn-danger nemko-btn-default nemko-btn-withdraw text-base md-text-lg" style="display:none;">Withdraw</button>
+        <button type="button" id="qd-verify-btn" class="nemko-btn-default nemko-btn-save text-sm">Verify</button>
+        <button type="button" id="qd-reject-btn" class="nemko-btn-default nemko-btn-reject text-sm">Reject</button>
+        <button type="button" id="qd-withdraw-btn" class="btn nemko-btn-default nemko-btn-withdraw text-sm" style="display:none;">Withdraw</button>
       </div>
 
     </div>
@@ -512,7 +586,7 @@ export default class VerificationAndAuthorization {
     <div class="modal-content">
 
       <div class="modal-header">
-        <h5 class="modal-title fhd-text-xl-combo">Qualification Details</h5>
+        <h5 class="modal-title text-lg font-semibold">Qualification Details</h5>
         <button type="button" class="btn-close" id="vd-close-btn" aria-label="Close"></button>
       </div>
 
@@ -533,25 +607,25 @@ export default class VerificationAndAuthorization {
             </div>
           </div>
 
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
+          <div class="w-100 float-start d-flex flex-wrap gap-3 frm-readonly-row justify-content-between py-1">
+            <div class="d-flex flex-column form-control-col min-w-0">
               <label class="form-label font-semibold">Qualification</label>
               <p class="frm-readonly-val" id="vd-qualification"></p>
+            </div>
+            <div class="d-flex flex-column form-control-col min-w-0">
+              <label class="form-label font-semibold">Qualification Level</label>
+              <p class="frm-readonly-val" id="vd-qual-level"></p>
             </div>
           </div>
 
           <div class="w-100 float-start d-flex flex-wrap gap-3 frm-readonly-row justify-content-between py-1">
             <div class="d-flex flex-column form-control-col min-w-0">
-              <label class="form-label font-semibold">Qualification level</label>
-              <p class="frm-readonly-val" id="vd-qual-level"></p>
-            </div>
-            <div class="d-flex flex-column form-control-col min-w-0">
-              <label class="form-label font-semibold">Conformity statement</label>
-              <p class="frm-readonly-val" id="vd-conformity"></p>
-            </div>
-            <div class="d-flex flex-column form-control-col min-w-0">
-              <label class="form-label font-semibold">Report approver</label>
+              <label class="form-label font-semibold">Report Approver</label>
               <p class="frm-readonly-val" id="vd-report-approver"></p>
+            </div>
+            <div class="d-flex flex-column form-control-col min-w-0">
+              <label class="form-label font-semibold">Conformity Statement</label>
+              <p class="frm-readonly-val" id="vd-conformity"></p>
             </div>
           </div>
 
@@ -564,36 +638,26 @@ export default class VerificationAndAuthorization {
 
           <div class="w-100 float-start d-flex py-1">
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">Limitations (Requester)</label>
+              <label class="form-label font-semibold">Limitations by Applicant (reference only)</label>
               <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="vd-limitations-requester"></p>
             </div>
           </div>
 
-          <div class="w-100 float-start d-flex py-1">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">Limitations (Verifier)</label>
-              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="vd-limitations-verifier"></p>
-            </div>
-          </div>
-
           <div class="w-100 float-start d-flex frm-readonly-row py-1">
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">Target achieve date</label>
+              <label class="form-label font-semibold">Target Achieve Date</label>
               <p class="frm-readonly-val" id="vd-target-date"></p>
             </div>
           </div>
 
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">Authorizer</label>
-              <p class="frm-readonly-val" id="vd-authorizer"></p>
-            </div>
-          </div>
-
-          <div class="w-100 float-start d-flex frm-readonly-row py-1">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
+          <div class="w-100 float-start d-flex flex-wrap gap-3 frm-readonly-row justify-content-between py-1">
+            <div class="d-flex flex-column form-control-col min-w-0">
               <label class="form-label font-semibold">Verified by</label>
               <p class="frm-readonly-val" id="vd-verified-by"></p>
+            </div>
+            <div class="d-flex flex-column form-control-col min-w-0">
+              <label class="form-label font-semibold">Authorizer</label>
+              <p class="frm-readonly-val" id="vd-authorizer"></p>
             </div>
           </div>
 
@@ -601,7 +665,7 @@ export default class VerificationAndAuthorization {
       </div>
 
       <div class="modal-footer">
-        <button type="button" id="vd-back-btn" class="nemko-btn-default nemko-btn-secondary text-base md-text-lg" data-dismiss-modal="verifiedDetailsModal">Back</button>
+        <button type="button" id="vd-back-btn" class="nemko-btn-default nemko-btn-secondary text-sm" data-dismiss-modal="verifiedDetailsModal">Back</button>
       </div>
 
     </div>
@@ -614,7 +678,7 @@ export default class VerificationAndAuthorization {
     <div class="modal-content">
 
       <div class="modal-header">
-        <h5 class="modal-title fhd-text-xl-combo">Select Authorizer</h5>
+        <h5 class="modal-title text-lg font-semibold">Select Authorizer</h5>
         <button type="button" class="btn-close" id="select-authorizer-close-btn" aria-label="Close"></button>
       </div>
 
@@ -636,8 +700,8 @@ export default class VerificationAndAuthorization {
       </div>
 
       <div class="modal-footer gap-2 justify-content-sm-start justify-content-center">
-        <button type="button" class="btn nemko-btn-default nemko-btn-save text-base md-text-lg m-0" id="authorizer-save-btn">Save</button>
-        <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-base md-text-lg m-0" id="authorizer-cancel-btn">Cancel</button>
+        <button type="button" class="btn nemko-btn-default nemko-btn-save text-sm m-0" id="authorizer-save-btn">Save</button>
+        <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-sm m-0" id="authorizer-cancel-btn">Cancel</button>
       </div>
 
     </div>
@@ -649,31 +713,13 @@ export default class VerificationAndAuthorization {
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title fhd-text-xl-combo">Qualification Details</h5>
+        <h5 class="modal-title text-lg font-semibold">Qualification Details</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body custom-scroll-view">
         <div class="w-100 float-start d-flex flex-column gap-3 nemko-modal-frm py-2">
-          <div class="row gy-3">
-            <div class="col-12 col-sm-4 col-md-4">
-              <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label for="auth-req-email" class="form-label font-semibold">Requester email</label>
-                <input type="email" class="form-control" id="auth-req-email" readonly />
-              </div>
-            </div>
-            <div class="col-12 col-sm-4 col-md-4">
-              <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label for="auth-ver-email" class="form-label font-semibold">Verifier email</label>
-                <input type="email" class="form-control" id="auth-ver-email" readonly/>
-              </div>
-            </div>
-            <div class="col-12 col-sm-4 col-md-4">
-              <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label for="auth-auth-email" class="form-label font-semibold">Authorizer email</label>
-                <input type="email" class="form-control" id="auth-auth-email" readonly/>
-              </div>
-            </div>
-          </div>
+          
+          
           <div class="row gy-3">
             <div class="col-12 col-sm-6 col-md-6">
               <div class="w-100 float-start d-flex flex-column form-control-col">
@@ -688,85 +734,125 @@ export default class VerificationAndAuthorization {
               </div>
             </div>
           </div>
-
           <div class="row gy-3">
-            <div class="col-12 col-sm-4 col-md-4">
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Local Unit</label>
+                <input type="text" class="form-control" id="auth-local-unit" readonly />
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Email Address</label>
+                <input type="email" class="form-control" id="auth-email-address" readonly />
+              </div>
+            </div>
+          </div>
+
+           <div class="row gy-3">
+            <div class="col-12 col-sm-6 col-md-6">
               <div class="w-100 float-start d-flex flex-column form-control-col">
                 <label class="form-label font-semibold">Qualification</label>
                 <input type="text" class="form-control" id="auth-qualification" readonly />
               </div>
             </div>
-            <div class="col-12 col-sm-4 col-md-4">
+            <div class="col-12 col-sm-6 col-md-6">
               <div class="w-100 float-start d-flex flex-column form-control-col">
                 <label class="form-label font-semibold">Qualification Type</label>
                 <input type="text" class="form-control" id="auth-qualification-type" readonly />
               </div>
             </div>
-            <div class="col-12 col-sm-4 col-md-4">
-            <div class="w-100 float-start d-flex  frm-readonly-row flex-column form-control-col">
-              <label class="form-label font-semibold">Status</label>
-              <input type="text" class="form-control" id="auth-status" readonly />
-            </div>
-          </div>
           </div>
 
           <div class="row gy-3">
             <div class="col-12 col-sm-4 col-md-4">
               <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label class="form-label font-semibold">Qualification level</label>
+                <label class="form-label font-semibold">Qualification Level</label>
                 <input type="text" class="form-control" id="auth-qual-level" readonly />
               </div>
             </div>
-            <div class="col-12 col-sm-4 col-md-4">
-              <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label class="form-label font-semibold">Conformity statement</label>
-                <input type="text" class="form-control" id="auth-conformity" readonly />
+          </div>
+
+           <div class="row gy-3">
+            <div class="col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex frm-readonly-row flex-column form-control-col">
+                <label class="form-label font-semibold">Status</label>
+                <input type="text" class="form-control" id="auth-status" readonly />
               </div>
             </div>
-            <div class="col-12 col-sm-4 col-md-4">
+            <div class="col-sm-4 col-md-4">
               <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label class="form-label font-semibold">Report approver</label>
+                <label class="form-label font-semibold">Report Approver</label>
                 <input type="text" class="form-control" id="auth-report-approver" readonly />
               </div>
             </div>
-          </div>
-
-          
-
-          <div class="w-100 float-start d-flex py-1">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">remarks</label>
-              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="auth-remarks">—</p>
+            <div class="col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Conformity Statement</label>
+                <input type="text" class="form-control" id="auth-conformity" readonly />
+              </div>
+            </div>
+            <div class="col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Certification Decision</label>
+                <input type="text" class="form-control" id="auth-certification" readonly />
+              </div>
             </div>
           </div>
+
           <div class="w-100 float-start d-flex py-1">
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">limitations (requester)</label>
+              <label class="form-label font-semibold">Remarks</label>
+              <textarea class="form-control h-px-98 custom-scroll-view" id="auth-remarks"></textarea>
+            </div>
+          </div>
+          <div class="w-100 float-start d-flex py-1" id="auth-limitations-requester-row">
+            <div class="w-100 float-start d-flex flex-column form-control-col">
+              <label class="form-label font-semibold">Limitations by Applicant (reference only)</label>
               <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="auth-limitations-requester">—</p>
-            </div>
-          </div>
-          <div class="w-100 float-start d-flex py-1">
-            <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">limitations (verifier)</label>
-              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="auth-limitations-verifier">—</p>
+              <textarea class="form-control h-px-98 custom-scroll-view" id="auth-limitations-requester-textarea" readonly style="display:none;"></textarea>
             </div>
           </div>
           <div class="w-100 float-start d-flex flex-column form-control-col">
-            <label for="limitationsTxtarea" class="form-label font-semibold">limitations</label>
+            <label for="limitationsTxtarea" class="form-label font-semibold">Final Limitation</label>
             <textarea class="form-control h-px-98 custom-scroll-view" id="limitationsTxtarea"></textarea>
+          </div>
+
+          <div class="row gy-3">
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Target Achieve Date</label>
+                <input type="text" class="form-control" id="auth-target-date" readonly />
+              </div>
+            </div>
+          </div>
+
+          <div class="row gy-3">
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label for="auth-ver-email" class="form-label font-semibold">Verifier</label>
+                <input type="text" class="form-control" id="auth-ver-email" readonly/>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label for="auth-auth-email" class="form-label font-semibold">Authorizer</label>
+                <input type="text" class="form-control" id="auth-auth-email" readonly/>
+              </div>
+            </div>
           </div>
 
           <div class="w-100 float-start d-flex frm-readonly-row py-1">
             <!--     <div class="w-100 float-start d-flex flex-column form-control-col"> -->
-              <!--     <label class="form-label font-semibold">Approval date</label> -->
+              <!--     <label class="form-label font-semibold">Approval Date</label> -->
               <!--     <p class="frm-readonly-val" id="auth-approval-date-readonly">—</p> -->
             <!--     </div>-->
         </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="nemko-btn-default nemko-btn-save text-base md-text-lg" id="auth-modal-authorize-btn">Authorize</button>
-        <button type="button" class="nemko-btn-default nemko-btn-reject text-base md-text-lg" id="auth-modal-reject-btn">Reject</button>
+        <button type="button" class="nemko-btn-default nemko-btn-save text-sm" id="auth-modal-authorize-btn">Authorize</button>
+        <button type="button" class="nemko-btn-default nemko-btn-reject text-sm" id="auth-modal-reject-btn">Reject</button>
       </div>
     </div>
   </div>
@@ -776,7 +862,7 @@ export default class VerificationAndAuthorization {
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title fhd-text-xl-combo">Add Rejection Reason</h5>
+        <h5 class="modal-title text-lg font-semibold">Add Rejection Reason</h5>
         <button type="button" class="btn-close" id="reject-reason-close-btn" aria-label="Close"></button>
       </div>
       <div class="modal-body custom-scroll-view">
@@ -785,7 +871,26 @@ export default class VerificationAndAuthorization {
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="nemko-btn-default nemko-btn-reject text-base md-text-lg" id="reject-reason-confirm-btn">Reject</button>
+        <button type="button" class="nemko-btn-default nemko-btn-reject text-sm" id="reject-reason-confirm-btn">Reject</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- WITHDRAW REASON MODAL -->
+<div class="modal nemko-modal qualification-details-modal" id="withdrawReasonModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-lg font-semibold">Add Withdrawal Reason</h5>
+        <button type="button" class="btn-close" id="withdraw-reason-close-btn" aria-label="Close"></button>
+      </div>
+      <div class="modal-body custom-scroll-view">
+        <div class="w-100 float-start d-flex flex-column form-control-col">
+          <textarea class="form-control h-px-98 custom-scroll-view" id="withdraw-reason-textarea" placeholder="Please provide a reason for withdrawing this qualification!"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn nemko-btn-default nemko-btn-withdraw text-sm" id="withdraw-reason-confirm-btn">Withdraw</button>
       </div>
     </div>
   </div>
@@ -796,32 +901,11 @@ export default class VerificationAndAuthorization {
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title fhd-text-xl-combo">Qualification Details</h5>
+        <h5 class="modal-title text-lg font-semibold">Qualification Details</h5>
         <button type="button"  class="btn-close withdraw-back-btn" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body custom-scroll-view">
         <div class="w-100 float-start d-flex flex-column gap-3 nemko-modal-frm py-2">
-           <div class="row gy-3">
-            <div class="col-12 col-sm-4 col-md-4">
-              <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label for="wd-req-email" class="form-label font-semibold">Requester email</label>
-                <input type="email" class="form-control" id="wd-req-email" />
-              </div>
-            </div>
-            <div class="col-12 col-sm-4 col-md-4">
-              <div class="w-100 float-start d-flex flex-column  form-control-col">
-                <label for="wd-ver-email" class="form-label font-semibold">Ver email</label>
-                <input type="email" class="form-control" id="wd-ver-email" />
-              </div>
-            </div>
-            <div class="col-12 col-sm-4 col-md-4">
-              <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label for="wd-auth-email" class="form-label font-semibold">Authorizer email</label>
-                <input type="email" class="form-control" id="wd-auth-email" />
-              </div>
-            </div>
-          </div>
-          
           <div class="row gy-3">
             <div class="col-12 col-sm-6 col-md-6">
               <div class="w-100 float-start d-flex flex-column form-control-col">
@@ -836,96 +920,149 @@ export default class VerificationAndAuthorization {
               </div>
             </div>
           </div>
-
           <div class="row gy-3">
-            <div class="col-12 col-sm-4 col-md-4">
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Local Unit</label>
+                <input type="text" class="form-control" id="wd-local-unit" readonly />
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Email Address</label>
+                <input type="email" class="form-control" id="wd-email-address" readonly />
+              </div>
+            </div>
+          </div>
+
+           <div class="row gy-3">
+            <div class="col-12 col-sm-6 col-md-6">
               <div class="w-100 float-start d-flex flex-column form-control-col">
                 <label class="form-label font-semibold">Qualification</label>
                 <input type="text" class="form-control" id="wd-qualification" readonly />
               </div>
             </div>
-            <div class="col-12 col-sm-4 col-md-4">
+            <div class="col-12 col-sm-6 col-md-6">
               <div class="w-100 float-start d-flex flex-column form-control-col">
                 <label class="form-label font-semibold">Qualification Type</label>
                 <input type="text" class="form-control" id="wd-qualification-type" readonly />
               </div>
             </div>
-            
-          <div class="col-12 col-sm-4 col-md-4">
-            <div class="w-100 float-start d-flex frm-readonly-row flex-column form-control-col">
-              <label class="form-label font-semibold">Status</label>
-              <input type="text" class="form-control" id="wd-status" readonly />
-            </div>
-          </div>
           </div>
 
           <div class="row gy-3">
             <div class="col-12 col-sm-4 col-md-4">
               <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label class="form-label font-semibold">Qualification level</label>
+                <label class="form-label font-semibold">Qualification Level</label>
                 <input type="text" class="form-control" id="wd-level" readonly />
-              </div>
-            </div>
-            <div class="col-12 col-sm-4 col-md-4">
-              <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label class="form-label font-semibold">Conformity statement</label>
-                <input type="text" class="form-control" id="wd-conformity" readonly />
-              </div>
-            </div>
-            <div class="col-12 col-sm-4 col-md-4">
-              <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label class="form-label font-semibold">Report approver</label>
-                <input type="text" class="form-control" id="wd-report-approver" readonly />
               </div>
             </div>
           </div>
 
-
-          <div class="w-100 float-start d-flex py-1">
+         <div class="row gy-3">
+            <div class="col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex frm-readonly-row flex-column form-control-col">
+                <label class="form-label font-semibold">Status</label>
+                <input type="text" class="form-control" id="wd-status" readonly />
+              </div>
+            </div>
+            <div class="col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Report Approver</label>
+                <input type="text" class="form-control" id="wd-report-approver" readonly />
+              </div>
+            </div>
+            <div class="col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Conformity Statement</label>
+                <input type="text" class="form-control" id="wd-conformity" readonly />
+              </div>
+            </div>
+            <div class="col-sm-4 col-md-4">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Certification Decision</label>
+                <input type="text" class="form-control" id="wd-certification" readonly />
+              </div>
+            </div>
+          </div>
+           <div class="w-100 float-start d-flex py-1">
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">remarks</label>
+              <label class="form-label font-semibold">Remarks</label>
               <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="wd-remarks">—</p>
             </div>
           </div>
           <div class="w-100 float-start d-flex py-1">
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">limitations (requester)</label>
+              <label class="form-label font-semibold">Limitations by Applicant (reference only)</label>
               <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="wd-limitations">—</p>
             </div>
           </div>
           <div class="w-100 float-start d-flex py-1">
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">limitations (verifier)</label>
-              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="wd-limitations-verifier">—</p>
+              <label class="form-label font-semibold">Final Limitations</label>
+              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="wd-limitations-final">—</p>
             </div>
           </div>
-          <div class="w-100 float-start d-flex py-1">
+
+         <div class="row gy-3">
+            <div class="col-12 col-sm-6 col-md-6" id="wd-withdrawn-by-row">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Withdrawn by</label>
+                <input type="text" class="form-control" id="wd-withdrawn-by" readonly />
+              </div>
+            </div>
+          </div>
+         <div class="w-100 float-start d-flex py-1" id="wd-withdrawn-reason-row">
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label class="form-label font-semibold">limitations (authorizer)</label>
-              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="wd-limitations-authorizer">—</p>
+              <label class="form-label font-semibold">Withdrawn Reason</label>
+              <p class="frm-readonly-val form-control h-px-98 overflow-auto custom-scroll-view" id="wd-withdrawn-reason-para">—</p>
             </div>
           </div>
 
           <div class="row gy-3">
             <div class="col-12 col-sm-6 col-md-6">
               <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label class="form-label font-semibold">Qualified date</label>
+                <label class="form-label font-semibold">Target Achieve Date</label>
+                <input type="text" class="form-control" id="wd-target-date" readonly />
+              </div>
+            </div>
+          </div>
+
+          <div class="row gy-3">
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label class="form-label font-semibold">Qualified Date</label>
                 <input type="text" class="form-control" id="wd-qualified-date-readonly" readonly />
               </div>
             </div>
             <div class="col-12 col-sm-6 col-md-6">
               <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label class="form-label font-semibold">Withdrawn date</label>
+                <label class="form-label font-semibold">Withdrawn Date</label>
                 <input type="text" class="form-control" id="wd-withdrawn-date-readonly" readonly />
               </div>
             </div>
           </div>
 
+          <div class="row gy-3">
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label for="wd-ver-email" class="form-label font-semibold">Verifier </label>
+                <input type="email" class="form-control" id="wd-ver-email" />
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="w-100 float-start d-flex flex-column form-control-col">
+                <label for="wd-auth-email" class="form-label font-semibold">Authorizer </label>
+                <input type="email" class="form-control" id="wd-auth-email" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
       <div class="modal-footer">
-        <button type="button" id="wd-withdraw-btn" class="btn btn-danger nemko-btn-default nemko-btn-withdraw text-base md-text-lg" style="display:none;">Withdraw</button>
-        <button type="button" class="nemko-btn-default nemko-btn-save text-base md-text-lg withdraw-back-btn" >Back</button>
+        <button type="button" id="wd-withdraw-btn" class="btn nemko-btn-default nemko-btn-withdraw text-sm" style="display:none;">Withdraw</button>
+        <button type="button" class="nemko-btn-default nemko-btn-save text-sm withdraw-back-btn" >Back</button>
       </div>
     </div>
   </div>

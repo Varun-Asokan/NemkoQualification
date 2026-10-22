@@ -3,7 +3,7 @@
   "solution": {
     "name": "nemko-intranet-client-side-solution",
     "id": "77ff7a37-1b04-43ef-b937-cd2dca8598e0",
-    "version": "1.0.0.2",
+    "version": "1.0.0.4",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,

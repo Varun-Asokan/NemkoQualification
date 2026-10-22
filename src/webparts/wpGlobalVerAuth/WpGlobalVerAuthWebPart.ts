@@ -123,7 +123,9 @@ export default class WpGlobalVerAuthWebPart extends BaseClientSideWebPart<IWpGlo
     sortBy?: string | null,
     sortOrder?: string | null
   ): Promise<void> {
+    (window as any).nemkoGvaLoadError = false; // set true below if this load fails (one error pattern)
     if (!this.apiClient) {
+      (window as any).nemkoGvaLoadError = true;
       (window as any).nemkoGvaRows = [];
       (window as any).nemkoGvaPagination = null;
       return;
@@ -138,6 +140,7 @@ export default class WpGlobalVerAuthWebPart extends BaseClientSideWebPart<IWpGlo
     try {
       const response: HttpClientResponse = await this.apiClient.get(apiUrl, AadHttpClient.configurations.v1);
       if (!response.ok) {
+        (window as any).nemkoGvaLoadError = true;
         (window as any).nemkoGvaRows = [];
         (window as any).nemkoGvaPagination = null;
         return;
@@ -154,6 +157,7 @@ export default class WpGlobalVerAuthWebPart extends BaseClientSideWebPart<IWpGlo
       (window as any).nemkoGvaPagination = json?.data?.pagination ?? null;
     } catch (err) {
       console.error('[NEMKO] fetchGvaPage error:', err);
+      (window as any).nemkoGvaLoadError = true;
       (window as any).nemkoGvaRows = [];
       (window as any).nemkoGvaPagination = null;
     }
@@ -290,8 +294,20 @@ export default class WpGlobalVerAuthWebPart extends BaseClientSideWebPart<IWpGlo
   private showTableError(): void {
     const tbodies = this.domElement.querySelectorAll('.nemko-table-container tbody');
     tbodies.forEach(tbody => {
+      // Same error state as my-qualifications.js (audit D10 / handover C4)
       tbody.innerHTML =
-        '<tr><td colspan="20" style="text-align:center;padding:2rem;color:#696A6E;">Failed to load data. Please refresh the page.</td></tr>';
+        '<tr><td colspan="20" class="text-center py-4 text-color-3 text-sm font-medium">' +
+        'Could not load data. ' +
+        '<a href="#" role="button" class="nemko-table-retry-link">Try again</a>' +
+        '</td></tr>';
+      const retryLink = tbody.querySelector('.nemko-table-retry-link');
+      if (retryLink) {
+        retryLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          // Re-acquire the API client (clears _initFailed on success), then re-render
+          this.initApiClient().then(() => this.render()).catch(() => { /* error state stays */ });
+        });
+      }
     });
   }
 

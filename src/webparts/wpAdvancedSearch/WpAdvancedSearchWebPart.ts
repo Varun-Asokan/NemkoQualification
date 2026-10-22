@@ -30,12 +30,23 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
 
   private isAdminUser: boolean | null = null;
   private activeQualificationDetailsId: string = '';
+  private withdrawReasonConfirmCallback: ((reason: string) => void) | null = null;
   private _popstateHandler: (() => void) | null = null;
   private _initFailed = false;
   private readonly _fetchVersions = new Map<string, number>();
   private readonly _filterCache = new Map<string, any[]>();
 
+  // Bumped on every render() call. loadHomeScripts() captures the value for
+  // the cycle it belongs to and only applies its result (calling
+  // initAdvancedSearch(), showing an error) if this is still the latest
+  // generation — otherwise a spurious popstate (browsers can replay one when
+  // a page is restored after an abrupt close/crash) triggering a second,
+  // overlapping render()/loadHomeScripts() cycle could have the older cycle
+  // act on a DOM that's already been replaced by a newer one.
+  private _renderGeneration = 0;
+
   public render(): void {
+    const renderGen = ++this._renderGeneration;
     const resourceUrl = `${this.siteUrl}/SiteAssets`;
 
     this.domElement.innerHTML =
@@ -49,7 +60,7 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
 
     SharedSidebar.initBehavior(this.domElement, this.siteUrl);
     this.bindImportModal();
-    this.loadHomeScripts();
+    this.loadHomeScripts(renderGen);
     this.applyAdminVisibility().catch(() => { /* keep buttons hidden */ });
   }
 
@@ -69,11 +80,6 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
       '#import-scheme-btn',
       '#import-test-method-btn',
       '#import-employee-btn',
-      '#export-advanced-search-btn',
-      '#export-standard-btn',
-      '#export-scheme-btn',
-      '#export-test-method-btn',
-      '#export-employee-btn',
     ];
     selectors.forEach(sel => {
       const btn = this.domElement.querySelector<HTMLElement>(sel);
@@ -107,6 +113,25 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
         modal.querySelectorAll<HTMLInputElement>('input[type="radio"]').forEach(el => {
           el.disabled = true;
         });
+      });
+
+      // Inactive is an admin-only status filter, same as the withdraw button.
+      const statusInactiveOption = this.domElement.querySelector<HTMLOptionElement>('#f-status option[value="inactive"]');
+      if (statusInactiveOption) statusInactiveOption.remove();
+
+      // Database tabs: non-admins have no New/Import buttons, so move each
+      // Export To Excel button onto the filter row and hide the empty toolbar.
+      ['standared-table', 'schemes-table', 'test-method-table', 'employees-table'].forEach(tableId => {
+        const exportBtn = this.domElement.querySelector<HTMLElement>(`#${tableId} .export-excel-btn`);
+        const toolbar = exportBtn?.parentElement;
+        const filterRow = toolbar?.nextElementSibling?.querySelector<HTMLElement>('.row');
+        if (!exportBtn || !toolbar || !filterRow) return;
+
+        const exportCol = document.createElement('div');
+        exportCol.className = 'col-auto ms-auto d-flex align-items-end';
+        exportCol.appendChild(exportBtn);
+        filterRow.appendChild(exportCol);
+        toolbar.style.display = 'none';
       });
     }
   }
@@ -146,6 +171,36 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
     this._initFailed = true;
   }
 
+  // Every direct this.apiClient.get()/fetch() call in this file awaits the
+  // request with no timeout — if the underlying AAD token silent-refresh
+  // stalls (a known AadHttpClient quirk, more likely right after a browser
+  // crash/restore leaves cookies/session state cold), the await never
+  // resolves or rejects, so the table/modal that's waiting on it is stuck on
+  // its loading state forever — only a full page reload (fresh apiClient)
+  // clears it. Wrapping each call in this race bounds that wait so a stall
+  // surfaces as a normal caught error instead.
+  private withTimeout<T>(promise: Promise<T>, timeoutMs: number = 8000): Promise<T> {
+    return Promise.race([
+      promise,
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error(`Timed out after ${timeoutMs}ms`)), timeoutMs)
+      ),
+    ]);
+  }
+
+  // SPComponentLoader.loadScript() has no built-in timeout — if the network
+  // request for a script stalls, the promise never resolves or rejects,
+  // hanging the Promise.all() in loadHomeScripts() forever and leaving the
+  // loading skeleton on screen with no way out but a full page reload.
+  private loadScriptWithTimeout(url: string, timeoutMs: number = 15000): Promise<void> {
+    return Promise.race([
+      SPComponentLoader.loadScript(url).then(() => undefined),
+      new Promise<void>((_, reject) =>
+        setTimeout(() => reject(new Error(`Script load timed out after ${timeoutMs}ms: ${url}`)), timeoutMs)
+      ),
+    ]);
+  }
+
   // ── Advanced Search: MyQualifications ────────────────────────────────────────
   private async fetchQualifications(searchParams?: {
     search?: string;
@@ -153,7 +208,7 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
     pageSize?: number;
     sortBy?: string;
     sortOrder?: string;
-    status?: boolean;
+    status?: string;
     conformityStatement?: boolean;
     certificationDecision?: boolean;
     qualificationLevel?: number;
@@ -195,14 +250,14 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
         columnTextSearches: searchParams?.columnTextSearches ?? []
       };
 
-      const response = await this.apiClient.post(
+      const response = await this.withTimeout(this.apiClient.post(
         apiUrl,
         AadHttpClient.configurations.v1,
         {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         }
-      );
+      ));
 
       if (!response.ok) {
         (window as any).nemkoTableRows = [];
@@ -215,6 +270,7 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
 
       (window as any).nemkoTableRows = items.map((item: any) => ({
         id: String(item.qualificationId ?? ''),
+        externalId: item.externalId ?? '',
         employee: item.appliedBy?.name ?? '',
         reqEmail: item.appliedBy?.email ?? '',                          // for details modal
         office: item.appliedBy?.office ?? '',
@@ -228,6 +284,7 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
         certification: item.certificationDecision === true ? 'Yes' : item.certificationDecision === false ? 'No' : '',
         conformity: item.confirmityStatement === true ? 'Yes' : item.confirmityStatement === false ? 'No' : '',
         limitations: item.limitations ?? '',
+        finalLimitations: item.FinalLimitations ?? '',
         remarks: item.remarks ?? '',
         verifiedBy: Array.isArray(item.verifier)
           ? item.verifier.map((v: any) => v.name).join(', ')
@@ -237,11 +294,10 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
           ? item.authorizer.map((a: any) => a.name).join(', ')
           : '',
         authorizedByEmail: Array.isArray(item.authorizer) ? item.authorizer.map((a: any) => a.email).join(', ') : '',          // for details modal
-        verifierLimitations: item.verifierLimitations ?? '',           // for details modal
-        authorizerLimitations: item.authorizerLimitations ?? '',       // for details modal
         targetAchieveDate: item.targetAchieveDate?.split('T')[0] ?? '', // for details modal
         withdrawnDate: item.withdrawnDate ?? '',
         qualifiedDate: item.qualifiedDate ?? '',
+        requestedDate: item.requestedDate ?? '',
         withdrawn: item.withdrawn ?? false,
       }));
 
@@ -258,6 +314,7 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
   private async fetchQualificationDetails(id: string): Promise<void> {
     const apiUrl = `${API_BASE}/api/qualification/${id}`;
     this.activeQualificationDetailsId = id;
+    (window as any).nemkoQualificationDetailError = null;
 
     if (!this.apiClient) {
       (window as any).nemkoQualificationDetail = null;
@@ -265,9 +322,15 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
     }
 
     try {
-      const response = await this.apiClient.get(apiUrl, AadHttpClient.configurations.v1);
+      const response = await this.withTimeout(this.apiClient.get(apiUrl, AadHttpClient.configurations.v1));
       if (!response.ok) {
         (window as any).nemkoQualificationDetail = null;
+        try {
+          const errJson = await response.json();
+          (window as any).nemkoQualificationDetailError = errJson?.message ?? null;
+        } catch {
+          // Non-JSON error body — leave the message null (JS layer falls back to a generic string).
+        }
         return;
       }
       const json = await response.json();
@@ -279,7 +342,7 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
 
       const appliedBy = item.appliedBy ?? {};
       const statusName: string = item.qualificationStatus?.name ?? '';
-      const isActive = item.qualificationStatus?.isActive;
+      const isActive = item.isActive;
       const verifierNames = Array.isArray(item.verifier) ? item.verifier.map((v: any) => v.name).join(', ') : '';
       const authorizerNames = Array.isArray(item.authorizer) ? item.authorizer.map((a: any) => a.name).join(', ') : '';
       const verifierEmail = Array.isArray(item.verifier) ? (item.verifier[0]?.email ?? '') : '';
@@ -287,6 +350,7 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
 
       (window as any).nemkoQualificationDetail = {
         qualificationId: item.qualificationId ?? '',
+        externalId: item.externalId ?? '',
         requestedBy: appliedBy.name ?? '',
         requestedByEmail: appliedBy.email ?? '',
         localUnit: item.localUnit ?? '',
@@ -295,17 +359,21 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
         verifiedBy: { name: verifierNames, email: verifierEmail },
         authorizedBy: { name: authorizerNames, email: authorizerEmail },
         authorizedDate: item.qualifiedDate ?? '',
+        qualificationType: { value: item.qualificationTypeId?.name ?? '' },
         qualificationReference: { value: item.qualificationReference?.name ?? '' },
         level: { value: item.qualificationLevel?.name ?? '' },
         conformityStatement: (item.confirmityStatement ?? item.conformityStatement) === true ? 'Yes' : 'No',
         certificationDecision: item.certificationDecision === true ? 'Yes' : 'No',
         reportApprover: item.reportApprover === true ? 'Yes' : 'No',
         remarks: item.remarks ?? '',
-        limitations: item.authorizerLimitations ?? '', // Limitations field is sourced from authorizerLimitations
-        verifierLimitations: item.verifierLimitations ?? '',
-        authorizerLimitations: item.authorizerLimitations ?? '',
+        limitations: item.limitations ?? '',
+        finalLimitations: item.FinalLimitations ?? '',
         type: item.qualificationTypeId?.name ?? '',
         withdrawn: item.withdrawn ?? false,
+        withdrawnReason:        item.withdrawnReason ?? '',
+        withdrawnBy:            item.withdrawnBy?.name ?? '',
+        withdrawnDate:          item.withdrawnDate ?? "",
+        targetAchieveDate: item.targetAchieveDate?.split('T')[0] ?? '',
       };
     } catch (err) {
       console.error('[NEMKO] fetchQualificationDetails error:', err);
@@ -313,10 +381,11 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
     }
   }
 
+
   // ── Withdraw (Qualification Details modal) ──────────────────────────────────
   // Same API contract as the My Verification & Authorization webpart:
   // PUT /api/qualification/Operation with status: 'withdraw'.
-  private async apiWithdrawQualification(qualificationId: number): Promise<void> {
+  private async apiWithdrawQualification(qualificationId: number, reason: string = ''): Promise<void> {
     if (!this.apiClient) return;
     const url = `${API_BASE}/api/qualification/Operation`;
     const response = await this.apiClient.fetch(url, AadHttpClient.configurations.v1, {
@@ -324,7 +393,8 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         qualificationId: [qualificationId],
-        status: 'withdraw'
+        status: 'withdraw',
+        actionComment: reason
       })
     });
     if (!response.ok) {
@@ -336,21 +406,50 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
     const id = this.activeQualificationDetailsId;
     if (!id) { this.closeModal('detailsQualificationModal'); return; }
 
-    const detail = (window as any).nemkoQualificationDetail;
-    const qualificationName: string = detail?.qualificationReference?.value ?? '';
+    this.openWithdrawReasonModal((reason: string) => {
+      this.apiWithdrawQualification(Number(id), reason)
+        .then(() => {
+          this.closeModal('detailsQualificationModal');
+          alert('Qualification has been withdrawn successfully.');
+          (window as any)._nemkoAdvSearch?.refreshQualifications?.();
+        })
+        .catch(err => {
+          console.error('[NEMKO] Withdraw failed:', err);
+          alert('Failed to withdraw qualification. Please try again.');
+        });
+    }, 'detailsQualificationModal');
+  }
 
-    if (!confirm(`Do you want to withdraw the qualification - ${qualificationName}?`)) return;
+  // ── Modal: Withdraw Reason ──────────────────────────────────────────────────
+  // Same "Add Withdrawal Reason" modal/flow as
+  // WpVerificationAndAuthorizationWebPart — closes the underlying details modal,
+  // opens this one to collect a reason, then calls the confirm callback with it
+  // once "Withdraw" is clicked (or clears the callback on close without acting).
+  private bindWithdrawReasonModal(): void {
+    const self = this;
+    this.domElement.querySelector('#withdraw-reason-close-btn')?.addEventListener('click', () => {
+      self.withdrawReasonConfirmCallback = null;
+      self.closeModal('withdrawReasonModal');
+    });
+    this.domElement.querySelector('#withdraw-reason-confirm-btn')?.addEventListener('click', () => {
+      const textarea = self.domElement.querySelector('#withdraw-reason-textarea') as HTMLTextAreaElement;
+      const reason = textarea?.value?.trim() ?? '';
+      const callback = self.withdrawReasonConfirmCallback;
+      self.withdrawReasonConfirmCallback = null;
+      self.closeModal('withdrawReasonModal');
+      if (callback) callback(reason);
+    });
+  }
 
-    this.apiWithdrawQualification(Number(id))
-      .then(() => {
-        this.closeModal('detailsQualificationModal');
-        alert('Qualification has been withdrawn successfully.');
-        (window as any)._nemkoAdvSearch?.refreshQualifications?.();
-      })
-      .catch(err => {
-        console.error('[NEMKO] Withdraw failed:', err);
-        alert('Failed to withdraw qualification. Please try again.');
-      });
+  private openWithdrawReasonModal(onConfirm: (reason: string) => void, underlyingModalId?: string): void {
+    const textarea = this.domElement.querySelector('#withdraw-reason-textarea') as HTMLTextAreaElement;
+    if (textarea) textarea.value = '';
+    this.withdrawReasonConfirmCallback = onConfirm;
+    if (underlyingModalId) {
+      this.closeThenOpenModal(underlyingModalId, 'withdrawReasonModal');
+    } else {
+      this.openModal('withdrawReasonModal');
+    }
   }
 
 
@@ -539,7 +638,7 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
     const apiUrl = `${API_BASE}/api/database/standards?${qs.toString()}`;
 
     try {
-      const response = await this.apiClient.get(apiUrl, AadHttpClient.configurations.v1);
+      const response = await this.withTimeout(this.apiClient.get(apiUrl, AadHttpClient.configurations.v1));
       if (!response.ok) {
         (window as any).nemkoStandardItems = [];
         (window as any).nemkoDbStandardRows = [];
@@ -570,19 +669,28 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
 
   private async fetchStandardDetails(id: string): Promise<void> {
     const apiUrl = `${API_BASE}/api/database/standards/${id}`;
-    const fallback = { externalId: '', title: '', productCategory: '', icsCode: '', iaf: '', nace: '', accreditedStandard: false, linkToWorkbench: '', standardFamilyName: '' };
+    (window as any).nemkoStandardDetailError = null;
     if (!this.apiClient) {
-      (window as any).nemkoStandardDetail = fallback;
+      (window as any).nemkoStandardDetail = null;
       return;
     }
     try {
-      const response = await this.apiClient.get(apiUrl, AadHttpClient.configurations.v1);
-      if (!response.ok) { (window as any).nemkoStandardDetail = fallback; return; }
+      const response = await this.withTimeout(this.apiClient.get(apiUrl, AadHttpClient.configurations.v1));
+      if (!response.ok) {
+        (window as any).nemkoStandardDetail = null;
+        try {
+          const errJson = await response.json();
+          (window as any).nemkoStandardDetailError = errJson?.message ?? null;
+        } catch {
+          // Non-JSON error body — leave the message null.
+        }
+        return;
+      }
       const json = await response.json();
-      (window as any).nemkoStandardDetail = json?.data ?? fallback;
+      (window as any).nemkoStandardDetail = json?.data ?? null;
     } catch (err) {
       console.error('fetchStandardDetails error:', err);
-      (window as any).nemkoStandardDetail = fallback;
+      (window as any).nemkoStandardDetail = null;
     }
   }
 
@@ -598,7 +706,7 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
     const apiUrl = `${API_BASE}/api/database/scheme?${qs.toString()}`;
 
     try {
-      const response = await this.apiClient.get(apiUrl, AadHttpClient.configurations.v1);
+      const response = await this.withTimeout(this.apiClient.get(apiUrl, AadHttpClient.configurations.v1));
       if (!response.ok) {
         (window as any).nemkoSchemeItems = [];
         (window as any).nemkoDbSchemeRows = [];
@@ -628,16 +736,25 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
 
   private async fetchSchemeDetails(id: string): Promise<void> {
     const apiUrl = `${API_BASE}/api/database/scheme/${id}`;
-    const fallback = { externalId: '', name: '', referenceStandard: '' };
-    if (!this.apiClient) { (window as any).nemkoSchemeDetail = fallback; return; }
+    (window as any).nemkoSchemeDetailError = null;
+    if (!this.apiClient) { (window as any).nemkoSchemeDetail = null; return; }
     try {
-      const response = await this.apiClient.get(apiUrl, AadHttpClient.configurations.v1);
-      if (!response.ok) { (window as any).nemkoSchemeDetail = fallback; return; }
+      const response = await this.withTimeout(this.apiClient.get(apiUrl, AadHttpClient.configurations.v1));
+      if (!response.ok) {
+        (window as any).nemkoSchemeDetail = null;
+        try {
+          const errJson = await response.json();
+          (window as any).nemkoSchemeDetailError = errJson?.message ?? null;
+        } catch {
+          // Non-JSON error body — leave the message null.
+        }
+        return;
+      }
       const json = await response.json();
-      (window as any).nemkoSchemeDetail = json?.data ?? fallback;
+      (window as any).nemkoSchemeDetail = json?.data ?? null;
     } catch (err) {
       console.error('fetchSchemeDetails error:', err);
-      (window as any).nemkoSchemeDetail = fallback;
+      (window as any).nemkoSchemeDetail = null;
     }
   }
 
@@ -650,7 +767,6 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
     const nameEl = this.domElement.querySelector('#schemeNameIp') as HTMLInputElement;
     const refEl = this.domElement.querySelector('#refStandaredTxtarea') as HTMLTextAreaElement;
     // ── VALIDATION ──
-    if (!this.validateRequired(externalIdEl, 'External ID')) return;
     if (!this.validateRequired(nameEl, 'Scheme name')) return;
     try {
       const response = await this.apiClient.post(
@@ -700,7 +816,7 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
     }
 
     try {
-      const response = await this.apiClient.get(apiUrl, AadHttpClient.configurations.v1);
+      const response = await this.withTimeout(this.apiClient.get(apiUrl, AadHttpClient.configurations.v1));
       if (!response.ok) {
         (window as any).nemkoTestMethodItems = [];
         (window as any).nemkoDbTestMethodRows = [];
@@ -731,16 +847,25 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
 
   private async fetchTestMethodDetails(id: string): Promise<void> {
     const apiUrl = `${API_BASE}/api/database/test-methods/${id}`;
-    const fallback = { externalId: '', name: '', productCategory: '', referenceStandard: '' };
-    if (!this.apiClient) { (window as any).nemkoTestMethodDetail = fallback; return; }
+    (window as any).nemkoTestMethodDetailError = null;
+    if (!this.apiClient) { (window as any).nemkoTestMethodDetail = null; return; }
     try {
-      const response = await this.apiClient.get(apiUrl, AadHttpClient.configurations.v1);
-      if (!response.ok) { (window as any).nemkoTestMethodDetail = fallback; return; }
+      const response = await this.withTimeout(this.apiClient.get(apiUrl, AadHttpClient.configurations.v1));
+      if (!response.ok) {
+        (window as any).nemkoTestMethodDetail = null;
+        try {
+          const errJson = await response.json();
+          (window as any).nemkoTestMethodDetailError = errJson?.message ?? null;
+        } catch {
+          // Non-JSON error body — leave the message null.
+        }
+        return;
+      }
       const json = await response.json();
-      (window as any).nemkoTestMethodDetail = json?.data ?? fallback;
+      (window as any).nemkoTestMethodDetail = json?.data ?? null;
     } catch (err) {
       console.error('fetchTestMethodDetails error:', err);
-      (window as any).nemkoTestMethodDetail = fallback;
+      (window as any).nemkoTestMethodDetail = null;
     }
   }
 
@@ -753,7 +878,6 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
     const catEl = this.domElement.querySelector('#pdctCategoryTm') as HTMLInputElement;
     const refEl = this.domElement.querySelector('#refStandaredTmTxtarea') as HTMLTextAreaElement;
     // ── VALIDATION ──
-    if (!this.validateRequired(externalIdEl, 'External ID')) return;
     if (!this.validateRequired(nameEl, 'Method name')) return;
 
     try {
@@ -804,7 +928,7 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
     }
 
     try {
-      const response = await this.apiClient.get(apiUrl, AadHttpClient.configurations.v1);
+      const response = await this.withTimeout(this.apiClient.get(apiUrl, AadHttpClient.configurations.v1));
       if (!response.ok) {
         (window as any).nemkoEmployeeItems = [];
         (window as any).nemkoDbEmployeeRows = [];
@@ -864,7 +988,7 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
     }
 
     try {
-      const response = await this.apiClient.get(apiUrl, AadHttpClient.configurations.v1);
+      const response = await this.withTimeout(this.apiClient.get(apiUrl, AadHttpClient.configurations.v1));
       if (!response.ok) {
         (window as any).nemkoEmployeeDetailQualifications = [];
         (window as any).nemkoEmployeeDetailPagination = null;
@@ -1193,7 +1317,7 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
     if (!thead || !tbody) return;
 
     const headerCells = columns.map((_, i) =>
-      `<th class="text-base md-text-lg">${this.getColumnLetter(i)}</th>`
+      `<th class="text-sm">${this.getColumnLetter(i)}</th>`
     ).join('');
     const dataCells = columns.map(col => `<td>${this.escapeHtml(col)}</td>`).join('');
 
@@ -1446,6 +1570,8 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
 
     const qdWithdrawBtn = this.domElement.querySelector('#qd-withdraw-btn');
     if (qdWithdrawBtn) qdWithdrawBtn.addEventListener('click', () => this.withdrawFromQualificationDetailsModal());
+
+    this.bindWithdrawReasonModal();
 
     const fileInput =
       this.domElement.querySelector(
@@ -1707,6 +1833,17 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
     (window as any).$(el).modal('hide');
   }
 
+  // Close one modal and only open the next once the first has fully finished
+  // its hide transition (waits for hidden.bs.modal) — same handoff pattern
+  // WpVerificationAndAuthorizationWebPart uses, so two backdrops never end up
+  // stacked on top of each other.
+  private closeThenOpenModal(closeId: string, openId: string): void {
+    const current = this.domElement.querySelector('#' + closeId) as HTMLElement;
+    if (!current) { this.openModal(openId); return; }
+    current.addEventListener('hidden.bs.modal', () => this.openModal(openId), { once: true });
+    this.closeModal(closeId);
+  }
+
   private handleSidebarNavigation(): void {
     const params = new URLSearchParams(window.location.search);
     if (params.get('open') !== 'create-standard') return;
@@ -1749,21 +1886,37 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
   private showTableError(): void {
     const tbodies = this.domElement.querySelectorAll('.nemko-table-container tbody');
     tbodies.forEach(tbody => {
+      // Same error state as My Qualifications (audit D10 / handover C4)
       tbody.innerHTML =
-        '<tr><td colspan="20" style="text-align:center;padding:2rem;color:#696A6E;">Failed to load data. Please refresh the page.</td></tr>';
+        '<tr><td colspan="20" class="text-center py-4 text-color-3 text-sm font-medium">' +
+        'Could not load data. ' +
+        '<a href="#" role="button" class="nemko-table-retry-link">Try again</a>' +
+        '</td></tr>';
+      const retryLink = tbody.querySelector('.nemko-table-retry-link');
+      if (retryLink) {
+        retryLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.initApiClient().then(() => this.render()).catch(() => { /* error state stays */ });
+        });
+      }
     });
   }
 
-  private loadHomeScripts(): void {
+  private loadHomeScripts(renderGen: number): void {
     const siteAssetsUrl = `${this.siteUrl}/SiteAssets`;
 
-    const scriptsPromise = SPComponentLoader.loadScript(`${siteAssetsUrl}/resources/js/jquery-ui.js`)
-      .then(() => SPComponentLoader.loadScript(`${siteAssetsUrl}/resources/js/advanced-search.js`));
+    const scriptsPromise = Promise.all([
+      this.loadScriptWithTimeout(`${siteAssetsUrl}/resources/js/jquery-ui.js`),
+      this.loadScriptWithTimeout(`${siteAssetsUrl}/resources/js/advanced-search.js`),
+    ]);
 
     if (this._initFailed) {
       scriptsPromise
-        .then(() => this.showTableError())
-        .catch(err => console.error('[NEMKO] JS Load Error:', err));
+        .then(() => { if (renderGen === this._renderGeneration) this.showTableError(); })
+        .catch(err => {
+          console.error('[NEMKO] JS Load Error:', err);
+          if (renderGen === this._renderGeneration) this.showTableError();
+        });
       return;
     }
 
@@ -1777,11 +1930,17 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
     // down to 1, so first paint no longer waits on tabs/dropdowns the user
     // may never open.
     const dataPromise = Promise.all([
-      this.fetchQualifications({ status: true }), // defaults to Active
+      this.fetchQualifications({ status: 'active' }), // defaults to Active
     ]);
 
     Promise.all([scriptsPromise, dataPromise])
       .then(() => {
+        // A newer render() has since replaced the DOM this chain was loading
+        // for — that cycle owns the current page and has already run (or
+        // will run) its own initAdvancedSearch(). Applying this one now
+        // would be a wasted re-init at best.
+        if (renderGen !== this._renderGeneration) return;
+
         if (typeof (window as any).initAdvancedSearch === 'function') {
           (window as any).initAdvancedSearch();
           this.handleSidebarNavigation();
@@ -1789,7 +1948,10 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
           console.error('[NEMKO] initAdvancedSearch not found on window');
         }
       })
-      .catch(err => console.error('[NEMKO] JS Load Error:', err));
+      .catch(err => {
+        console.error('[NEMKO] JS Load Error:', err);
+        if (renderGen === this._renderGeneration) this.showTableError();
+      });
   }
 
   protected get dataVersion(): Version {

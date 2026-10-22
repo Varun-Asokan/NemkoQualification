@@ -9,12 +9,13 @@ import * as strings from 'HfNemkoApplicationCustomizerStrings';
 
 import HfNemkoHeader from './Header';
 import HfNemkoFooter from './Footer';
-// import HfNemkoChatbot from './Chatbot';
+import HfNemkoChatbot from './Chatbot';
 import NemkoAdminCheck from '../../NemkoAdminCheck';
 import { SPComponentLoader } from '@microsoft/sp-loader';
-import { SPHttpClient } from '@microsoft/sp-http';
+import { SPHttpClient, AadHttpClient } from '@microsoft/sp-http';
 
 const LOG_SOURCE: string = 'HfNemkoApplicationCustomizer';
+const DASHBOARD_API_BASE = 'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net';
 
 export interface IHfNemkoApplicationCustomizerProperties {
   testMessage: string;
@@ -26,19 +27,25 @@ export default class HfNemkoApplicationCustomizer
   private _topPlaceholder: PlaceholderContent | undefined;
   private _bottomPlaceholder: PlaceholderContent | undefined;
   private _navigationHandler: any = null;
+  private _apiClient: AadHttpClient | undefined;
 
 private _sidebarObserver: MutationObserver | null = null; // add as class property
 
 public async onInit(): Promise<void> {
 
-   const currentPage = window.location.pathname.toLowerCase();
- 
-  if (currentPage.indexOf('/sitepages/copilot.aspx') !== -1) {
+  const currentPage = window.location.pathname.toLowerCase();
+  const isCopilotPage = currentPage.indexOf('/sitepages/copilot.aspx') !== -1;
+
+  const basePath = this.context.pageContext.web.serverRelativeUrl + "/SiteAssets/resources";
+
+  // Always load CSS so hide-rules like #CommentsWrapper apply even on Copilot.aspx
+  this.loadCssFiles(basePath);
+
+  if (isCopilotPage) {
     return Promise.resolve();
   }
 
   Log.info(LOG_SOURCE, `Initialized ${strings.Title}`);
-  const basePath = this.context.pageContext.web.serverRelativeUrl + "/SiteAssets/resources";
 
   this.context.placeholderProvider.changedEvent.add(this, this._renderPlaceHolders);
 
@@ -46,13 +53,12 @@ public async onInit(): Promise<void> {
     setTimeout(() => {
       this._renderFooter();
       this._updateHeaderActiveLink();
-      // Re-run sidebar detection on every SPA navigation
       this._detectSidebar();
     }, 300);
   });
 
-  this.loadCssFiles(basePath);
   this.loadJsFiles(basePath);
+  this._initApiClient();
 
   return Promise.resolve();
 }
@@ -64,7 +70,7 @@ public async onInit(): Promise<void> {
     SPComponentLoader.loadCss(basePath + "/css/variable.css");
     SPComponentLoader.loadCss(basePath + "/css/font-size.css");
     SPComponentLoader.loadCss(basePath + "/css/swiper-bundle.min.css");
-    SPComponentLoader.loadCss(basePath + "/css/custom.css");
+    SPComponentLoader.loadCss(basePath + "/css/custom.css?v=1");
     SPComponentLoader.loadCss(basePath + "/css/home.css");
     SPComponentLoader.loadCss(basePath + "/css/sp-custom.css");
   }
@@ -75,6 +81,21 @@ public async onInit(): Promise<void> {
     await SPComponentLoader.loadScript(basePath + "/js/swiper-bundle.min.js");
     await SPComponentLoader.loadScript(basePath + "/js/common.js");
     await SPComponentLoader.loadScript(basePath + "/js/home.js");
+  }
+
+  private async _initApiClient(retries: number = 2): Promise<void> {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        this._apiClient = await this.context.aadHttpClientFactory
+          .getClient('api://66eda48a-d5f9-4db0-a911-0d936f8ce92b');
+        return;
+      } catch (err) {
+        console.error(`[HfNemko] AAD client init attempt ${attempt + 1}/${retries + 1} failed:`, err);
+        if (attempt < retries) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+    }
   }
 
 private _headerInitialized: boolean = false;
@@ -99,7 +120,7 @@ private _renderPlaceHolders(): void {
         .replace(/__KEY_HOME_URL__/g, this.context.pageContext.web.absoluteUrl + "/SitePages/HomePage.aspx?env=WebViewList")
         .replace("__KEY_ADMIN_URL__", this.context.pageContext.web.absoluteUrl + "/SitePages/AdminPage.aspx?env=WebViewList");
 
-      document.body.style.paddingTop = "80px";
+      // document.body.style.paddingTop = "60px";
 
       this._loadHeaderUserData().catch(() => { /* silent fallback */ });
 
@@ -116,33 +137,33 @@ private _renderPlaceHolders(): void {
   this._renderFooter();
 
   /** CHATBOT */
-// if (!document.getElementById('nemko-chatbot')) {
-//   const div = document.createElement('div');
-//   div.innerHTML =
-//     HfNemkoChatbot.chatbotHTML
-//     .replace(
-//       /__KEY_RESOURCE_URL__/g,
-//       this.context.pageContext.web.absoluteUrl + "/SiteAssets"
-//     )
-//     .replace(
-//         /__KEY_COPILOT_URL__/g,
-//         this.context.pageContext.web.absoluteUrl + "/SitePages/Copilot.aspx"
-//       );
-//   document.body.appendChild(div);
+if (!document.getElementById('nemko-chatbot')) {
+  const div = document.createElement('div');
+  div.innerHTML =
+    HfNemkoChatbot.chatbotHTML
+    .replace(
+      /__KEY_RESOURCE_URL__/g,
+      this.context.pageContext.web.absoluteUrl + "/SiteAssets"
+    )
+    .replace(
+        /__KEY_COPILOT_URL__/g,
+        this.context.pageContext.web.absoluteUrl + "/SitePages/Copilot.aspx"
+      );
+  document.body.appendChild(div);
 
-//   // ── Homepage: open chatbot by default, hide FAB ──
-//   const isHomePage = window.location.pathname.toLowerCase()
-//   .indexOf('/sitepages/homepage.aspx') !== -1;
-//   if (isHomePage) {
-//     const chat = div.querySelector('#nemko-chatbot');
-//     const fab = div.querySelector('#chatFab');
-//     chat?.classList.add('open');
-//     fab?.classList.remove('d-flex');
-//     fab?.classList.add('d-none');
-//   }
+  // ── Homepage: open chatbot by default, hide FAB ──
+  const isHomePage = window.location.pathname.toLowerCase()
+  .indexOf('/sitepages/homepage.aspx') !== -1;
+  if (isHomePage) {
+    const chat = div.querySelector('#nemko-chatbot');
+    const fab = div.querySelector('#chatFab');
+    chat?.classList.add('open');
+    fab?.classList.remove('d-flex');
+    fab?.classList.add('d-none');
+  }
 
-//   this._attachChatEvents();
-// }
+  this._attachChatEvents();
+}
 }
 
 private _initNavbarToggler(): void {
@@ -155,6 +176,19 @@ private _initNavbarToggler(): void {
   if (!toggler || !target) return;
 
   this._headerInitialized = true;
+
+  // Sign-out must be a real, full navigation — SharePoint's SPA router
+  // intercepts same-origin anchor clicks to do a client-side pushState
+  // navigation instead, which SignOut.aspx can't complete (it needs an
+  // actual round trip through the sign-out/redirect chain). Stopping
+  // propagation here keeps the click from ever reaching that router's
+  // document-level listener.
+  const signOutLink = document.querySelector<HTMLAnchorElement>('.nemko-header a[href*="SignOut.aspx"]');
+  signOutLink?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.location.href = signOutLink.href;
+  });
 
   toggler.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -211,37 +245,37 @@ private _initNavbarToggler(): void {
     }
   }
 
-  // private _attachChatEvents(): void {
+  private _attachChatEvents(): void {
 
-  //   const chat = document.getElementById('nemko-chatbot');
-  //   const toggle = document.getElementById('chatFab');
-  //   const close = document.getElementById('chat-close');
+    const chat = document.getElementById('nemko-chatbot');
+    const toggle = document.getElementById('chatFab');
+    const close = document.getElementById('chat-close');
 
-  //   if (!chat) return;
+    if (!chat) return;
 
-  //   toggle?.addEventListener('click', () => {
-  //     chat.classList.toggle('open');
-  //     toggle.classList.toggle('d-none');
-  //   });
+    toggle?.addEventListener('click', () => {
+      chat.classList.toggle('open');
+      toggle.classList.toggle('d-none');
+    });
 
-  //   close?.addEventListener('click', () => {
-  //     chat.classList.remove('open');
-  //     toggle?.classList.remove('d-none');
-  //   });
+    close?.addEventListener('click', () => {
+      chat.classList.remove('open');
+      toggle?.classList.remove('d-none');
+    });
 
-  //   document.querySelectorAll('.nm-suggestion-btn').forEach(btn => {
-  //     btn.addEventListener('click', () => {
-  //       const input = document.getElementById('chatInput') as HTMLTextAreaElement;
-  //       const counter = document.getElementById('charCount');
+    document.querySelectorAll('.nm-suggestion-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = document.getElementById('chatInput') as HTMLTextAreaElement;
+        const counter = document.getElementById('charCount');
 
-  //       if (input && counter) {
-  //         input.value = (btn as HTMLElement).innerText.trim();
-  //         counter.innerText = `${input.value.length}/2000`;
-  //         input.focus();
-  //       }
-  //     });
-  //   });
-  // }
+        if (input && counter) {
+          input.value = (btn as HTMLElement).innerText.trim();
+          counter.innerText = `${input.value.length}/2000`;
+          input.focus();
+        }
+      });
+    });
+  }
 
   private _detectSidebar(): void {
   // Disconnect any previous observer before starting a new one
@@ -335,14 +369,29 @@ private _applySidebarMode(hasSidebar: boolean): void {
     const container = this._topPlaceholder?.domElement;
     if (!container) return;
 
+    // Default to Graph displayName; override with the Dashboard API's
+    // employeeName if that call succeeds and returns a non-empty value.
+    let displayName: string = '';
+
     try {
       const graphClient = await this.context.msGraphClientFactory.getClient('3');
       const user = await graphClient.api('/me').select('displayName').get();
-      const nameEl = container.querySelector<HTMLElement>('#nav-user-name');
-      if (nameEl) nameEl.textContent = user.displayName ?? '';
+      displayName = user.displayName ?? '';
     } catch (err) {
-      console.error('[HfNemko] Failed to load display name:', err);
+      console.error('[HfNemko] Failed to load display name from Graph:', err);
     }
+
+    try {
+      const employeeName = await this._fetchEmployeeNameFromDashboard();
+      if (employeeName && employeeName.trim().length > 0) {
+        displayName = employeeName;
+      }
+    } catch (err) {
+      console.error('[HfNemko] Failed to load employeeName from Dashboard API:', err);
+    }
+
+    const nameEl = container.querySelector<HTMLElement>('#nav-user-name');
+    if (nameEl) nameEl.textContent = displayName;
 
     try {
       const graphClient = await this.context.msGraphClientFactory.getClient('3');
@@ -363,6 +412,26 @@ private _applySidebarMode(hasSidebar: boolean): void {
     } catch (err) {
       console.error('[HfNemko] Failed to check Admin group:', err);
     }
+  }
+
+  // ── Dashboard API: fetches employeeName to override the Graph display name.
+  // Waits (briefly) for _initApiClient to finish if it hasn't already, since
+  // this can run before the AAD client is ready on first page load. ────────
+  private async _fetchEmployeeNameFromDashboard(): Promise<string> {
+    if (!this._apiClient) {
+      await this._initApiClient(0);
+    }
+    if (!this._apiClient) return '';
+
+    const response = await this._apiClient.get(
+      `${DASHBOARD_API_BASE}/api/dashboard`,
+      AadHttpClient.configurations.v1
+    );
+
+    if (!response.ok) return '';
+
+    const result = await response.json();
+    return result?.data?.employeeName ?? '';
   }
 
   private async _loadFooterLinks(): Promise<void> {

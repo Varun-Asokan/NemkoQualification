@@ -45,13 +45,28 @@ function normalizeLevelName(name: string | undefined): string {
   return s.replace(/[\s\-]+/g, '_');
 }
 
+/**
+ * The API represents an explicit "All" selection for Office / Qualification
+ * Reference as a single-item array `[{ id: 0, name: "All" }]` rather than an
+ * empty array. Detect that shape here so the rest of the mapping (and all
+ * the downstream "empty ids array = All" handling already in
+ * admin-override.js) can keep treating "All" as an empty ids array.
+ */
+function isAllSentinel(arr: any[]): boolean {
+  return Array.isArray(arr) && arr.length === 1 &&
+    Number(arr[0]?.id) === 0 &&
+    typeof arr[0]?.name === 'string' && arr[0].name.trim().toLowerCase() === 'all';
+}
+
 const API_BASE = 'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net';
 
-// GET is confirmed: /api/admin/override. POST/PUT/DELETE payload shapes are
-// still TODO — not yet confirmed with the backend team, so
-// addAdminOverride/updateAdminOverride/deleteAdminOverride below are still
-// best-guess stubs pointed at this same base path.
-const ADMIN_OVERRIDE_API = `${API_BASE}/api/admin/override`;
+// Confirmed contract:
+//   GET    /api/admin/overriderule            (list)
+//   GET    /api/admin/overriderule/{id}       (single record, used to populate Edit)
+//   POST   /api/admin/overriderule
+//   PUT    /api/admin/overriderule/{id}
+//   DELETE /api/admin/overriderule/{id}
+const ADMIN_OVERRIDE_API = `${API_BASE}/api/admin/overriderule`;
 
 // ─── WebPart ──────────────────────────────────────────────────────────────────
 
@@ -229,12 +244,18 @@ export default class WpAdminOverrideWebPart extends BaseClientSideWebPart<IWpAdm
     if (role.isAuthorizer) roleKeys.push('authorizer');
     const roleLabels = roleKeys.map((k) => (k === 'verifier' ? 'Verifier' : 'Authorizer'));
 
+    // "All" comes back as [{ id: 0, name: "All" }] for Office / Qualification
+    // Reference — normalise it to an empty ids array so the existing
+    // "empty ids = All" handling in admin-override.js applies unchanged.
+    const officeIsAll = isAllSentinel(officeArr);
+    const referenceIsAll = isAllSentinel(qualifications);
+
     return {
       id:               String(item.id ?? ''),
       employeeId:       employeeArr[0]?.id ?? '',
       employee:         employeeArr[0]?.name ?? '',
-      office:           officeArr.map((o: any) => o.name).join(', '),
-      officeIds:        officeArr.map((o: any) => o.id),
+      office:           officeIsAll ? 'All' : officeArr.map((o: any) => o.name).join(', '),
+      officeIds:        officeIsAll ? [] : officeArr.map((o: any) => o.id),
       qualificationTypeIdNum: item.type?.id ?? '',
       qualificationTypeName:  item.type?.name ?? '',
       qualificationType:      mapTypeName(item.type?.name),
@@ -242,15 +263,37 @@ export default class WpAdminOverrideWebPart extends BaseClientSideWebPart<IWpAdm
       roleKeys:         roleKeys,
       levels:           levels.map((l: any) => l.name).join(', '),
       levelIds:         levels.map((l: any) => l.id),
-      qualifications:   qualifications.map((q: any) => q.name).join(', '),
-      referenceIds:     qualifications.map((q: any) => q.id),
+      qualifications:   referenceIsAll ? 'All' : qualifications.map((q: any) => q.name).join(', '),
+      referenceIds:     referenceIsAll ? [] : qualifications.map((q: any) => q.id),
       status:           item.isActive ? 'Active' : 'Inactive',
       statusKey:        item.isActive ? 'active' : 'inactive',
       actions:          'Edit',
     };
   }
 
-  /** TODO: wire up to the real POST endpoint once available. */
+  /**
+   * GET /api/admin/overriderule/{id} — used to populate the Edit modal with
+   * a fresh record rather than relying on the (possibly stale/paged-out)
+   * copy already sitting in the table's in-memory rows. The single-record
+   * response's `data` object has the exact same per-field shape as a list
+   * item, so mapAdminOverrideRow() above is reused as-is.
+   */
+  private async fetchAdminOverrideById(id: string): Promise<any> {
+    if (!this.apiClient) {
+      console.warn('[NEMKO] fetchAdminOverrideById: apiClient not initialised yet, skipping GET by id.');
+      return null;
+    }
+    try {
+      const json = await this.getJsonWithRetry(`${ADMIN_OVERRIDE_API}/${id}`);
+      if (!json?.data) return null;
+      return this.mapAdminOverrideRow(json.data);
+    } catch (err) {
+      console.error('[NEMKO] fetchAdminOverrideById error:', err);
+      return null;
+    }
+  }
+
+  /** POST /api/admin/overriderule */
   private async addAdminOverride(payload: any): Promise<{ ok: boolean; message?: string }> {
     if (!this.apiClient) return { ok: false, message: 'API client not initialised.' };
     try {
@@ -268,7 +311,7 @@ export default class WpAdminOverrideWebPart extends BaseClientSideWebPart<IWpAdm
     }
   }
 
-  /** TODO: wire up to the real PUT endpoint once available. */
+  /** PUT /api/admin/overriderule/{id} */
   private async updateAdminOverride(id: string, payload: any): Promise<{ ok: boolean; message?: string }> {
     if (!this.apiClient) return { ok: false, message: 'API client not initialised.' };
     try {
@@ -286,7 +329,7 @@ export default class WpAdminOverrideWebPart extends BaseClientSideWebPart<IWpAdm
     }
   }
 
-  /** TODO: wire up to the real DELETE endpoint once available. */
+  /** DELETE /api/admin/overriderule/{id} */
   private async deleteAdminOverride(id: string): Promise<{ ok: boolean; message?: string }> {
     if (!this.apiClient) return { ok: false, message: 'API client not initialised.' };
     try {
@@ -571,6 +614,8 @@ export default class WpAdminOverrideWebPart extends BaseClientSideWebPart<IWpAdm
   private bindAdminOverrideEvents(): void {
     (window as any).nemkoFetchAdminOverridesPage = (page: number, filters?: any): Promise<void> =>
       this.fetchAdminOverrides(page, filters);
+    (window as any).nemkoFetchAdminOverrideById = (id: string): Promise<any> =>
+      this.fetchAdminOverrideById(id);
 
     (window as any).nemkoAddAdminOverride = (payload: any) => this.addAdminOverride(payload);
     (window as any).nemkoUpdateAdminOverride = (id: string, payload: any) => this.updateAdminOverride(id, payload);
@@ -588,6 +633,8 @@ export default class WpAdminOverrideWebPart extends BaseClientSideWebPart<IWpAdm
 
     (window as any).nemkoFetchOffices = (search?: string): Promise<void> => this.fetchOffices(search);
     (window as any).nemkoFetchOfficesNextPage = (): Promise<void> => this.fetchOfficesNextPage();
+
+    console.log('[NEMKO] bindAdminOverrideEvents ran. nemkoFetchAdminOverrideById is:', typeof (window as any).nemkoFetchAdminOverrideById);
   }
 
   // ═════════════════════════════════════════════════════════════════════════
@@ -628,8 +675,20 @@ export default class WpAdminOverrideWebPart extends BaseClientSideWebPart<IWpAdm
   private showTableError(): void {
     const tbodies = this.domElement.querySelectorAll('.nemko-table-container tbody');
     tbodies.forEach(tbody => {
+      // Same error state as my-qualifications.js (audit D10 / handover C4)
       tbody.innerHTML =
-        '<tr><td colspan="20" style="text-align:center;padding:2rem;color:#696A6E;">Failed to load data. Please refresh the page.</td></tr>';
+        '<tr><td colspan="20" class="text-center py-4 text-color-3 text-sm font-medium">' +
+        'Could not load data. ' +
+        '<a href="#" role="button" class="nemko-table-retry-link">Try again</a>' +
+        '</td></tr>';
+      const retryLink = tbody.querySelector('.nemko-table-retry-link');
+      if (retryLink) {
+        retryLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          // Re-acquire the API client (clears _initFailed on success), then re-render
+          this.initApiClient().then(() => this.render()).catch(() => { /* error state stays */ });
+        });
+      }
     });
   }
 
@@ -655,14 +714,17 @@ export default class WpAdminOverrideWebPart extends BaseClientSideWebPart<IWpAdm
       return;
     }
 
-    // Warm the type/level ref-data cache in the background, same reasoning
-    // as My Qualifications — the modal awaits this same cached promise so
-    // it opens instantly once the page has loaded.
-    this.ensureRefData().catch(() => { /* modal-open path will retry */ });
+    // Warm the type/level ref-data cache in the background — folded into the
+    // same Promise.all as the table fetch below so the toolbar (including
+    // "Add Employee") stays disabled until Types/Levels are ready too, not
+    // just the table. Without this, clicking Add before this settles opened
+    // the modal with an empty Type dropdown/Level checkboxes that only
+    // populated once this promise happened to resolve.
+    const refDataPromise = this.ensureRefData().catch(() => { /* modal-open path will retry */ });
 
     const dataPromise = this.fetchAdminOverrides();
 
-    Promise.all([scriptsPromise, dataPromise])
+    Promise.all([scriptsPromise, dataPromise, refDataPromise])
       .then(() => {
         if (typeof (window as any).initAdminOverride === 'function') {
           (window as any).initAdminOverride();

@@ -22,26 +22,11 @@ function boolToYesNo(val: any): string {
   return 'No';
 }
 
-/** Format an ISO date string → 'dd-mm-yyyy', or return '' */
+/** Format an ISO date string → 'yyyy-mm-dd', or return '' */
 function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '';
   const d = dateStr.split('T')[0].split('-');
-  return d.length === 3 ? `${d[2]}-${d[1]}-${d[0]}` : dateStr;
-}
-
-/**
- * Reads the first non-empty value found under any of the given key names.
- * Used defensively for fields whose exact casing/name coming back from the
- * API has been inconsistent (e.g. verifier/authorizer limitations), so a
- * naming mismatch doesn't silently leave the field blank in the UI.
- */
-function pickField(item: any, keys: string[]): string {
-  if (!item) return '';
-  for (const key of keys) {
-    const val = item[key];
-    if (val !== undefined && val !== null && val !== '') return val;
-  }
-  return '';
+  return d.length === 3 ? `${d[0]}-${d[1]}-${d[2]}` : dateStr;
 }
 
 /**
@@ -106,7 +91,26 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
   private _lastRequestedRows: any[] | null = null;
   private _lastRequestedPagination: any = null;
 
+  // Bumped on every render() call. loadHomeScripts() captures the value at
+  // the start of the render cycle it belongs to; when its async chain
+  // (script load + data fetch) finally settles, it only applies the result
+  // if this is still the latest generation. Needed because a spurious
+  // popstate (browsers can replay one when a page is restored after an
+  // abrupt close/crash — see _popstateHandler below) triggers a second,
+  // overlapping render()/loadHomeScripts() cycle on the same instance; without
+  // this guard, whichever cycle's chain resolves last "wins" the shared
+  // window globals and re-enables controls, even if it belongs to a render
+  // that's already been replaced and is no longer on screen.
+  private _renderGeneration = 0;
+
+  // Same idea as _renderGeneration, but per modal fetch, since each modal can
+  // independently be reopened for a different item before its previous fetch
+  // has resolved.
+  private _detailsRequestSeq = 0;
+  private _editRequestSeq = 0;
+
   public render(): void {
+    const renderGen = ++this._renderGeneration;
     const resourceUrl = `${this.siteUrl}/SiteAssets`;
 
     const params = new URLSearchParams(window.location.search);
@@ -138,7 +142,7 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
     // clickable.
     this.setControlsBusy(true);
 
-    this.loadHomeScripts();
+    this.loadHomeScripts(renderGen);
   }
 
   protected async onInit(): Promise<void> {
@@ -245,6 +249,71 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
     throw lastErr;
   }
 
+  // Same bounded-wait guard as getJsonWithRetry() above, but for a single
+  // attempt with no retry — used by the modal detail/edit fetches below,
+  // which call this.apiClient.get() directly rather than through
+  // getJsonWithRetry(). Without this, a silently-stalled AAD token refresh
+  // leaves the modal's loading spinner stuck forever, since the await never
+  // resolves or rejects — only a full page reload (fresh apiClient) clears it.
+  private withTimeout<T>(promise: Promise<T>, timeoutMs: number = 8000): Promise<T> {
+    return Promise.race([
+      promise,
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error(`Timed out after ${timeoutMs}ms`)), timeoutMs)
+      ),
+    ]);
+  }
+
+  // ── Background retry for a failed default-view table fetch ──────────────────
+  // getJsonWithRetry() already gives each request ~7s across 3 attempts — if
+  // that's still not enough (a stalled AAD token refresh or a cold backend can
+  // take longer), the table is left showing "Failed to load data" until a
+  // manual refresh. This keeps quietly re-requesting the same page-1/no-filter
+  // call in the background, with growing backoff, for up to 90s more — the
+  // same window a manual hard refresh effectively buys, but automatic. On
+  // success it updates the same window globals the initial fetch would have
+  // and asks the JS layer (nemkoRefreshTableFromWindow) to re-render that tab,
+  // so the table just fills in on its own with no error shown and no refresh
+  // needed. Scoped to the default view only — a user-triggered filter/page
+  // request that fails is left as-is rather than retried indefinitely behind
+  // their back.
+  private retryDefaultTableFetchInBackground(
+    apiUrl: string,
+    tabId: 'authorized-table' | 'requested-table',
+    windowRowsKey: string,
+    windowPagKey: string,
+    windowErrorKey: string,
+    parseJson: (json: any) => { rows: any[]; pagination: any },
+    onSuccess: (rows: any[], pagination: any) => void
+  ): void {
+    const start = Date.now();
+    const maxWindowMs = 90000;
+    let delay = 3000;
+
+    const tick = async (): Promise<void> => {
+      if (Date.now() - start >= maxWindowMs) return;
+      await new Promise(resolve => setTimeout(resolve, delay));
+      try {
+        const json = await this.getJsonWithRetry(apiUrl);
+        const { rows, pagination } = parseJson(json);
+
+        (window as any)[windowRowsKey]  = rows;
+        (window as any)[windowPagKey]   = pagination;
+        (window as any)[windowErrorKey] = false;
+        onSuccess(rows, pagination);
+
+        if (typeof (window as any).nemkoRefreshTableFromWindow === 'function') {
+          (window as any).nemkoRefreshTableFromWindow(tabId);
+        }
+      } catch (err) {
+        delay = Math.min(delay * 1.5, 15000);
+        void tick();
+      }
+    };
+
+    void tick();
+  }
+
   // ── Authorized Table ────────────────────────────────────────────────────────
   /**
    * GET /api/qualifications/authorized
@@ -325,6 +394,18 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
         (window as any).nemkoTablePagination = null;
         (window as any).nemkoTableLoadError  = true;
       }
+      if (isDefaultView) {
+        this.retryDefaultTableFetchInBackground(
+          apiUrl, 'authorized-table', 'nemkoTableRows', 'nemkoTablePagination', 'nemkoTableLoadError',
+          (json) => {
+            const data = json?.data;
+            const items: any[] = Array.isArray(data) ? data : (data?.items ?? []);
+            const pagination = Array.isArray(data) ? (json?.pagination ?? null) : (data?.pagination ?? null);
+            return { rows: items.map((item: any) => this.mapAuthorizedRow(item)), pagination };
+          },
+          (rows, pagination) => { this._lastAuthorizedRows = rows; this._lastAuthorizedPagination = pagination; }
+        );
+      }
     }
   }
 
@@ -343,7 +424,8 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
       verifiedBy:       verifierNames,
       
       active:           boolToYesNo(item.qualificationStatus.isActive),
-      limitations:      item.limitations  ?? '',
+      limitations:      item.limitations ?? '',
+      finalLimitations: item.FinalLimitations ?? '',
       report:           boolToYesNo(item.reportApprover),
       certification:    boolToYesNo(item.certificationDecision),
       
@@ -351,6 +433,7 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
       remarks:          item.remarks      ?? '',
       targetDate:       formatDate(item.targetAchieveDate),
       qualifiedDate:    item.qualifiedDate ?? "",   
+      requestedDate:    item.requestedDate ?? "",
       authorizedBy:     authorizerNames,
       verifierIds,
       authorizerIds,
@@ -359,6 +442,7 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
       qualificationReferenceId: item.qualificationReference?.qualificationReferenceId ?? '',
       qualificationLevelId: item.qualificationLevel?.qualificationLevelId ?? '',
       withdrawn:        item.withdrawn ?? false,
+      withdrawnDate:    item.withdrawnDate ?? '',
       qualificationStatusName: item.qualificationStatus?.name ?? '',
       actions:          'Update'
     };
@@ -434,6 +518,17 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
         (window as any).nemkoRequestedPagination = null;
         (window as any).nemkoRequestedLoadError  = true;
       }
+      if (isDefaultView) {
+        this.retryDefaultTableFetchInBackground(
+          apiUrl, 'requested-table', 'nemkoRequestedRows', 'nemkoRequestedPagination', 'nemkoRequestedLoadError',
+          (json) => {
+            const items: any[] = json?.data?.items ?? [];
+            const pagination = json?.data?.pagination ?? null;
+            return { rows: items.map((item: any) => this.mapRequestedRow(item)), pagination };
+          },
+          (rows, pagination) => { this._lastRequestedRows = rows; this._lastRequestedPagination = pagination; }
+        );
+      }
     }
   }
 
@@ -443,6 +538,7 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
     const authorizerNames = Array.isArray(item.authorizer) ? item.authorizer.map((a: any) => a.name).join(', ')      : '';
     const verifierIds     = Array.isArray(item.verifier)   ? item.verifier.map((v: any) => v.employeeId).join(',')   : '';
     const authorizerIds   = Array.isArray(item.authorizer) ? item.authorizer.map((a: any) => a.employeeId).join(',') : '';
+    const statusName      = item.qualificationStatus?.name ?? '';
 
     return {
       id:               String(item.qualificationId ?? ''),
@@ -457,11 +553,11 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
       conformity:       boolToYesNo(item.confirmityStatement ?? item.conformityStatement),
       remarks:          item.remarks     ?? '',
       limitations:      item.limitations ?? '',
-      verifierLimitations:   pickField(item, ['verifierLimitations', 'VerifierLimitations', 'verifierLimitation']),
-      authorizerLimitations: pickField(item, ['authorizerLimitations', 'AuthorizerLimitations', 'authorizerLimitation']),
+      finalLimitations: item.FinalLimitations ?? '',
       rejectionComment: item.rejectReason ?? '',
       targetDate:       formatDate(item.targetAchieveDate),
       qualifiedDate:    item.qualifiedDate ?? "",
+      requestedDate:    item.requestedDate ?? "",
       authorizedBy:     authorizerNames,
       verifierIds,
       authorizerIds,
@@ -470,7 +566,7 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
       qualificationReferenceId: item.qualificationReference?.qualificationReferenceId ?? '',
       qualificationLevelId: item.qualificationLevel?.qualificationLevelId ?? '',
       withdrawn:        item.withdrawn ?? false,
-      qualificationStatusName: item.qualificationStatus?.name ?? '',
+      qualificationStatusName: statusName,
       actions:          'Edit',
     };
   }
@@ -483,28 +579,48 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
    * Normalises the raw API response into the shape the JS populate() function expects.
    */
   private async fetchQualificationDetails(id: string): Promise<void> {
+    // Reopening the Details modal for a different row before this call
+    // resolves (or the same row twice in quick succession) starts a newer
+    // call that bumps this sequence — so an older, slower response arriving
+    // after it must not overwrite window.nemkoQualificationDetail with the
+    // wrong item's data.
+    const seq = ++this._detailsRequestSeq;
     const apiUrl = `${API_BASE}/api/qualification/${id}`;
-
-
+    (window as any).nemkoQualificationDetailError = null;
 
     if (!this.apiClient) {
-      (window as any).nemkoQualificationDetail = null;
+      if (seq === this._detailsRequestSeq) (window as any).nemkoQualificationDetail = null;
       return;
     }
 
     try {
-      const response = await this.apiClient.get(apiUrl, AadHttpClient.configurations.v1);
+      const response = await this.withTimeout(this.apiClient.get(apiUrl, AadHttpClient.configurations.v1));
       if (!response.ok) {
         console.warn('[NEMKO] fetchQualificationDetails non-ok:', response.status, 'id:', id);
-        (window as any).nemkoQualificationDetail = null;
+        // Surface the API's own error message (e.g. "Qualification not found.")
+        // instead of only a generic string — falls back to null (generic
+        // message shown by the JS layer) if the body isn't JSON or has none.
+        let message: string | null = null;
+        try {
+          const errJson = await response.json();
+          message = errJson?.message ?? null;
+        } catch {
+          // Non-JSON error body — leave the message null.
+        }
+        if (seq === this._detailsRequestSeq) {
+          (window as any).nemkoQualificationDetail = null;
+          (window as any).nemkoQualificationDetailError = message;
+        }
         return;
       }
       const json = await response.json();
       const raw = json?.data ?? null;
-      (window as any).nemkoQualificationDetail = raw ? this.normaliseDetailShape(raw) : null;
+      if (seq === this._detailsRequestSeq) {
+        (window as any).nemkoQualificationDetail = raw ? this.normaliseDetailShape(raw) : null;
+      }
     } catch (err) {
       console.error('[NEMKO] fetchQualificationDetails error:', err);
-      (window as any).nemkoQualificationDetail = null;
+      if (seq === this._detailsRequestSeq) (window as any).nemkoQualificationDetail = null;
     }
   }
 
@@ -515,26 +631,45 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
    * populated with fresh data instead of the (possibly stale) cached table row.
    */
   private async fetchQualificationForEdit(id: string): Promise<void> {
+    // Same stale-response guard as fetchQualificationDetails() above, applied
+    // to the Edit modal's own window global/sequence.
+    const seq = ++this._editRequestSeq;
     const apiUrl = `${API_BASE}/api/qualification/${id}`;
+    (window as any).nemkoQualificationEditError = null;
 
     if (!this.apiClient) {
-      (window as any).nemkoQualificationEditDetail = null;
+      if (seq === this._editRequestSeq) (window as any).nemkoQualificationEditDetail = null;
       return;
     }
 
     try {
-      const response = await this.apiClient.get(apiUrl, AadHttpClient.configurations.v1);
+      const response = await this.withTimeout(this.apiClient.get(apiUrl, AadHttpClient.configurations.v1));
       if (!response.ok) {
         console.warn('[NEMKO] fetchQualificationForEdit non-ok:', response.status, 'id:', id);
-        (window as any).nemkoQualificationEditDetail = null;
+        // Surface the API's own error message (e.g. "Qualification not found.")
+        // instead of only a generic string — falls back to null (generic
+        // message shown by the JS layer) if the body isn't JSON or has none.
+        let message: string | null = null;
+        try {
+          const errJson = await response.json();
+          message = errJson?.message ?? null;
+        } catch {
+          // Non-JSON error body — leave the message null.
+        }
+        if (seq === this._editRequestSeq) {
+          (window as any).nemkoQualificationEditDetail = null;
+          (window as any).nemkoQualificationEditError = message;
+        }
         return;
       }
       const json = await response.json();
       const raw = json?.data ?? null;
-      (window as any).nemkoQualificationEditDetail = raw ? this.mapQualificationToEditRow(raw) : null;
+      if (seq === this._editRequestSeq) {
+        (window as any).nemkoQualificationEditDetail = raw ? this.mapQualificationToEditRow(raw) : null;
+      }
     } catch (err) {
       console.error('[NEMKO] fetchQualificationForEdit error:', err);
-      (window as any).nemkoQualificationEditDetail = null;
+      if (seq === this._editRequestSeq) (window as any).nemkoQualificationEditDetail = null;
     }
   }
 
@@ -555,8 +690,7 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
       conformity:       boolToYesNo(item.confirmityStatement ?? item.conformityStatement),
       remarks:          item.remarks      ?? '',
       limitations:      item.limitations  ?? '',
-      verifierLimitations:   pickField(item, ['verifierLimitations', 'VerifierLimitations', 'verifierLimitation']),
-      authorizerLimitations: pickField(item, ['authorizerLimitations', 'AuthorizerLimitations', 'authorizerLimitation']),
+      finalLimitations: item.FinalLimitations ?? '',
       rejectionComment: item.rejectReason ?? '',
       targetDate:       formatDate(item.targetAchieveDate),
       qualifiedDate:    item.qualifiedDate ?? '',
@@ -584,6 +718,7 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
 
     return {
       qualificationId:        item.qualificationId ?? '',
+      externalId:             item.externalId ?? '',
       requestedBy:            appliedBy.name  ?? '',
       requestedByEmail:       appliedBy.email ?? '',
       localUnit:              item.localUnit ?? '',
@@ -593,6 +728,7 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
       authorizedBy:           { name: authorizerNames, email: authorizerEmail },
       authorizedDate:         item.qualifiedDate ?? '',
       targetAchieveDate:      item.targetAchieveDate ?? '',
+      qualificationType:      { value: item.qualificationTypeId?.name ?? '' },
       qualificationReference: { value: item.qualificationReference?.name ?? '' },
       level:                  { value: item.qualificationLevel?.name      ?? '' },
       conformityStatement:    (item.confirmityStatement ?? item.conformityStatement) === true ? 'Yes' : 'No',
@@ -600,11 +736,15 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
       reportApprover:         item.reportApprover === true ? 'Yes' : 'No',
       remarks:                item.remarks     ?? '',
       limitations:            item.limitations ?? '',
-      verifierLimitations:    pickField(item, ['verifierLimitations', 'VerifierLimitations', 'verifierLimitation']),
-      authorizerLimitations:  pickField(item, ['authorizerLimitations', 'AuthorizerLimitations', 'authorizerLimitation']),
+      finalLimitations:       item.FinalLimitations ?? '',
       rejectionComment:       item.rejectReason ?? '',
+      rejectedBy:             item.rejectedBy?.name ?? '',
       type:                   item.qualificationTypeId?.name ?? '',
       withdrawn:              item.withdrawn ?? false,
+      withdrawnDate:          item.withdrawnDate ?? "",
+      rejectedDate:           item.rejectedDate ?? "",
+      withdrawnReason:        item.withdrawnReason ?? '',
+      withdrawnBy:            item.withdrawnBy?.name ?? '',
     };
   }
 
@@ -695,12 +835,8 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
 
     let targetAchieveDate = '';
     const rawDate = targetDateEl?.value ?? '';
-    if (rawDate) {
-      const parts = rawDate.split('-');
-      if (parts.length === 3) {
-        const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
-        targetAchieveDate = `${year}-${parts[1]}-${parts[0]}T00:00:00.000Z`;
-      }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+      targetAchieveDate = rawDate;
     }
 
     const selectedTypeOption    = qualTypeEl.options[qualTypeEl.selectedIndex];
@@ -825,15 +961,11 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
     const toBeVerifiedBy   = this.resolveEmployeesByIds(verifiedEl?.getAttribute('data-emp-ids')   ?? '');
     const toBeAuthorizedBy = this.resolveEmployeesByIds(authorizedEl?.getAttribute('data-emp-ids') ?? '');
 
-    // ── Normalise target date: dd-mm-yyyy → ISO string ────────────────────────
+    // ── Normalise target date: yyyy-mm-dd → ISO string ────────────────────────
     let targetAchieveDate: string | null = null;
     const rawDate = targetDateEl?.value ?? '';
-    if (rawDate) {
-      const parts = rawDate.split('-');
-      if (parts.length === 3) {
-        const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
-        targetAchieveDate = `${year}-${parts[1]}-${parts[0]}T00:00:00.000Z`;
-      }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+      targetAchieveDate = rawDate;
     }
 
     // ── Build payload — qualificationId in body, not URL ──────────────────────
@@ -986,19 +1118,19 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
   }
 
   // ── Shared reference-data fetcher (single page) ────────────────────────────
-  private async fetchRefData(apiUrl: string, windowKey: string, mapFn: (item: any) => any): Promise<void> {
-    if (!this.apiClient) { (window as any)[windowKey] = []; return; }
-    try {
-      const response = await this.apiClient.get(apiUrl, AadHttpClient.configurations.v1);
-      if (!response.ok) { (window as any)[windowKey] = []; return; }
-      const json = await response.json();
-      const raw: any[] = json?.data?.items ?? (Array.isArray(json?.data) ? json.data : (Array.isArray(json?.items) ? json.items : []));
-      (window as any)[windowKey] = raw.map(mapFn);
-    } catch (err) {
-      console.error('[NEMKO] fetchRefData error:', err);
-      (window as any)[windowKey] = [];
-    }
+private async fetchRefData(apiUrl: string, windowKey: string, mapFn: (item: any) => any): Promise<void> {
+  if (!this.apiClient) {
+    // Don't cache an empty result as "success" — throw so
+    // loadQualificationRefDataWithBackgroundRetry()'s retry loop gets a
+    // chance to try again once this.apiClient is actually ready, instead of
+    // permanently caching an empty Type/Level list in
+    // _qualificationRefDataPromise.
+    throw new Error('[NEMKO] fetchRefData: apiClient not ready');
   }
+  const json = await this.getJsonWithRetry(apiUrl);
+  const raw: any[] = json?.data?.items ?? (Array.isArray(json?.data) ? json.data : (Array.isArray(json?.items) ? json.items : []));
+  (window as any)[windowKey] = raw.map(mapFn);
+}
 
   // ── Paginated (infinite-scroll) reference-data fetcher — fetches ONE page at a time ─
   // windowItemsKey  -> window[...] array of items accumulated so far (replaced on page 1, appended after)
@@ -1086,19 +1218,46 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
 
   private ensureQualificationRefData(): Promise<void> {
     if (!this._qualificationRefDataPromise) {
-      this._qualificationRefDataPromise = Promise.all([
-        this.fetchQualificationLevels(),
-        this.fetchQualificationTypes(),
-      ])
-        .then(() => undefined)
-        .catch((err) => {
-          console.error('[NEMKO] Failed to load qualification levels/types:', err);
-          // Allow a retry the next time the modal opens instead of caching a permanent failure.
-          this._qualificationRefDataPromise = null;
-          throw err;
-        });
+      this._qualificationRefDataPromise = this.loadQualificationRefDataWithBackgroundRetry();
     }
     return this._qualificationRefDataPromise;
+  }
+
+  /**
+   * fetchQualificationLevels()/fetchQualificationTypes() each already carry their
+   * own ~7s retry budget via getJsonWithRetry. If that's still not enough — a
+   * stalled AAD silent token refresh or a cold-starting backend can take longer —
+   * this keeps quietly retrying with growing backoff for up to 90s more instead
+   * of giving up. That's the same window a manual hard refresh effectively buys,
+   * but automatic: an Add/Edit modal already open and awaiting
+   * nemkoEnsureQualificationRefData() just gets its Type/Level populated a
+   * little later once a retry lands — no error shown, no refresh needed. Only
+   * rejects once the full 90s window is exhausted, at which point the cache is
+   * reset so the next modal open starts a fresh attempt.
+   */
+  private async loadQualificationRefDataWithBackgroundRetry(): Promise<void> {
+    const attempt = (): Promise<void> =>
+      Promise.all([this.fetchQualificationLevels(), this.fetchQualificationTypes()]).then(() => undefined);
+
+    const start = Date.now();
+    const maxWindowMs = 90000;
+    let delay = 3000;
+
+    for (;;) {
+      try {
+        await attempt();
+        return;
+      } catch (err) {
+        if (Date.now() - start >= maxWindowMs) {
+          console.error('[NEMKO] Failed to load qualification levels/types after background retries:', err);
+          this._qualificationRefDataPromise = null;
+          throw err;
+        }
+        console.warn('[NEMKO] Qualification levels/types fetch failed, retrying in background:', err);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay = Math.min(delay * 1.5, 15000);
+      }
+    }
   }
 
   private readonly _refCache = new Map<string, any[]>();
@@ -1168,11 +1327,6 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
 
   private async fetchVerifiers(typeId: string, levelId: string, search?: string, referenceId?: string): Promise<void> {
     const cacheKey = `${typeId}_${levelId}_${referenceId || ''}`;
-    if (!search && this._verifierCache.has(cacheKey)) {
-      (window as any).nemkoVerifierItems = this._verifierCache.get(cacheKey);
-      (window as any).nemkoVerifierPagination = { typeId, levelId, referenceId: referenceId || '', search: '', page: 1, hasMore: false, loading: false };
-      return;
-    }
     const base = API_BASE;
     await this.fetchPaginated(
       (page) => {
@@ -1227,11 +1381,6 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
 
   private async fetchAuthorizers(typeId: string, levelId: string, search?: string, referenceId?: string): Promise<void> {
     const cacheKey = `${typeId}_${levelId}_${referenceId || ''}`;
-    if (!search && this._authorizerCache.has(cacheKey)) {
-      (window as any).nemkoAuthorizerItems = this._authorizerCache.get(cacheKey);
-      (window as any).nemkoAuthorizerPagination = { typeId, levelId, referenceId: referenceId || '', search: '', page: 1, hasMore: false, loading: false };
-      return;
-    }
     const base = API_BASE;
     await this.fetchPaginated(
       (page) => {
@@ -1337,8 +1486,20 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
   private showTableError(): void {
     const tbodies = this.domElement.querySelectorAll('.nemko-table-container tbody');
     tbodies.forEach(tbody => {
+      // Same error state as my-qualifications.js (audit D10 / handover C4)
       tbody.innerHTML =
-        '<tr><td colspan="20" style="text-align:center;padding:2rem;color:#696A6E;">Failed to load data. Please refresh the page.</td></tr>';
+        '<tr><td colspan="20" class="text-center py-4 text-color-3 text-sm font-medium">' +
+        'Could not load data. ' +
+        '<a href="#" role="button" class="nemko-table-retry-link">Try again</a>' +
+        '</td></tr>';
+      const retryLink = tbody.querySelector('.nemko-table-retry-link');
+      if (retryLink) {
+        retryLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          // Re-acquire the API client (clears _initFailed on success), then re-render
+          this.initApiClient().then(() => this.render()).catch(() => { /* error state stays */ });
+        });
+      }
     });
   }
 
@@ -1384,7 +1545,26 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
     });
   }
 
-  private loadHomeScripts(): void {
+  // SPComponentLoader.loadScript() has no built-in timeout — if the network
+  // request for a script stalls (e.g. a cold SiteAssets cache right after a
+  // hard refresh), the promise never resolves *or* rejects. Unlike the API
+  // calls in this file (all routed through getJsonWithRetry, which race each
+  // attempt against a timeout), a stalled script load would hang scriptsPromise
+  // forever below — so initMyQualifications() never runs, the loading skeleton
+  // never gets replaced, and none of my-qualifications.js's handlers (including
+  // the Add Qualification modal's populate-on-open logic) ever get registered.
+  // Racing against a timeout here bounds that hang and lets it fail into the
+  // existing scriptsPromise/dataPromise .catch() → showTableError() path instead.
+  private loadScriptWithTimeout(url: string, timeoutMs: number = 15000): Promise<void> {
+    return Promise.race([
+      SPComponentLoader.loadScript(url).then(() => undefined),
+      new Promise<void>((_, reject) =>
+        setTimeout(() => reject(new Error(`Script load timed out after ${timeoutMs}ms: ${url}`)), timeoutMs)
+      ),
+    ]);
+  }
+
+  private loadHomeScripts(renderGen: number): void {
     const siteAssetsUrl = `${this.siteUrl}/SiteAssets`;
 
     // Loaded in parallel rather than chained: my-qualifications.js only
@@ -1395,8 +1575,8 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
     // which Promise.all still guarantees. This turns two sequential network
     // round trips into one, roughly halving script-load time on a cold cache.
     const scriptsPromise = Promise.all([
-      SPComponentLoader.loadScript(`${siteAssetsUrl}/resources/js/jquery-ui.js`),
-      SPComponentLoader.loadScript(`${siteAssetsUrl}/resources/js/my-qualifications.js`),
+      this.loadScriptWithTimeout(`${siteAssetsUrl}/resources/js/jquery-ui.js`),
+      this.loadScriptWithTimeout(`${siteAssetsUrl}/resources/js/my-qualifications.js`),
     ]);
 
     // Guarantees the toolbar/filters are re-enabled exactly once no matter
@@ -1407,13 +1587,17 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
     let controlsReleased = false;
     const releaseControls = (): void => {
       if (controlsReleased) return;
+      // A newer render() has since started (renderGen no longer current) —
+      // that cycle owns the on-screen DOM and its own setControlsBusy(true)/
+      // releaseControls() pair, so this stale cycle must not touch it.
+      if (renderGen !== this._renderGeneration) return;
       controlsReleased = true;
       this.setControlsBusy(false);
     };
 
     if (this._initFailed) {
       scriptsPromise
-        .then(() => this.showTableError())
+        .then(() => { if (renderGen === this._renderGeneration) this.showTableError(); })
         .catch(err => console.error('[NEMKO] JS Load Error:', err))
         .then(() => releaseControls());
       return;
@@ -1435,6 +1619,14 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
 
     Promise.all([scriptsPromise, dataPromise])
       .then(() => {
+        // Stale cycle: a newer render() replaced the DOM this chain was
+        // loading for, and that newer cycle has already run (or will run)
+        // its own initMyQualifications() against the current DOM. Applying
+        // this one now would be a wasted re-render at best and, if this
+        // chain's data fetch actually returned stale/empty state, could
+        // overwrite the newer cycle's correct table state with the older one.
+        if (renderGen !== this._renderGeneration) return;
+
         if (typeof (window as any).initMyQualifications === 'function') {
           (window as any).initMyQualifications();
         } else {
@@ -1456,7 +1648,7 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
       })
       .catch(err => {
         console.error('[NEMKO] JS Load Error:', err);
-        this.showTableError();
+        if (renderGen === this._renderGeneration) this.showTableError();
       })
       .then(() => releaseControls());
 
@@ -1469,7 +1661,7 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
     // independent of this timer), so nothing is lost — the page just also
     // becomes clickable sooner as a fallback.
     setTimeout(() => {
-      if (!controlsReleased) {
+      if (!controlsReleased && renderGen === this._renderGeneration) {
         console.error('[NEMKO] Qualifications page took too long to load — releasing controls so the page is not stuck.');
         releaseControls();
       }

@@ -5,10 +5,10 @@ import {
 } from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 import { SPComponentLoader } from '@microsoft/sp-loader';
-import { AadHttpClient } from '@microsoft/sp-http';           // ← ADDED
+import { AadHttpClient } from '@microsoft/sp-http';
 import * as strings from 'WpVerificationAndAuthorizationWebPartStrings';
 import VerificationAndAuthorization from './VerificationAndAuthorization';
-import SharedSidebar from '../../SharedSideBar';
+import SharedSidebar from '../../SharedSidebar';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface IWpVerificationAndAuthorizationWebPartProps {
@@ -18,11 +18,13 @@ export interface IWpVerificationAndAuthorizationWebPartProps {
 interface IVerificationRow {
   Id: number;
   QualificationId: string;
+  ExternalId?: string;
   Employee: string;
   Qualification: string;
   Type: string;
   Level: string;
   TargetDate: string;
+  ReceivedDate?: string;
   Authorizer: string;
   AuthorizerEmployeeIds?: number[];
   VerifiedBy: string;
@@ -32,18 +34,22 @@ interface IVerificationRow {
   QualificationLevel?: number;
   QualificationTypeId?: number;
   ReportApprover?: boolean;
-  VerifierLimitations?: string;
+  FinalLimitation?: string;
+  LocalUnit?: string;
+  AppliedByEmail?: string;
 }
 
 interface IAuthorizationRow {
   Id: number;
   QualificationId: string;
+  ExternalId?: string;
   Employee: string;
   AppliedByEmail?: string;
   Qualification: string;
   Type: string;
   Level: string;
   TargetDate: string;
+  ReceivedDate?: string;
   Authorizer: string;
   VerifiedBy: string;
   VerifiedByEmail: string;
@@ -51,14 +57,15 @@ interface IAuthorizationRow {
   Status: string;
   Withdrawn?: boolean;
   WithdrawnDate?: string;
+  WithdrawnBy?: string;
   ConformityStatement?: boolean;
   CertificationDecision?: boolean;
   QualificationLevel?: number;
   QualificationTypeId?: number;
   ReportApprover?: boolean;
   QualifiedDate?: string;
-  VerifierLimitations?: string;
-  AuthorizerLimitations?: string;
+  FinalLimitation?: string;
+  LocalUnit?: string;
 }
 
 
@@ -99,6 +106,14 @@ interface IApiQualificationItem {
   reportApprover?: boolean;
 }
 
+interface IBulkUpdateResult {
+  completedIds: number[];
+  notFoundIds: number[];
+  authorizerEmpty: number[];
+  totalRequested: number;
+  totalCompleted: number;
+  totalFailed: number;
+}
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const API_BASE_URL =
@@ -116,8 +131,9 @@ const SORT_KEY_TO_API_FIELD: { [key: string]: string } = {
   Type: 'qualificationtype',
   Level: 'qualificationlevel',
   TargetDate: 'targetachievedate',
+  ReceivedDate: 'requesteddate',
   Authorizer: 'authorizer',
-  VerifiedBy: 'verifier' ,
+  VerifiedBy: 'verifier',
   Status: 'qualificationstatus'
 };
 
@@ -194,6 +210,8 @@ export default class WpVerificationAndAuthorizationWebPart
 
   // ── Loading flag ───────────────────────────────────────────────────────────
   private _isLoading: boolean = false;
+  // True when the last table load failed (one error pattern, audit D10 / handover C4)
+  private _loadError: boolean = false;
 
   // ── Calendar ───────────────────────────────────────────────────────────────
   private calViewYear: number = 0;
@@ -202,10 +220,14 @@ export default class WpVerificationAndAuthorizationWebPart
   // ── Modal helpers ──────────────────────────────────────────────────────────
   private activeDetailsRowId: number = -1;
   private rejectReasonConfirmCallback: ((reason: string) => void) | null = null;
+  private withdrawReasonConfirmCallback: ((reason: string) => void) | null = null;
   private selectedAuthorizerTemps: Array<{ id: number; name: string; email: string }> = [];
 
   /** Populated per-modal from GET /api/reference-data/Authorizer?qualificationTypeId=&qualificationLevel= */
   private authorizerOptions: Array<{ id: number; name: string; email: string }> = [];
+
+  private withdrawDetailsRequestId: number = 0;
+  private qualDetailsRequestId: number = 0;
 
   private yesNo(value: boolean | null | undefined): string {
     return value ? 'Yes' : 'No';
@@ -404,6 +426,7 @@ export default class WpVerificationAndAuthorizationWebPart
 
     if (!this.apiClient) {
       console.warn('[NEMKO] apiClient not initialised yet');
+      this._loadError = true;
       return emptyResult;
     }
 
@@ -430,6 +453,7 @@ export default class WpVerificationAndAuthorizationWebPart
 
       if (!response.ok) {
         console.error(`[NEMKO] API ${response.status} – ${url}`);
+        this._loadError = true;
         return emptyResult;
       }
 
@@ -471,6 +495,7 @@ export default class WpVerificationAndAuthorizationWebPart
 
     } catch (err) {
       console.error(`[NEMKO] fetch error for status="${options.status}":`, err);
+      this._loadError = true;
       return emptyResult;
     }
   }
@@ -487,11 +512,13 @@ export default class WpVerificationAndAuthorizationWebPart
     return {
       Id: item.qualificationId ?? idx + 1,
       QualificationId: String(item.qualificationId ?? ''),
+      ExternalId: item.externalId ?? '',
       Employee: employeeName,
       Qualification: item.qualificationReference?.name ?? item.qualificationName ?? '',
       Type: item.qualificationTypeId?.name ?? '',
       Level: item.qualificationLevel?.name ?? item.level ?? '',
       TargetDate: item.targetAchieveDate?.split('T')[0] ?? item.targetDate ?? '',
+      ReceivedDate: item.requestedDate?.split('T')[0] ?? item.requestedDate ?? '',
       Authorizer: Array.isArray(item.authorizer)
         ? item.authorizer.map((a: any) => a.name).join(', ')
         : (item.authorizer?.name ?? item.authorizer ?? ''),
@@ -506,7 +533,9 @@ export default class WpVerificationAndAuthorizationWebPart
       CertificationDecision: item.certificationDecision,
       QualificationLevel: item.qualificationLevel?.qualificationLevelId ?? item.qualificationLevel?.id ?? item.qualificationLevel,
       ReportApprover: item.reportApprover,
-      VerifierLimitations: item.verifierLimitations ?? '',
+      FinalLimitation: item.FinalLimitations ?? '',
+      LocalUnit: item.localUnit ?? '',
+      AppliedByEmail: item.appliedBy?.email ?? '',
       QualificationTypeId: Number(
         item.qualificationTypeId?.qualificationTypeId ??
         item.qualificationType?.qualificationTypeId ??
@@ -527,12 +556,14 @@ export default class WpVerificationAndAuthorizationWebPart
     return {
       Id: item.qualificationId ?? idx + 1,
       QualificationId: String(item.qualificationId ?? ''),
+      ExternalId: item.externalId ?? '',
       Employee: employeeName,
       AppliedByEmail: item.appliedBy?.email ?? '',
       Qualification: item.qualificationReference?.name ?? item.qualificationName ?? '',
       Type: item.qualificationTypeId?.name ?? '',
       Level: item.qualificationLevel?.name ?? item.level ?? '',
       TargetDate: item.targetAchieveDate?.split('T')[0] ?? item.targetDate ?? '',
+      ReceivedDate: item.requestedDate?.split('T')[0] ?? item.requestedDate ?? '',
       VerifiedBy: Array.isArray(item.verifier)
         ? item.verifier.map((v: any) => v.name).join(', ')
         : (item.verifier?.name ?? item.verifiedBy ?? ''),
@@ -544,6 +575,7 @@ export default class WpVerificationAndAuthorizationWebPart
         : (item.authorizer?.employeeId ? [item.authorizer.employeeId] : []),
       Withdrawn: item.withdrawn === true,
       WithdrawnDate: item.withdrawnDate ?? '',
+      WithdrawnBy: item.withdrawnBy?.name ?? '',
       Authorizer: Array.isArray(item.authorizer)
         ? item.authorizer.map((v: any) => v.name).join(', ')
         : (item.authorizer?.name ?? item.authorizer ?? ''),
@@ -561,8 +593,7 @@ export default class WpVerificationAndAuthorizationWebPart
       ) || 0,
       ReportApprover: item.reportApprover,
       QualifiedDate: item.qualifiedDate?.split('T')[0] ?? item.qualifiedDate ?? '',
-      VerifierLimitations: item.verifierLimitations ?? '',
-      AuthorizerLimitations: item.authorizerLimitations ?? ''
+      FinalLimitation: item.FinalLimitations ?? ''
     };
   }
 
@@ -588,6 +619,7 @@ export default class WpVerificationAndAuthorizationWebPart
    */
   private async loadApiData(): Promise<void> {
     this._isLoading = true;
+    this._loadError = false;
     this.showTableLoading();
 
     const tabKey = this.currentTabKey();
@@ -681,9 +713,47 @@ export default class WpVerificationAndAuthorizationWebPart
       }
     } catch (err) {
       console.error('[NEMKO] loadApiData error:', err);
+      this._loadError = true;
     } finally {
       this._isLoading = false;
     }
+  }
+  private handleDeletedQualification(qualId: string, modalId: string): void {
+
+    this.closeModal(modalId);
+
+    requestAnimationFrame(() => {
+
+      requestAnimationFrame(() => {
+
+        alert('This qualification has been deleted by the applicant and is no longer available.');
+
+        this.verificationRows = this.verificationRows.filter(r => r.QualificationId !== qualId);
+
+        this.authorizationRows = this.authorizationRows.filter(r => r.QualificationId !== qualId);
+
+        this.fetchAndRefresh();
+
+      });
+
+    });
+
+  }
+
+
+  // ─── Column widths (audit D4 / handover P6, same pattern as my-qualifications.js) ──
+  // Relative weights shared over the visible columns so the table fits its
+  // container instead of scrolling sideways. The checkbox column keeps 36px.
+  private static readonly NM_COL_WEIGHTS: Record<string, number> = {
+    Employee: 14, Qualification: 20, Type: 9, Level: 8, TargetDate: 9, ReceivedDate: 9,
+    Authorizer: 13, VerifiedBy: 13, Status: 9, Details: 8, Withdraw: 9
+  };
+  private nmColWidthStyle(key: string, visibleCols: Array<{ key: string }>): string {
+    const weights = WpVerificationAndAuthorizationWebPart.NM_COL_WEIGHTS;
+    let total = 0;
+    visibleCols.forEach(c => { if (c.key !== 'chk') total += (weights[c.key] || 10); });
+    const pct = ((weights[key] || 10) / (total || 1)) * 100;
+    return `width:${pct.toFixed(2)}%;min-width:0;`;
   }
 
   /** Fetch data then redraw the current view + pagination bar */
@@ -707,8 +777,8 @@ export default class WpVerificationAndAuthorizationWebPart
     const tbody = this.domElement.querySelector(selector);
     if (tbody) {
       tbody.innerHTML =
-        '<tr><td colspan="10" class="text-center py-4">' +
-        '<span class="text-muted">Loading data…</span>' +
+        '<tr><td colspan="10" class="text-center py-4 text-color-3 text-sm font-medium">' +
+        'Loading data…' +
         '</td></tr>';
     }
   }
@@ -767,6 +837,8 @@ export default class WpVerificationAndAuthorizationWebPart
 
     paginationEls.forEach(paginationEl => {
       paginationEl.classList.add('justify-content-start');
+      // Audit D9: hide page navigation when there is nothing to page through
+      paginationEl.style.visibility = totalCount === 0 ? 'hidden' : '';
       paginationEl.innerHTML = paginationHtml;
 
       paginationEl.querySelectorAll('[data-pg-action]').forEach(btn => {
@@ -797,6 +869,7 @@ export default class WpVerificationAndAuthorizationWebPart
     this.bindServerFilters();
     this.bindQualificationDetailsModal();
     this.bindRejectReasonModal();
+    this.bindWithdrawReasonModal();
 
     this.initCustomCalendar('targetAchieveDate', 'targetAchieveDateIcon', 'targetAchieveDateWrapper', 'nemko-cal-popup', true);
     this.initCustomCalendar('approvalDate', 'approvalDateIcon', 'approvalDateWrapper', 'approval-cal-popup', true);
@@ -876,6 +949,7 @@ export default class WpVerificationAndAuthorizationWebPart
 
     if (!this.apiClient) {
       console.warn('[NEMKO] apiClient not initialised yet');
+      this._loadError = true;
       return emptyResult;
     }
 
@@ -901,6 +975,7 @@ export default class WpVerificationAndAuthorizationWebPart
       const response = await this.apiClient.get(url, AadHttpClient.configurations.v1);
       if (!response.ok) {
         console.error(`[NEMKO] API ${response.status} – ${url}`);
+        this._loadError = true;
         return emptyResult;
       }
 
@@ -930,6 +1005,7 @@ export default class WpVerificationAndAuthorizationWebPart
 
     } catch (err) {
       console.error(`[NEMKO] fetchAuthorizations error:`, err);
+      this._loadError = true;
       return emptyResult;
     }
   }
@@ -940,6 +1016,10 @@ export default class WpVerificationAndAuthorizationWebPart
       const url = `${API_BASE_URL}/api/qualification/${encodeURIComponent(id)}`;
       console.log('[NEMKO] fetchQualificationById:', url);
       const response = await this.apiClient.get(url, AadHttpClient.configurations.v1);
+      if (response.status === 404) {
+        console.warn('[NEMKO] fetchQualificationById not found (deleted):', id);
+        return { __notFound: true };
+      }
       if (!response.ok) {
         console.warn('[NEMKO] fetchQualificationById non-ok:', response.status, 'id:', id);
         return null;
@@ -987,11 +1067,11 @@ export default class WpVerificationAndAuthorizationWebPart
   private updateSubTabLabels(): void {
     const tabs = this.domElement.querySelectorAll('.tab-link-btn');
     if (this.currentMainTab === 'verification') {
-      if (tabs[0]) tabs[0].textContent = 'Pending verification';
-      if (tabs[1]) tabs[1].textContent = 'Verified by me';
+      if (tabs[0]) tabs[0].textContent = 'Pending Verification';
+      if (tabs[1]) tabs[1].textContent = 'Verified by Me';
     } else {
-      if (tabs[0]) tabs[0].textContent = 'Pending authorization';
-      if (tabs[1]) tabs[1].textContent = 'Authorized by me';
+      if (tabs[0]) tabs[0].textContent = 'Pending Authorization';
+      if (tabs[1]) tabs[1].textContent = 'Authorized by Me';
     }
   }
 
@@ -1276,7 +1356,7 @@ export default class WpVerificationAndAuthorizationWebPart
         `<label class="dropdown-item d-flex align-items-center gap-2" data-col-key="${col.key}">` +
         `<input type="checkbox" ${isVisible ? 'checked' : ''} class="d-none" name="col-heading-${tabKey}" />` +
         `<span class="chkbox-icon ${isVisible ? 'active' : ''}"></span>` +
-        `<p class="font-medium text-sm md-text-base text-color-3">${col.label}</p>` +
+        `<p class="font-medium text-sm text-color-3">${col.label}</p>` +
         `</label></li>`
       );
     }).join('');
@@ -1362,7 +1442,8 @@ export default class WpVerificationAndAuthorizationWebPart
       { key: 'Type', label: 'Type', visible: true },
       { key: 'Level', label: 'Level', visible: true },
       { key: 'TargetDate', label: 'Target Date', visible: true },
-      { key: 'Authorizer', label: 'To be Authorized By', visible: true },
+      { key: 'ReceivedDate', label: 'Initiated Date', visible: true },
+      { key: 'Authorizer', label: 'To Be Authorized by', visible: true },
       { key: 'Status', label: 'Status', visible: true },
       { key: 'Details', label: 'Details', visible: true }
     ];
@@ -1374,6 +1455,7 @@ export default class WpVerificationAndAuthorizationWebPart
       Type: r.Type,
       Level: r.Level,
       TargetDate: r.TargetDate,
+      ReceivedDate: r.ReceivedDate,
       Authorizer: r.Authorizer,
       Status: r.Status,
       Details: '<a href="#" class="text-primary text-sm evaluate-link">Evaluate</a>'
@@ -1390,7 +1472,8 @@ export default class WpVerificationAndAuthorizationWebPart
       { key: 'Type', label: 'Type', visible: true },
       { key: 'Level', label: 'Level', visible: true },
       { key: 'TargetDate', label: 'Target Date', visible: true },
-      { key: 'Authorizer', label: 'To be Authorized By', visible: true },
+      { key: 'ReceivedDate', label: 'Initiated Date', visible: true },
+      { key: 'Authorizer', label: 'To Be Authorized by', visible: true },
       { key: 'Status', label: 'Status', visible: true }
     ];
 
@@ -1400,6 +1483,7 @@ export default class WpVerificationAndAuthorizationWebPart
       Type: r.Type,
       Level: r.Level,
       TargetDate: r.TargetDate,
+      ReceivedDate: r.ReceivedDate,
       Authorizer: r.Authorizer,
       Status: r.Status
     }));
@@ -1422,7 +1506,8 @@ export default class WpVerificationAndAuthorizationWebPart
       { key: 'Type', label: 'Type', visible: true },
       { key: 'Level', label: 'Level', visible: true },
       { key: 'TargetDate', label: 'Target Date', visible: true },
-      { key: 'VerifiedBy', label: 'Verified By', visible: true },
+      { key: 'ReceivedDate', label: 'Initiated Date', visible: true },
+      { key: 'VerifiedBy', label: 'Verified by', visible: true },
       { key: 'Status', label: 'Status', visible: true },
       { key: 'Details', label: 'Details', visible: true }
     ];
@@ -1434,6 +1519,7 @@ export default class WpVerificationAndAuthorizationWebPart
       Type: r.Type,
       Level: r.Level,
       TargetDate: r.TargetDate,
+      ReceivedDate: r.ReceivedDate,
       VerifiedBy: r.VerifiedBy,
       Status: r.Status,
       Details: '<a href="#" class="text-primary text-sm evaluate-link">Evaluate</a>'
@@ -1450,7 +1536,8 @@ export default class WpVerificationAndAuthorizationWebPart
       { key: 'Type', label: 'Type', visible: true },
       { key: 'Level', label: 'Level', visible: true },
       { key: 'TargetDate', label: 'Target Date', visible: true },
-      { key: 'VerifiedBy', label: 'Verified By', visible: true },
+      { key: 'ReceivedDate', label: 'Initiated Date', visible: true },
+      { key: 'VerifiedBy', label: 'Verified by', visible: true },
       { key: 'Status', label: 'Status', visible: true }
     ];
 
@@ -1460,6 +1547,7 @@ export default class WpVerificationAndAuthorizationWebPart
       Type: r.Type,
       Level: r.Level,
       TargetDate: r.TargetDate,
+      ReceivedDate: r.ReceivedDate,
       VerifiedBy: r.VerifiedBy,
       Status: r.Status
     }));
@@ -1491,22 +1579,31 @@ export default class WpVerificationAndAuthorizationWebPart
     let headHtml = '<tr>';
     for (const col of visibleCols) {
       if (col.key === 'chk') {
-        headHtml += '<th style="width:36px;"></th>';
+        // headHtml += '<th style="width:36px;"></th>';
+        headHtml += '<th style="width:36px;"><input type="checkbox" class="select-all-chk" /></th>';
       } else if (col.key === 'Details' || col.key === 'Withdraw') {
         headHtml +=
-          `<th><div class="w-100 d-flex justify-content-between align-items-center">` +
-          `<p class="text-color-3 font-medium text-sm lg-text-base">${col.label}</p></div></th>`;
+          `<th style="${this.nmColWidthStyle(col.key, visibleCols)}"><div class="w-100 d-flex justify-content-between align-items-center">` +
+          `<p class="text-color-3 font-medium text-sm" style="white-space:normal;">${col.label}</p></div></th>`;
       } else {
         headHtml +=
-          `<th class="sortable-col" data-sort-key="${col.key}" style="cursor:pointer;">` +
+          `<th class="sortable-col" data-sort-key="${col.key}" style="cursor:pointer;${this.nmColWidthStyle(col.key, visibleCols)}">` +
           `<div class="w-100 d-flex justify-content-between align-items-center gap-1" style="flex-wrap:nowrap;">` +
-          `<p class="text-color-3 font-medium text-sm lg-text-base" style="margin:0;min-width:0;">${col.label}</p>` +
+          `<p class="text-color-3 font-medium text-sm" style="margin:0;min-width:0;white-space:normal;">${col.label}</p>` +
           this.getSortSVG(col.key) +
           `</div></th>`;
       }
     }
     headHtml += '</tr>';
     thead.innerHTML = headHtml;
+    const selectAllChk = thead.querySelector('.select-all-chk') as HTMLInputElement | null;
+    if (selectAllChk) {
+      selectAllChk.addEventListener('change', () => {
+        tbody.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach(cb => {
+          cb.checked = selectAllChk.checked;
+        });
+      });
+    }
 
     const self = this;
     thead.querySelectorAll('.sortable-col').forEach(th => {
@@ -1527,9 +1624,24 @@ export default class WpVerificationAndAuthorizationWebPart
     });
 
     if (rows.length === 0) {
+      // Load failed: same error state as my-qualifications.js (audit D10 / handover C4)
+      if (!this._isLoading && this._loadError) {
+        tbody.innerHTML =
+          `<tr><td colspan="${visibleCols.length}" class="text-center py-4 text-color-3 text-sm font-medium">` +
+          'Could not load data. <a href="#" role="button" class="nemko-table-retry-link">Try again</a>' +
+          `</td></tr>`;
+        const retryLink = tbody.querySelector('.nemko-table-retry-link');
+        if (retryLink) {
+          retryLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.fetchAndRefresh();
+          });
+        }
+        return;
+      }
       tbody.innerHTML =
-        `<tr><td colspan="${visibleCols.length}" class="text-center text-muted py-4">` +
-        (this._isLoading ? 'Loading data…' : 'No records found.') +
+        `<tr><td colspan="${visibleCols.length}" class="text-center py-4 text-color-3 text-sm font-medium">` +
+        (this._isLoading ? 'Loading data…' : 'No records found. Try adjusting your search criteria.') +
         `</td></tr>`;
       return;
     }
@@ -1543,7 +1655,15 @@ export default class WpVerificationAndAuthorizationWebPart
         : `<tr data-qual-id="${qualId}">`) +
         visibleCols.map(col => {
           const val = row[col.key];
-          return '<td>' + (val !== undefined && val !== null ? val : '') + '</td>';
+          const content = val !== undefined && val !== null ? val : '';
+          // 'chk' (checkbox) / 'Details' / 'Withdraw' cells carry their own
+          // interactive HTML — clamping them risks clipping the control
+          // itself, so only plain-text columns get wrapped (matches
+          // my-qualifications.js's line-clamp-3 pattern).
+          if (col.key === 'chk' || col.key === 'Details' || col.key === 'Withdraw') {
+            return '<td>' + content + '</td>';
+          }
+          return '<td><div class="line-clamp-3">' + content + '</div></td>';
         }).join('') +
         '</tr>';
     }).join('');
@@ -1565,10 +1685,12 @@ export default class WpVerificationAndAuthorizationWebPart
     const verifierEmployeeId = this.getEmployeeIdByEmail(this.currentUserEmail);
 
     this.apiBulkUpdate(ids, 'verify', verifierEmployeeId)
-      .then(() => {
-        this.verificationRows = this.verificationRows.filter(r => ids.indexOf(Number(r.QualificationId)) === -1);
-        selectedRows.forEach(row => this.addAudit('Verified', row.Employee, row.Qualification));
-        alert(`${ids.length} qualification(s) submitted for verification successfully.`);
+      .then(result => {
+        this.verificationRows = this.verificationRows.filter(r => result.completedIds.indexOf(Number(r.QualificationId)) === -1);
+        selectedRows
+          .filter(row => result.completedIds.indexOf(Number(row.QualificationId)) !== -1)
+          .forEach(row => this.addAudit('Verified', row.Employee, row.Qualification));
+        this.showBulkUpdateResultAlert(result, 'verified');
         this.fetchAndRefresh();
       })
       .catch(err => {
@@ -1592,11 +1714,12 @@ export default class WpVerificationAndAuthorizationWebPart
     const authorizerEmployeeId = this.getEmployeeIdByEmail(this.currentUserEmail);
 
     this.apiBulkUpdate(ids, 'authorize', authorizerEmployeeId)
-      .then(() => {
-        this.authorizationRows = this.authorizationRows.filter(r => ids.indexOf(Number(r.QualificationId)) === -1);
-        selectedRows.forEach(row => this.addAudit('Authorized', row.Employee, row.Qualification));
-        alert(`${ids.length} qualification(s) authorized successfully.`);
-
+      .then(result => {
+        this.authorizationRows = this.authorizationRows.filter(r => result.completedIds.indexOf(Number(r.QualificationId)) === -1);
+        selectedRows
+          .filter(row => result.completedIds.indexOf(Number(row.QualificationId)) !== -1)
+          .forEach(row => this.addAudit('Authorized', row.Employee, row.Qualification));
+        this.showBulkUpdateResultAlert(result, 'authorized');
         this.fetchAndRefresh();
       })
       .catch(err => {
@@ -1613,7 +1736,8 @@ export default class WpVerificationAndAuthorizationWebPart
     return matches.length > 0 ? matches[0].id : 0;
   }
 
-  private async apiVerifyQualification(qualificationId: number, toBeAuthorizedByEmployeeIds: number[], verifierLimitations: string, targetAchieveDate?: string): Promise<void> {
+  // private async apiVerifyQualification(qualificationId: number, toBeAuthorizedByEmployeeIds: number[], finalLimitation: string, targetAchieveDate?: string): Promise<void> {
+  private async apiVerifyQualification(qualificationId: number, toBeAuthorizedByEmployeeIds: number[], finalLimitation: string, targetAchieveDate?: string, remarks?: string): Promise<void> {
     if (!this.apiClient) return;
     const url = `${API_BASE_URL}/api/qualification/Operation`;
     const body: any = {
@@ -1621,7 +1745,8 @@ export default class WpVerificationAndAuthorizationWebPart
       status: 'verify',
       toBeVerifiedBy: [],
       toBeAuthorizedBy: toBeAuthorizedByEmployeeIds.map(id => ({ employeeId: id })),
-      actionComment: verifierLimitations
+      actionComment: finalLimitation,
+      remarks: remarks ?? ''
     };
     if (targetAchieveDate) {
       body.targetAchieveDate = targetAchieveDate;
@@ -1636,7 +1761,8 @@ export default class WpVerificationAndAuthorizationWebPart
     }
   }
 
-  private async apiAuthorizeQualification(qualificationId: number, toBeAuthorizedByEmployeeId: number, authorizerLimitations: string): Promise<void> {
+  // private async apiAuthorizeQualification(qualificationId: number, toBeAuthorizedByEmployeeId: number, finalLimitation: string): Promise<void> {
+  private async apiAuthorizeQualification(qualificationId: number, toBeAuthorizedByEmployeeId: number, finalLimitation: string, remarks?: string): Promise<void> {
     if (!this.apiClient) return;
     const url = `${API_BASE_URL}/api/qualification/Operation`;
     const response = await this.apiClient.fetch(url, AadHttpClient.configurations.v1, {
@@ -1647,7 +1773,8 @@ export default class WpVerificationAndAuthorizationWebPart
         status: 'authorize',
         toBeVerifiedBy: [],
         toBeAuthorizedBy: [{ employeeId: toBeAuthorizedByEmployeeId }],
-        actionComment: authorizerLimitations
+        actionComment: finalLimitation,
+    remarks: remarks ?? ''
       })
     });
     if (!response.ok) {
@@ -1684,7 +1811,7 @@ export default class WpVerificationAndAuthorizationWebPart
 
 
 
-  private async apiWithdrawQualification(qualificationId: number): Promise<void> {
+  private async apiWithdrawQualification(qualificationId: number, reason: string = ''): Promise<void> {
     if (!this.apiClient) return;
     const url = `${API_BASE_URL}/api/qualification/Operation`;
     const response = await this.apiClient.fetch(url, AadHttpClient.configurations.v1, {
@@ -1692,7 +1819,8 @@ export default class WpVerificationAndAuthorizationWebPart
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         qualificationId: [qualificationId],
-        status: 'withdraw'
+        status: 'withdraw',
+        actionComment: reason
       })
     });
     if (!response.ok) {
@@ -1705,53 +1833,61 @@ export default class WpVerificationAndAuthorizationWebPart
     const row = this.findRow(this.verificationRows, function (r) { return r.Id === self.activeDetailsRowId; });
     if (!row) { this.closeModal('qualificationDetailsModal'); return; }
 
-    if (!confirm(`Do you want to withdraw the qualification - ${row.Qualification}?`)) return;
-
-    this.apiWithdrawQualification(Number(row.QualificationId))
-      .then(() => {
-        row.Status = 'Withdrawn';
-        this.addAudit('Withdrawn', row.Employee, row.Qualification);
-        this.closeModal('qualificationDetailsModal');
-        alert('Qualification has been withdrawn successfully.');
-        this.fetchAndRefresh();
-      })
-      .catch(err => {
-        console.error('[NEMKO] Withdraw failed:', err);
-        alert('Failed to withdraw qualification. Please try again.');
-      });
+    this.openWithdrawReasonModal((reason: string) => {
+      this.apiWithdrawQualification(Number(row.QualificationId), reason)
+        .then(() => {
+          row.Status = 'Withdrawn';
+          this.addAudit('Withdrawn', row.Employee, row.Qualification);
+          this.closeModal('qualificationDetailsModal');
+          alert('Qualification has been withdrawn successfully.');
+          this.fetchAndRefresh();
+        })
+        .catch(err => {
+          console.error('[NEMKO] Withdraw failed:', err);
+          alert('Failed to withdraw qualification. Please try again.');
+        });
+    }, 'qualificationDetailsModal');
   }
-
   private withdrawFromWithdrawDetailsModal(): void {
     const self = this;
     const row = this.findRow(this.authorizationRows, function (r) { return r.Id === self.activeDetailsRowId; });
     if (!row) { this.closeModal('withdrawDetailsModal'); return; }
 
-    if (!confirm(`Do you want to withdraw the qualification - ${row.Qualification}?`)) return;
-
-    this.apiWithdrawQualification(Number(row.QualificationId))
-      .then(() => {
-        row.Status = 'Withdrawn';
-        row.Withdrawn = true;
-        this.addAudit('Withdrawn', row.Employee, row.Qualification);
-        this.closeModal('withdrawDetailsModal');
-        alert('Qualification has been withdrawn successfully.');
-        this.fetchAndRefresh();
-      })
-      .catch(err => {
-        console.error('[NEMKO] Withdraw failed:', err);
-        alert('Failed to withdraw qualification. Please try again.');
-      });
+    this.openWithdrawReasonModal((reason: string) => {
+      this.apiWithdrawQualification(Number(row.QualificationId), reason)
+        .then(() => {
+          row.Status = 'Withdrawn';
+          row.Withdrawn = true;
+          this.addAudit('Withdrawn', row.Employee, row.Qualification);
+          this.closeModal('withdrawDetailsModal');
+          alert('Qualification has been withdrawn successfully.');
+          this.fetchAndRefresh();
+        })
+        .catch(err => {
+          console.error('[NEMKO] Withdraw failed:', err);
+          alert('Failed to withdraw qualification. Please try again.');
+        });
+    }, 'withdrawDetailsModal');
   }
+
 
   private async apiBulkUpdate(
     qualificationIds: number[],
     action: 'verify' | 'authorize' | 'reject',
     employeeId?: number,
-    reason?: string
-  ): Promise<void> {
-    if (!this.apiClient) return;
+    reason?: string,
+  remarks?: string
+  ): Promise<IBulkUpdateResult> {
+    const emptyResult: IBulkUpdateResult = {
+      completedIds: [],
+      notFoundIds: [],
+      authorizerEmpty: [],
+      totalRequested: qualificationIds.length,
+      totalCompleted: 0,
+      totalFailed: qualificationIds.length
+    };
+    if (!this.apiClient) return emptyResult;
     const url = `${API_BASE_URL}/api/qualification/BulkUpdate`;
-
     const payload: any = {
       qualificationId: qualificationIds,
       status: action,
@@ -1761,8 +1897,9 @@ export default class WpVerificationAndAuthorizationWebPart
     if (reason) {
       payload.actionComment = reason;
     }
-
-
+    if (remarks) {
+    payload.remarks = remarks;
+  }
     const response = await this.apiClient.fetch(url, AadHttpClient.configurations.v1, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -1771,6 +1908,32 @@ export default class WpVerificationAndAuthorizationWebPart
     if (!response.ok) {
       throw new Error(`API ${response.status}`);
     }
+    const json = await response.json().catch(() => null);
+    const data = json && json.data ? json.data : {};
+    return {
+      completedIds: (data.completedIds || []).map(Number),
+      notFoundIds: (data.notFoundIds || []).map(Number),
+      authorizerEmpty: (data.authorizerEmpty || []).map(Number),
+      totalRequested: data.totalRequested ?? qualificationIds.length,
+      totalCompleted: data.totalCompleted ?? 0,
+      totalFailed: data.totalFailed ?? qualificationIds.length
+    };
+  }
+  private showBulkUpdateResultAlert(result: IBulkUpdateResult, actionLabel: string): void {
+    const messages: string[] = [];
+    if (result.completedIds.length > 0) {
+      messages.push(`${result.completedIds.length} qualification(s) ${actionLabel} successfully.`);
+    }
+    if (result.authorizerEmpty.length > 0) {
+      messages.push(`${result.authorizerEmpty.length} qualification(s) could not be ${actionLabel} because no authorizer is assigned (ID: ${result.authorizerEmpty.join(', ')}).`);
+    }
+    if (result.notFoundIds.length > 0) {
+      messages.push(`${result.notFoundIds.length} qualification(s) were not found (ID: ${result.notFoundIds.join(', ')}).`);
+    }
+    if (messages.length === 0) {
+      messages.push(`No qualifications were ${actionLabel}. Please try again.`);
+    }
+    alert(messages.join('\n'));
   }
 
   private rejectSelected(panel: string): void {
@@ -1787,13 +1950,16 @@ export default class WpVerificationAndAuthorizationWebPart
     this.openRejectReasonModal((reason: string) => {
 
       this.apiBulkUpdate(ids, 'reject', undefined, reason)
-        .then(() => {
+        .then(result => {
           if (panel === 'verification') {
-            this.verificationRows = this.verificationRows.filter(r => ids.indexOf(Number(r.QualificationId)) === -1);
+            this.verificationRows = this.verificationRows.filter(r => result.completedIds.indexOf(Number(r.QualificationId)) === -1);
           } else {
-            this.authorizationRows = this.authorizationRows.filter(r => ids.indexOf(Number(r.QualificationId)) === -1);
+            this.authorizationRows = this.authorizationRows.filter(r => result.completedIds.indexOf(Number(r.QualificationId)) === -1);
           }
-          selectedRows.forEach(row => this.addAudit('Rejected', row.Employee, row.Qualification));
+          selectedRows
+            .filter(row => result.completedIds.indexOf(Number(row.QualificationId)) !== -1)
+            .forEach(row => this.addAudit('Rejected', row.Employee, row.Qualification));
+          this.showBulkUpdateResultAlert(result, 'rejected');
           this.fetchAndRefresh();
         })
         .catch(err => {
@@ -1830,6 +1996,32 @@ export default class WpVerificationAndAuthorizationWebPart
     }
   }
 
+  private bindWithdrawReasonModal(): void {
+    const self = this;
+    this.domElement.querySelector('#withdraw-reason-close-btn')?.addEventListener('click', () => {
+      self.withdrawReasonConfirmCallback = null;
+      self.closeModal('withdrawReasonModal');
+    });
+    this.domElement.querySelector('#withdraw-reason-confirm-btn')?.addEventListener('click', () => {
+      const textarea = self.domElement.querySelector('#withdraw-reason-textarea') as HTMLTextAreaElement;
+      const reason = textarea?.value?.trim() ?? '';
+      const callback = self.withdrawReasonConfirmCallback;
+      self.withdrawReasonConfirmCallback = null;
+      self.closeModal('withdrawReasonModal');
+      if (callback) callback(reason);
+    });
+  }
+
+  private openWithdrawReasonModal(onConfirm: (reason: string) => void, underlyingModalId?: string): void {
+    const textarea = this.domElement.querySelector('#withdraw-reason-textarea') as HTMLTextAreaElement;
+    if (textarea) textarea.value = '';
+    this.withdrawReasonConfirmCallback = onConfirm;
+    if (underlyingModalId) {
+      this.closeThenOpenModal(underlyingModalId, 'withdrawReasonModal');
+    } else {
+      this.openModal('withdrawReasonModal');
+    }
+  }
 
   // ── Modal: Qualification Details ───────────────────────────────────────────
   private openQualificationDetailsModal(row: Element): void {
@@ -1863,16 +2055,26 @@ export default class WpVerificationAndAuthorizationWebPart
     authorizerFallback: string;
   }): void {
     const { qualId, isPendingView, found, authorizerFallback } = opts;
+    this.qualDetailsRequestId = (this.qualDetailsRequestId || 0) + 1;
+    const requestId = this.qualDetailsRequestId;
     this.authorizerPickerQualId = Number(qualId) || 0;
     this.authorizerPickerQualificationReferenceId = 0;
 
 
     const limitationsTextarea = this.domElement.querySelector('#qd-limitations-textarea') as HTMLTextAreaElement;
     if (limitationsTextarea) { limitationsTextarea.value = ''; limitationsTextarea.readOnly = !isPendingView; }
+    this.setToggleField('qd-limitations-textarea', 'qd-limitations-textarea-para', '', isPendingView, 'qd-limitations-textarea-row');
 
+    // const targetDateInput = this.domElement.querySelector('#targetAchieveDate') as HTMLInputElement;
+    // if (targetDateInput) { targetDateInput.value = ''; targetDateInput.readOnly = true; targetDateInput.style.pointerEvents = isPendingView ? '' : 'none'; }
     const targetDateInput = this.domElement.querySelector('#targetAchieveDate') as HTMLInputElement;
-    if (targetDateInput) { targetDateInput.value = ''; targetDateInput.readOnly = true; targetDateInput.style.pointerEvents = isPendingView ? '' : 'none'; }
-
+    if (targetDateInput) {
+      targetDateInput.value = '';
+      targetDateInput.readOnly = true;
+      targetDateInput.style.pointerEvents = isPendingView ? '' : 'none';
+      targetDateInput.style.backgroundColor = isPendingView ? '' : '#e9ecef';
+      targetDateInput.style.cursor = isPendingView ? 'pointer' : 'default';
+    }
     const targetDateIcon = this.domElement.querySelector('#targetAchieveDateIcon') as HTMLElement;
     if (targetDateIcon) targetDateIcon.style.display = isPendingView ? '' : 'none';
 
@@ -1887,7 +2089,12 @@ export default class WpVerificationAndAuthorizationWebPart
     if (isPendingView) {
       if (verifyBtn) verifyBtn.style.display = '';
       if (rejectBtn) rejectBtn.style.display = '';
-      if (authorizerInput) { authorizerInput.value = ''; authorizerInput.readOnly = false; authorizerInput.style.display = ''; }
+      // if (authorizerInput) { authorizerInput.value = ''; authorizerInput.readOnly = true; authorizerInput.style.display = ''; }
+      if (authorizerInput) {
+        authorizerInput.value = '';
+        authorizerInput.readOnly = true;
+        authorizerInput.style.display = '';
+      }
       if (authorizerPickBtn) authorizerPickBtn.style.display = '';
       const wrapper = authorizerInput?.parentElement;
       if (wrapper) { const oldEl = wrapper.querySelector('.qd-authorizer-readonly') as HTMLElement; if (oldEl) oldEl.style.display = 'none'; }
@@ -1897,23 +2104,42 @@ export default class WpVerificationAndAuthorizationWebPart
     } else {
       if (verifyBtn) verifyBtn.style.display = 'none';
       if (rejectBtn) rejectBtn.style.display = 'none';
-      if (authorizerInput) { authorizerInput.value = ''; authorizerInput.readOnly = true; authorizerInput.style.display = ''; }
+      // if (authorizerInput) { authorizerInput.value = ''; authorizerInput.readOnly = false; authorizerInput.style.display = ''; }
+      if (authorizerInput) {
+        authorizerInput.value = '';
+        authorizerInput.readOnly = true;
+        authorizerInput.style.display = '';
+      }
       if (authorizerPickBtn) authorizerPickBtn.style.display = 'none';
     }
 
-    this.setModalField('qd-qual-id', qualId);
+    this.setModalField('qd-qual-id', found?.ExternalId || 'Loading…');
     this.setModalField('qd-requested-by', 'Loading…');
+    this.setModalField('qd-verifier', 'Loading…');
     this.setModalField('qd-qualification', 'Loading…');
     this.setModalField('qd-qualification-type', 'Loading…');
     this.setModalField('qd-qual-level', 'Loading…');
     this.setModalField('qd-conformity', '—');
     this.setModalField('qd-report-approver', '—');
+    this.setModalField('qd-certification', '—');
     this.setModalField('qd-status', '—');
-    this.setModalField('qd-remarks', '—');
-    this.setModalField('qd-limitations-requester', '—');
-
+    this.setToggleField('qd-remarks', 'qd-remarks-para', '', isPendingView, 'qd-remarks-row');
+    const remarksTextarea = this.domElement.querySelector('#qd-remarks') as HTMLTextAreaElement;
+    if (remarksTextarea) remarksTextarea.readOnly = !isPendingView;
+    this.setToggleField('qd-limitations-requester-textarea', 'qd-limitations-requester', '', false, 'qd-limitations-requester-row');
+    this.setModalField('qd-local-unit', found?.LocalUnit || 'Loading…');
+    this.setModalField('qd-email-address', found?.AppliedByEmail || 'Loading…');
+    this.setRowVisibility('qd-qualified-date-row', !isPendingView);
+    this.setRowVisibility('qd-withdrawn-date-row', !isPendingView);
+    this.setRowVisibility('qd-withdrawn-reason-row', !isPendingView);
+    this.setRowVisibility('qd-withdrawn-by-row', !isPendingView);
 
     this.fetchQualificationById(qualId).then((fresh: any) => {
+      if (requestId !== this.qualDetailsRequestId) return; // stale response, a newer row is open now
+      if (fresh?.__notFound) {
+        this.handleDeletedQualification(qualId, 'qualificationDetailsModal');
+        return;
+      }
       const fmtDate = (d: string | null | undefined) => {
         if (!d) return '';
         return d.split('T')[0];
@@ -1927,13 +2153,22 @@ export default class WpVerificationAndAuthorizationWebPart
       const targetDate = fmtDate(fresh?.targetAchieveDate);
       const conformity = fresh != null ? this.yesNo(fresh.confirmityStatement ?? fresh.conformityStatement) : '—';
       const reportApprover = fresh != null ? this.yesNo(fresh.reportApprover) : '—';
-      const status = fresh?.qualificationStatus?.name ?? fresh?.status ?? found?.Status ?? '—';
+      const certificationDecision = fresh != null ? this.yesNo(fresh.certificationDecision) : '—';
+      const status = fresh?.qualificationStatus?.name ?? found?.Status ?? fresh?.status ?? '—';
       const remarks = fresh?.remarks ?? '';
       const limitations = fresh?.limitations ?? '';
-      const verifierLimitations = fresh?.verifierLimitations ?? '';
+      const finalLimitation = fresh?.FinalLimitations ?? '';
+      const qualifiedDate = fresh?.qualifiedDate ?? '';
+      const withdrawnDate = fresh?.withdrawnDate ?? '';
+      const withdrawnReason = fresh?.withdrawnReason ?? '';
+      const withdrawnBy = fresh?.withdrawnBy?.name ?? '';
       const authorizer = fresh != null && Array.isArray(fresh.authorizer)
         ? fresh.authorizer.map((a: any) => a.name).join(', ')
         : authorizerFallback;
+
+      const verifiedByName = Array.isArray(fresh?.verifier)
+        ? fresh.verifier.map((v: any) => v.name).join(', ')
+        : (found?.VerifiedBy ?? '');
 
       const qualTypeId = Number(
         fresh?.qualificationTypeId?.qualificationTypeId ??
@@ -1947,23 +2182,55 @@ export default class WpVerificationAndAuthorizationWebPart
       const authorizerEmployeeIds: number[] = Array.isArray(fresh?.authorizer)
         ? fresh.authorizer.map((a: any) => Number(a.employeeId ?? 0)).filter((id: number) => id > 0)
         : (found as IVerificationRow)?.AuthorizerEmployeeIds ?? [];
+      const externalId = fresh?.externalId ?? found?.ExternalId ?? '';
+      const localUnit = fresh?.localUnit ?? found?.LocalUnit ?? '—';
+      const emailAddress = appliedBy.email ?? found?.AppliedByEmail ?? '—';
 
-      this.setModalField('qd-qual-id', qualId);
+      this.setModalField('qd-qual-id', externalId || '—');
+      this.setModalField('qd-local-unit', localUnit);
+      this.setModalField('qd-email-address', emailAddress);
       this.setModalField('qd-requested-by', employee);
       this.setModalField('qd-qualification', qualification);
       this.setModalField('qd-qualification-type', qualificationType || '—');
       this.setModalField('qd-qual-level', level);
       this.setModalField('qd-conformity', conformity);
       this.setModalField('qd-report-approver', reportApprover);
+      this.setModalField('qd-certification', certificationDecision);
+      // this.setModalField('qd-status', status);
       this.setModalField('qd-status', status);
-      this.setModalField('qd-remarks', remarks || '—');
-      this.setModalField('qd-limitations-requester', limitations || '—');
+      this.setModalField('qd-verifier', verifiedByName);
+      this.setToggleField('qd-remarks', 'qd-remarks-para', remarks, isPendingView, 'qd-remarks-row');
+      if (remarksTextarea) remarksTextarea.readOnly = !isPendingView;
+      this.setToggleField('qd-limitations-requester-textarea', 'qd-limitations-requester', limitations, false, 'qd-limitations-requester-row');
 
       const qdWithdrawBtn = this.domElement.querySelector('#qd-withdraw-btn') as HTMLElement;
       if (qdWithdrawBtn) qdWithdrawBtn.style.display = (!isPendingView && status === 'Authorized') ? '' : 'none';
 
-      if (limitationsTextarea) limitationsTextarea.value = verifierLimitations;
-      if (targetDateInput) targetDateInput.value = targetDate;
+      // const statusNorm = String(status).trim().toLowerCase();
+      // const isAuthorized = statusNorm === 'authorized';
+      // const isWithdrawnStatus = statusNorm === 'withdrawn';
+      // Withdrawn By / Withdrawn Reason / Withdrawn date: NEVER shown in
+      // Pending verification. Always shown in "Verified by me", regardless
+      // of status — empty values fall back to the same dash/underline
+      // treatment used for Limitations and Remarks. Single source of
+      // truth — no other branch below is allowed to override this.
+      const showWithdrawnInfo = !isPendingView;
+      this.setRowVisibility('qd-withdrawn-reason-row', showWithdrawnInfo);
+      this.setRowVisibility('qd-withdrawn-by-row', showWithdrawnInfo);
+      this.setRowVisibility('qd-withdrawn-date-row', showWithdrawnInfo);
+      this.setToggleField('qd-withdrawn-reason-textarea', 'qd-withdrawn-reason-para', showWithdrawnInfo ? withdrawnReason : '', false, 'qd-withdrawn-reason-row');
+      this.setModalField('qd-withdrawn-by', showWithdrawnInfo ? withdrawnBy : '—');
+      const wDate = withdrawnDate ? withdrawnDate.split('T')[0] : '';
+      this.setModalField('qd-withdrawn-date-readonly', showWithdrawnInfo ? wDate : '—');
+      this.setRowVisibility('qd-qualified-date-row', showWithdrawnInfo);
+      const qDate = qualifiedDate ? qualifiedDate.split('T')[0] : '';
+      this.setModalField('qd-qualified-date-readonly', showWithdrawnInfo ? qDate : '—');
+      if (limitationsTextarea) limitationsTextarea.value = finalLimitation;
+      this.setToggleField('qd-limitations-textarea', 'qd-limitations-textarea-para', finalLimitation, isPendingView, 'qd-limitations-textarea-row');
+
+      // if (limitationsTextarea) limitationsTextarea.value = finalLimitation;
+      // if (targetDateInput) targetDateInput.value = targetDate;
+      if (targetDateInput) targetDateInput.value = isPendingView ? targetDate : (targetDate || '—');
 
       if (isPendingView) {
         if (authorizerInput) authorizerInput.value = authorizer;
@@ -2013,10 +2280,13 @@ export default class WpVerificationAndAuthorizationWebPart
       }
 
       const limitationsTextarea = this.domElement.querySelector('#qualificationDetailsModal #qd-limitations-textarea') as HTMLTextAreaElement;
-      const verifierLimitations = limitationsTextarea?.value?.trim() ?? '';
+      const finalLimitation = limitationsTextarea?.value?.trim() ?? '';
       const targetDateInput = this.domElement.querySelector('#targetAchieveDate') as HTMLInputElement;
       const targetAchieveDate = targetDateInput?.value?.trim() || '';
-      this.apiVerifyQualification(Number(row.QualificationId), toBeAuthorizedByIds, verifierLimitations, targetAchieveDate)
+      // this.apiVerifyQualification(Number(row.QualificationId), toBeAuthorizedByIds, finalLimitation, targetAchieveDate)
+      const remarksTextarea = this.domElement.querySelector('#qualificationDetailsModal #qd-remarks') as HTMLTextAreaElement;
+const remarks = remarksTextarea?.value?.trim() ?? '';
+this.apiVerifyQualification(Number(row.QualificationId), toBeAuthorizedByIds, finalLimitation, targetAchieveDate, remarks)
         .then(() => {
           row.Status = 'Verified';
           row.VerifiedBy = this.currentUserEmail || 'Current User';
@@ -2115,7 +2385,7 @@ export default class WpVerificationAndAuthorizationWebPart
     }
 
     const authEmailInput = authModal.querySelector('#auth-auth-email') as HTMLInputElement;
-    if (authEmailInput) authEmailInput.value = this.currentUserEmail || '';
+    if (authEmailInput) authEmailInput.value = '';
 
     const approvalDateInput = authModal.querySelector('#approvalDate') as HTMLInputElement;
     if (approvalDateInput) approvalDateInput.value = '';
@@ -2128,9 +2398,13 @@ export default class WpVerificationAndAuthorizationWebPart
     });
 
     const qualIdEl = authModal.querySelector('#auth-qual-id') as HTMLInputElement;
-    if (qualIdEl) qualIdEl.value = qualId || 'Loading…';
+    if (qualIdEl) qualIdEl.value = found?.ExternalId || 'Loading…';
     const requestedByEl = authModal.querySelector('#auth-requested-by') as HTMLInputElement;
     if (requestedByEl) requestedByEl.value = 'Loading…';
+    const localUnitEl = authModal.querySelector('#auth-local-unit') as HTMLInputElement;
+    if (localUnitEl) localUnitEl.value = found?.LocalUnit || 'Loading…';
+    const emailAddressEl = authModal.querySelector('#auth-email-address') as HTMLInputElement;
+    if (emailAddressEl) emailAddressEl.value = found?.AppliedByEmail || 'Loading…';
     const qualificationEl = authModal.querySelector('#auth-qualification') as HTMLInputElement;
     if (qualificationEl) qualificationEl.value = 'Loading…';
     const qualificationTypeEl = authModal.querySelector('#auth-qualification-type') as HTMLInputElement;
@@ -2141,17 +2415,18 @@ export default class WpVerificationAndAuthorizationWebPart
     if (conformityEl) conformityEl.value = '—';
     const reportApproverEl = authModal.querySelector('#auth-report-approver') as HTMLInputElement;
     if (reportApproverEl) reportApproverEl.value = '—';
+    const certificationEl = authModal.querySelector('#auth-certification') as HTMLInputElement;
+    if (certificationEl) certificationEl.value = '—';
     const statusEl = authModal.querySelector('#auth-status') as HTMLInputElement;
     if (statusEl) statusEl.value = 'Loading…';
 
-    const remarksEl = authModal.querySelector('#auth-remarks') as HTMLElement;
-    if (remarksEl) remarksEl.textContent = '—';
-    const limitationsRequesterEl = this.domElement.querySelector('#authorizationDetailsModal #auth-limitations-requester') as HTMLElement;
-    if (limitationsRequesterEl) limitationsRequesterEl.textContent = '—';
-    const limitationsVerifierEl = this.domElement.querySelector('#authorizationDetailsModal #auth-limitations-verifier') as HTMLElement;
-    if (limitationsVerifierEl) limitationsVerifierEl.textContent = found?.VerifierLimitations && found.VerifierLimitations.trim() !== '' ? found.VerifierLimitations : '—';
+    const remarksEl = authModal.querySelector('#auth-remarks') as HTMLTextAreaElement;
+if (remarksEl) remarksEl.value = '';
+    this.setToggleField('auth-limitations-requester-textarea', 'auth-limitations-requester', '', false, 'auth-limitations-requester-row');
     const limitationsTextarea = authModal.querySelector('#limitationsTxtarea') as HTMLTextAreaElement;
-    if (limitationsTextarea) limitationsTextarea.value = found?.AuthorizerLimitations ?? '';
+    if (limitationsTextarea) limitationsTextarea.value = found?.FinalLimitation ?? '';
+    const targetDateEl = authModal.querySelector('#auth-target-date') as HTMLInputElement;
+    if (targetDateEl) targetDateEl.value = 'Loading…';
     const reqEmailInput = authModal.querySelector('#auth-req-email') as HTMLInputElement;
     if (reqEmailInput) reqEmailInput.value = '';
     const verEmailInput = authModal.querySelector('#auth-ver-email') as HTMLInputElement;
@@ -2160,6 +2435,10 @@ export default class WpVerificationAndAuthorizationWebPart
     this.openModal('authorizationDetailsModal');
 
     this.fetchQualificationById(qualId).then((fresh: any) => {
+      if (fresh?.__notFound) {
+        this.handleDeletedQualification(qualId, 'authorizationDetailsModal');
+        return;
+      }
       const appliedBy = fresh?.appliedBy ?? {};
       const employee = appliedBy.name ?? found?.Employee ?? '';
       const qualification = fresh?.qualificationReference?.name ?? '';
@@ -2167,31 +2446,49 @@ export default class WpVerificationAndAuthorizationWebPart
       const level = fresh?.qualificationLevel?.name ?? '';
       const conformity = fresh != null ? this.yesNo(fresh.confirmityStatement ?? fresh.conformityStatement) : '—';
       const reportApprover = fresh != null ? this.yesNo(fresh.reportApprover) : '—';
+      const certificationDecision = fresh != null ? this.yesNo(fresh.certificationDecision) : '—';
       const status = fresh?.qualificationStatus?.name ?? fresh?.status ?? found?.Status ?? '—';
       const remarks = fresh?.remarks ?? '';
-      const verifierLimitations = fresh?.verifierLimitations ?? '';
+      const finalLimitation = fresh?.FinalLimitations ?? '';
       const applicantLimitations = fresh?.limitations ?? '';
+      const externalId = fresh?.externalId ?? found?.ExternalId ?? '';
 
-      const verifiedByEmail = Array.isArray(fresh?.verifier)
-        ? fresh.verifier.map((v: any) => v.email).join(', ')
-        : (found?.VerifiedByEmail ?? '');
+       const verifiedByName = Array.isArray(fresh?.verifier)
+        ? fresh.verifier.map((v: any) => v.name).join(', ')
+        : (found?.VerifiedBy ?? '');
+
+      const authorizerName = Array.isArray(fresh?.authorizer) && fresh.authorizer.length > 0
+        ? fresh.authorizer.map((a: any) => a.name).join(', ')
+        : (found?.Authorizer ?? '');
 
       const requesterEmail = appliedBy.email ?? found?.AppliedByEmail ?? '';
+      const localUnit = fresh?.localUnit ?? found?.LocalUnit ?? '—';
+      const fmtDate = (d: string | null | undefined) => {
+        if (!d) return '—';
+        return d.split('T')[0];
+      };
+      const targetDate = fresh?.targetAchieveDate ?? found?.TargetDate ?? '';
 
-      if (qualIdEl) qualIdEl.value = qualId || '—';
+      if (qualIdEl) qualIdEl.value = externalId || '—';
       if (requestedByEl) requestedByEl.value = employee || '—';
       if (qualificationEl) qualificationEl.value = qualification || '—';
       if (qualificationTypeEl) qualificationTypeEl.value = qualificationType || '—';
       if (qualLevelEl) qualLevelEl.value = level || '—';
       if (conformityEl) conformityEl.value = conformity;
       if (reportApproverEl) reportApproverEl.value = reportApprover;
+      if (certificationEl) certificationEl.value = certificationDecision;
       if (statusEl) statusEl.value = status;
+      if (localUnitEl) localUnitEl.value = localUnit;
+      if (emailAddressEl) emailAddressEl.value = requesterEmail;
 
-      if (remarksEl) remarksEl.textContent = remarks || '—';
-      if (limitationsRequesterEl) limitationsRequesterEl.textContent = applicantLimitations || '—';
-      if (limitationsVerifierEl) limitationsVerifierEl.textContent = verifierLimitations || '—';
+      // if (remarksEl) remarksEl.value = remarks || '—';
+      if (remarksEl) remarksEl.value = remarks || '';
+      this.setToggleField('auth-limitations-requester-textarea', 'auth-limitations-requester', applicantLimitations, false, 'auth-limitations-requester-row');
+      if (limitationsTextarea) limitationsTextarea.value = finalLimitation || found?.FinalLimitation || '';
+      if (targetDateEl) targetDateEl.value = fmtDate(targetDate);
       if (reqEmailInput) reqEmailInput.value = requesterEmail;
-      if (verEmailInput) verEmailInput.value = verifiedByEmail;
+      if (verEmailInput) verEmailInput.value = verifiedByName;
+      if (authEmailInput) authEmailInput.value = authorizerName;
 
       const qualTypeId = Number(
         fresh?.qualificationTypeId?.qualificationTypeId ??
@@ -2232,8 +2529,11 @@ export default class WpVerificationAndAuthorizationWebPart
           ? row.AuthorizerEmployeeIds[0]
           : this.getEmployeeIdByEmail(authorizerEmail);
         const limitationsTextarea = this.domElement.querySelector('#authorizationDetailsModal #limitationsTxtarea') as HTMLTextAreaElement;
-        const authorizerLimitations = limitationsTextarea?.value?.trim() ?? '';
-        this.apiAuthorizeQualification(Number(row.QualificationId), toBeAuthorizedByEmployeeId, authorizerLimitations)
+        const finalLimitation = limitationsTextarea?.value?.trim() ?? '';
+        // this.apiAuthorizeQualification(Number(row.QualificationId), toBeAuthorizedByEmployeeId, finalLimitation)
+        const remarksTextarea = this.domElement.querySelector('#authorizationDetailsModal #auth-remarks') as HTMLTextAreaElement;
+const remarks = remarksTextarea?.value?.trim() ?? '';
+this.apiAuthorizeQualification(Number(row.QualificationId), toBeAuthorizedByEmployeeId, finalLimitation, remarks)
           .then(() => {
             row.Status = 'Authorized';
             this.addAudit('Authorized', row.Employee, row.Qualification);
@@ -2312,6 +2612,8 @@ export default class WpVerificationAndAuthorizationWebPart
 
   // ── Modal: Withdraw Details ────────────────────────────────────────────────
   private openWithdrawDetailsModal(row: Element): void {
+    this.withdrawDetailsRequestId = (this.withdrawDetailsRequestId || 0) + 1;
+    const requestId = this.withdrawDetailsRequestId;
     const cells = row.querySelectorAll('td');
     const employeeFallback = cells[0]?.textContent?.trim() ?? '';
 
@@ -2331,25 +2633,32 @@ export default class WpVerificationAndAuthorizationWebPart
     if (wdWithdrawBtn) wdWithdrawBtn.style.display = 'none';
 
     const authEmailInput = modal.querySelector('#wd-auth-email') as HTMLInputElement;
-    if (authEmailInput) { authEmailInput.value = this.currentUserEmail; authEmailInput.readOnly = true; }
+    if (authEmailInput) { authEmailInput.value = ''; authEmailInput.readOnly = true; }
 
     const qualIdEl = modal.querySelector('#wd-qual-id') as HTMLInputElement;
-    if (qualIdEl) qualIdEl.value = qualId || 'Loading…';
+    if (qualIdEl) qualIdEl.value = foundRow?.ExternalId || 'Loading…';
 
     this.setModalField('wd-requested-by', 'Loading…');
     this.setModalField('wd-qualification', 'Loading…');
     this.setModalField('wd-qualification-type', 'Loading…');
     this.setModalField('wd-level', 'Loading…');
-    this.setModalField('wd-conformity', '—');
+        this.setModalField('wd-conformity', '—');
     this.setModalField('wd-report-approver', '—');
     this.setModalField('wd-status', '—');
+    this.setModalField('wd-certification', '—');
     this.setModalField('wd-remarks', '—');
 
-    this.setModalField('wd-limitations-verifier', '—');
     this.setModalField('wd-limitations', '—');
-    this.setModalField('wd-limitations-authorizer', '—');
+    this.setModalField('wd-limitations-final', '—');
+    this.setModalField('wd-target-date', '—');
     this.setModalField('wd-qualified-date-readonly', '—');
     this.setModalField('wd-withdrawn-date-readonly', '—');
+    this.setModalField('wd-local-unit', foundRow?.LocalUnit || 'Loading…');
+    this.setModalField('wd-email-address', foundRow?.AppliedByEmail || 'Loading…');
+   this.setRowVisibility('wd-withdrawn-reason-row', true);
+    this.setRowVisibility('wd-withdrawn-by-row', true);
+    this.setModalField('wd-withdrawn-by', '—');
+
 
     const reqEmailInput = modal.querySelector('#wd-req-email') as HTMLInputElement;
     if (reqEmailInput) { reqEmailInput.value = ''; reqEmailInput.readOnly = true; }
@@ -2359,10 +2668,14 @@ export default class WpVerificationAndAuthorizationWebPart
     this.openModal('withdrawDetailsModal');
 
     this.fetchQualificationById(qualId).then((fresh: any) => {
-      const fmtDate = (d: string | null | undefined) => {
+      if (requestId !== this.withdrawDetailsRequestId) return; // stale response, a newer row is open now
+      if (fresh?.__notFound) {
+        this.handleDeletedQualification(qualId, 'withdrawDetailsModal');
+        return;
+      }
+     const fmtDate = (d: string | null | undefined) => {
         if (!d) return '—';
-        const p = d.split('T')[0].split('-');
-        return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d;
+        return d.split('T')[0];
       };
 
       const appliedBy = fresh?.appliedBy ?? {};
@@ -2372,20 +2685,29 @@ export default class WpVerificationAndAuthorizationWebPart
       const level = fresh?.qualificationLevel?.name ?? foundRow?.Level ?? '';
       const conformity = fresh != null ? this.yesNo(fresh.confirmityStatement ?? fresh.conformityStatement) : '—';
       const reportApprover = fresh != null ? this.yesNo(fresh.reportApprover) : '—';
+      const certificationDecision = fresh != null ? this.yesNo(fresh.certificationDecision) : '—';
       const remarks = fresh?.remarks ?? '';
-      const verifierLimitations = fresh?.verifierLimitations ?? '';
       const limitations = fresh?.limitations ?? '';
-      const authorizerLimitations = fresh?.authorizerLimitations ?? '';
+      const finalLimitation = fresh?.FinalLimitations ?? '';
+      const externalId = fresh?.externalId ?? foundRow?.ExternalId ?? '';
 
-      const verifiedByEmail = Array.isArray(fresh?.verifier)
-        ? fresh.verifier.map((v: any) => v.email).join(', ')
-        : (foundRow?.VerifiedByEmail ?? '');
-      const requesterEmail = appliedBy.email ?? foundRow?.AppliedByEmail ?? '';
-      const qualifiedDate = fresh?.qualifiedDate ?? foundRow?.QualifiedDate ?? '';
+       const verifiedByName = Array.isArray(fresh?.verifier)
+        ? fresh.verifier.map((v: any) => v.name).join(', ')
+        : (foundRow?.VerifiedBy ?? '');
+      const authorizerName = Array.isArray(fresh?.authorizer) && fresh.authorizer.length > 0
+        ? fresh.authorizer.map((a: any) => a.name).join(', ')
+        : (foundRow?.Authorizer ?? '');
+     const qualifiedDate = fresh?.qualifiedDate ?? foundRow?.QualifiedDate ?? '';
       const withdrawnDate = fresh?.withdrawnDate ?? foundRow?.WithdrawnDate ?? '';
-      const status = fresh?.qualificationStatus?.name ?? fresh?.status ?? foundRow?.Status ?? '—';
-
-      if (qualIdEl) qualIdEl.value = qualId || '—';
+      const targetDate = fresh?.targetAchieveDate ?? foundRow?.TargetDate ?? '';
+      const status = fresh?.qualificationStatus?.name ?? foundRow?.Status ?? fresh?.status ?? '—';
+      const localUnit = fresh?.localUnit ?? foundRow?.LocalUnit ?? '—';
+      const requesterEmail = appliedBy.email ?? foundRow?.AppliedByEmail ?? '—';
+     // Withdrawn by / Withdrawn reason are always shown in "Authorized by
+      // me", regardless of status — not just when Withdrawn.
+      const withdrawnReason = String(fresh?.withdrawnReason ?? '').trim();
+      const withdrawnBy = fresh?.withdrawnBy?.name ?? '';
+      if (qualIdEl) qualIdEl.value = externalId || '—';
       this.setModalField('wd-requested-by', employee);
       this.setModalField('wd-qualification', qualification);
       this.setModalField('wd-qualification-type', qualificationType || '—');
@@ -2393,16 +2715,30 @@ export default class WpVerificationAndAuthorizationWebPart
       this.setModalField('wd-conformity', conformity);
       this.setModalField('wd-report-approver', reportApprover);
       this.setModalField('wd-status', status);
-      this.setModalField('wd-remarks', remarks || '—');
-
-      this.setModalField('wd-limitations-verifier', verifierLimitations || '—');
-      this.setModalField('wd-limitations', limitations || '—');
-      this.setModalField('wd-limitations-authorizer', authorizerLimitations || '—');
+      this.setModalField('wd-certification', certificationDecision);
+      // this.setModalField('wd-remarks', remarks || '—');
+      this.setReadonlyTextBox('wd-remarks', remarks || '—');
+      this.setModalField('wd-local-unit', localUnit);
+      this.setModalField('wd-email-address', requesterEmail);
+      // this.setModalField('wd-limitations', limitations || '—');
+      this.setReadonlyTextBox('wd-limitations', limitations || '—');
+      // this.setModalField('wd-limitations-final', finalLimitation || '—');
+      this.setReadonlyTextBox('wd-limitations-final', finalLimitation || '—');
+      this.setModalField('wd-target-date', fmtDate(targetDate));
       this.setModalField('wd-qualified-date-readonly', fmtDate(qualifiedDate));
       this.setModalField('wd-withdrawn-date-readonly', fmtDate(withdrawnDate));
+      this.setRowVisibility('wd-withdrawn-reason-row', true);
+      this.setRowVisibility('wd-withdrawn-by-row', true);
+      // Visibility lives on the row only (setRowVisibility above) — the
+      // paragraph must never carry its own separate display toggle, or the
+      // two can fall out of sync (row shown, text still hidden).
+      this.setReadonlyTextBox('wd-withdrawn-reason-para', withdrawnReason || '—');
+      this.setModalField('wd-withdrawn-by', withdrawnBy || '—');
 
-      if (reqEmailInput) reqEmailInput.value = requesterEmail;
-      if (verEmailInput) verEmailInput.value = verifiedByEmail;
+       if (reqEmailInput) reqEmailInput.value = requesterEmail;
+      if (verEmailInput) verEmailInput.value = verifiedByName;
+      if (authEmailInput) authEmailInput.value = authorizerName;
+
 
       const wdWithdrawBtnLive = modal.querySelector('#wd-withdraw-btn') as HTMLElement;
       if (wdWithdrawBtnLive) wdWithdrawBtnLive.style.display = (status === 'Authorized') ? '' : 'none';
@@ -2442,7 +2778,7 @@ export default class WpVerificationAndAuthorizationWebPart
         `<label class="nemko-frm-chkbox d-flex align-items-center gap-2" data-item-id="${a.id}">` +
         `<input class="form-check-input" type="checkbox" name="authorizerCheckbox" value="${a.id}" data-name="${a.name}" data-email="${a.email}"${isSel ? ' checked' : ''} />` +
         `<span class="chkbox-icon${isSel ? ' active' : ''}"></span>` +
-        `<p class="form-check-label">${a.name}<span class="text-muted text-xs ms-2">${a.email}</span></p>` +
+        `<p class="form-check-label" style="text-transform:none;">${a.name}<span class="text-muted text-xs ms-2">${a.email}</span></p>` +
         `</label>`
       );
     };
@@ -2545,7 +2881,7 @@ export default class WpVerificationAndAuthorizationWebPart
 
     this.domElement.querySelector('#authorizer-save-btn')?.addEventListener('click', () => {
       const ai = self.domElement.querySelector('#qd-authorizer') as HTMLInputElement;
-      if (ai && self.selectedAuthorizerTemps.length > 0) {
+      if (ai) {
         ai.value = self.selectedAuthorizerTemps.map(a => a.name).join(', ');
       }
       self.closeThenOpenModal('selectAuthorizerModal', 'qualificationDetailsModal');
@@ -2636,9 +2972,9 @@ export default class WpVerificationAndAuthorizationWebPart
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
     let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">` +
-      `<button type="button" id="cal-prev" style="width:28px;height:28px;border:none;background:#006e8c;color:#fff;border-radius:4px;">‹</button>` +
+      `<button type="button" id="cal-prev" style="width:28px;height:28px;border:none;background:var(--nemko-blue);color:#fff;border-radius:4px;">‹</button>` +
       `<span style="font-weight:600;">${MONTHS[month]} ${year}</span>` +
-      `<button type="button" id="cal-next" style="width:28px;height:28px;border:none;background:#006e8c;color:#fff;border-radius:4px;">›</button>` +
+      `<button type="button" id="cal-next" style="width:28px;height:28px;border:none;background:var(--nemko-blue);color:#fff;border-radius:4px;">›</button>` +
       `</div><table style="width:100%;border-collapse:collapse;"><thead><tr>` +
       DAYS.map(d => `<th style="padding:4px;text-align:center;font-size:12px;">${d}</th>`).join('') +
       `</tr></thead><tbody>`;
@@ -2657,7 +2993,7 @@ export default class WpVerificationAndAuthorizationWebPart
           if (isPast) {
             style += 'color:#ccc;cursor:not-allowed;pointer-events:none;';
           } else if (isSel) {
-            style += 'background:#006e8c;color:#fff;cursor:pointer;';
+            style += 'background:var(--nemko-blue);color:#fff;cursor:pointer;';
           } else if (isTd) {
             style += 'background:#fff3cd;cursor:pointer;';
           } else {
@@ -2704,24 +3040,95 @@ export default class WpVerificationAndAuthorizationWebPart
   }
 
   // ── Utility ────────────────────────────────────────────────────────────────
-  private setModalField(fieldId: string, value: string): void {
-    const el = this.domElement.querySelector('#' + fieldId) as HTMLElement;
-    if (!el) return;
-    const tag = el.tagName;
-    if (tag === 'INPUT' || tag === 'TEXTAREA') {
-      (el as HTMLInputElement | HTMLTextAreaElement).value = value || '—';
+  // Shows/hides an entire row (e.g. Withdrawn by) — separate from
+  // setToggleField because this field is a plain readonly input, not a
+  // textarea/paragraph pair, and setModalField already falls back to '—'
+  // when the value is empty.
+  private setRowVisibility(rowId: string, show: boolean): void {
+    const row = this.domElement.querySelector('#' + rowId) as HTMLElement;
+    if (row) row.style.setProperty('display', show ? 'flex' : 'none', 'important');
+  }
+
+  // Toggles a field between its textarea and its readonly "—" paragraph —
+  // mirrors nemkoSetToggleField() in my-qualifications.js.
+  // - Editable fields: always show the textarea.
+  // - Non-editable (readonly) fields: empty value -> show the <p> ("—"),
+  //   non-empty value -> show the textarea (so long content stays scrollable).
+  private setToggleField(
+    textareaId: string,
+    paraId: string,
+    val: string,
+    isEditable: boolean,
+    rowId?: string
+  ): void {
+    const textarea = this.domElement.querySelector('#' + textareaId) as HTMLTextAreaElement | null;
+    const para = this.domElement.querySelector('#' + paraId) as HTMLElement | null;
+    const row = rowId ? (this.domElement.querySelector('#' + rowId) as HTMLElement | null) : null;
+    const value = val || '';
+
+    if (textarea) textarea.value = value;
+    if (row) row.style.setProperty('border-bottom', 'none', 'important');
+    if (!para) return;
+
+    if (isEditable) {
+      if (textarea) textarea.style.display = '';
+      para.style.display = 'none';
+      row?.classList.remove('frm-readonly-row');
+      return;
+    }
+
+    const isEmpty = !String(value).trim();
+    if (isEmpty) {
+      para.textContent = '—';
+      para.style.display = '';
+      para.classList.remove('form-control', 'h-px-98', 'overflow-auto', 'custom-scroll-view');
+      para.style.border = 'none';
+      para.style.borderRadius = '0';
+      para.style.setProperty('border-bottom', '1px solid #ced4da', 'important');
+      para.style.background = 'transparent';
+      para.style.padding = '2px 0';
+      para.style.height = 'auto';
+      if (textarea) textarea.style.display = 'none';
+      row?.classList.add('frm-readonly-row');
     } else {
-      el.textContent = value || '—';
+      para.classList.add('form-control', 'h-px-98', 'overflow-auto', 'custom-scroll-view');
+      para.removeAttribute('style');
+      para.style.display = 'none';
+      if (textarea) textarea.style.display = '';
+      // row?.classList.remove('frm-readonly-row');
     }
   }
 
+private setModalField(fieldId: string, value: string): void {
+  const el = this.domElement.querySelector('#' + fieldId) as HTMLElement;
+  if (!el) return;
+  const tag = el.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA') {
+    (el as HTMLInputElement | HTMLTextAreaElement).value = value || '—';
+  } else {
+    el.textContent = value || '—';
+  }
+}
+// New: for the readonly "box" paragraphs (Remarks, Limitations, Final
+// Limitations, Withdrawn reason). Collapses to a plain dash + underline
+// when empty, instead of showing the full-height empty box.
+private setReadonlyTextBox(fieldId: string, value: string): void {
+  const el = this.domElement.querySelector('#' + fieldId) as HTMLElement;
+  if (!el) return;
+  const trimmed = (value || '').trim();
+  const isEmpty = !trimmed || trimmed === '-' || trimmed === '—';
 
-  // Same approach as WpEmployeesWebPart / WpMyQualificationsWebPart: hand off
-  // to the real Bootstrap modal plugin (via jQuery) instead of toggling
-  // classes/inline styles by hand. This gives us the dark backdrop,
-  // click-outside-to-close and Esc-to-close behaviour for free (respecting
-  // data-bs-backdrop="static" / data-bs-keyboard="false" on modals that
-  // must stay open until explicitly dismissed).
+  el.textContent = isEmpty ? '—' : trimmed;
+
+  if (isEmpty) {
+    el.classList.remove('form-control', 'h-px-98', 'overflow-auto', 'custom-scroll-view');
+    el.setAttribute('style', 'border:none;border-radius:0;border-bottom:1px solid #ced4da;background:transparent;padding:2px 0;height:auto;');
+  } else {
+    el.classList.add('form-control', 'h-px-98', 'overflow-auto', 'custom-scroll-view');
+    el.removeAttribute('style');
+  }
+}
+
   private openModal(id: string): void {
     const el = this.domElement.querySelector('#' + id) as HTMLElement;
     if (!el) return;
@@ -2732,6 +3139,10 @@ export default class WpVerificationAndAuthorizationWebPart
     const el = this.domElement.querySelector('#' + id) as HTMLElement;
     if (!el) return;
     (window as any).$(el).modal('hide');
+    el.classList.remove('show');
+    el.style.display = 'none';
+    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+    document.body.classList.remove('modal-open');
   }
 
   // Close one modal and only open the next once the first has fully finished

@@ -109,25 +109,6 @@ interface IColumnDef {
   dropdown: boolean;
 }
 
-// ─── Fallback rows ───────────────────────────────────────────────────────────
-
-const DUMMY_ROWS: IEmployeeRow[] = [
-  {
-    id: 0, name: 'John Doe', personal_status: 'Active', office: 'Oslo',
-    approval_manager: 'Jane Smith', direct_manager: 'Bob Johnson', localGM: 'Alice Brown',
-    quality_manager: 'Charlie Wilson', HR_contact: 'Diana Prince',
-    email: 'john.doe@nemko.com', direct_manager_email: 'bob.johnson@nemko.com',
-    location: 'Norway', employee_type: 'Permanent',
-  },
-  {
-    id: 0, name: 'Sara Lee', personal_status: 'Active', office: 'Stockholm',
-    approval_manager: 'Tom Hardy', direct_manager: 'Jane Smith', localGM: 'Alice Brown',
-    quality_manager: 'Charlie Wilson', HR_contact: 'Diana Prince',
-    email: 'sara.lee@nemko.com', direct_manager_email: 'jane.smith@nemko.com',
-    location: 'Sweden', employee_type: 'Permanent',
-  },
-];
-
 const COLUMNS: IColumnDef[] = [
   { key: 'name',             label: 'Name',             sortable: true, sortApiKey: 'name',            visible: true, dropdown: true },
   { key: 'personal_status',  label: 'Personal Status',  sortable: true, sortApiKey: 'personalstatus',  visible: true, dropdown: true },
@@ -159,16 +140,18 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
     'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/personal-status';
   private static readonly OFFICES_URL =
     'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/office';
-  private static readonly APPROVAL_MANAGERS_URL =
-    'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/approval-managers';
-  private static readonly DIRECT_MANAGERS_URL =
-    'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/direct-managers';
-  private static readonly LOCAL_GM_URL =
-    'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/local-gm';
-  private static readonly QUALITY_MANAGER_URL =
-    'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/quality-manager';
-  private static readonly HR_CONTACT_URL =
-    'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/hr-contact';
+  // private static readonly APPROVAL_MANAGERS_URL =
+  //   'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/approval-managers';
+  // private static readonly DIRECT_MANAGERS_URL =
+  //   'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/direct-managers';
+  // private static readonly LOCAL_GM_URL =
+  //   'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/local-gm';
+  // private static readonly QUALITY_MANAGER_URL =
+  //   'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/quality-manager';
+  // private static readonly HR_CONTACT_URL =
+  //   'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/hr-contact';
+  private static readonly EMPLOYEE_REF_URL =
+    'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/Employee';
   private static readonly EMPLOYEE_TYPE_URL =
     'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/EmployeeType';
 
@@ -177,15 +160,17 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
   // and "edit" modal fields (same underlying list), keyed by `key`.
   private static readonly SS_FIELD_CONFIGS: Array<{ key: string; url: string; targets: string[] }> = [
     { key: 'office', url: WpEmployeesWebPart.OFFICES_URL, targets: ['office', 'editOffice'] },
-    { key: 'approvalManager', url: WpEmployeesWebPart.APPROVAL_MANAGERS_URL, targets: ['approvalManager', 'editApprovalManager'] },
-    { key: 'directManager', url: WpEmployeesWebPart.DIRECT_MANAGERS_URL, targets: ['directManger', 'editDirectManger'] },
-    { key: 'localGM', url: WpEmployeesWebPart.LOCAL_GM_URL, targets: ['localGMList', 'editLocalGMList'] },
-    { key: 'qualityManager', url: WpEmployeesWebPart.QUALITY_MANAGER_URL, targets: ['qualityManger', 'editQualityManger'] },
-    { key: 'hrContact', url: WpEmployeesWebPart.HR_CONTACT_URL, targets: ['HR-contact', 'editHRContact'] },
+    { key: 'approvalManager', url: WpEmployeesWebPart.EMPLOYEE_REF_URL, targets: ['approvalManager', 'editApprovalManager'] },
+    { key: 'directManager', url: WpEmployeesWebPart.EMPLOYEE_REF_URL, targets: ['directManger', 'editDirectManger'] },
+    { key: 'localGM', url: WpEmployeesWebPart.EMPLOYEE_REF_URL, targets: ['localGMList', 'editLocalGMList'] },
+    { key: 'qualityManager', url: WpEmployeesWebPart.EMPLOYEE_REF_URL, targets: ['qualityManger', 'editQualityManger'] },
+    { key: 'hrContact', url: WpEmployeesWebPart.EMPLOYEE_REF_URL, targets: ['HR-contact', 'editHRContact'] },
   ];
 
   // ── Data state ────────────────────────────────────────────────────────────
   private rows: IEmployeeRow[] = [];
+  // True when the last table load failed (one error pattern, audit D10 / handover C4)
+  private _loadError = false;
   private paginationMeta: IPagination | null = null;
   private personalStatuses: Array<{ id: number; name: string }> = [];
   private employeeDetail: IEmployeeDetailData | null = null;
@@ -194,7 +179,7 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
   // office/approvalManager/directManager/localGM/qualityManager/hrContact are
   // paginated search-selects now — see SS_FIELD_CONFIGS + _ssPagination below.
   private refEmployeeTypes: Array<{ id: number; name: string }> | null = null;
-  private _ssPagination: Record<string, { page: number; hasMore: boolean; loading: boolean }> = {};
+  private _ssPagination: Record<string, { page: number; hasMore: boolean; loading: boolean; search: string; reqId: number }> = {};
 
   // ── Table / sort / filter state ───────────────────────────────────────────
   private columns: IColumnDef[] = COLUMNS.map(c => ({ ...c }));
@@ -236,7 +221,7 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
     this.initWhenReady();
     this.loadCss();
 
-    this.rows = [...DUMMY_ROWS];
+    this.rows = [];
     this.paginationMeta = null;
     this.personalStatuses = [];
     this.refEmployeeTypes = null;
@@ -248,8 +233,9 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
 
     this.fetchEmployeesAdmin()
       .catch(() => {
-        console.warn('[WpEmployees] API fetch failed, using dummy data');
-        this.rows = [...DUMMY_ROWS];
+        console.warn('[WpEmployees] API fetch failed');
+        this._loadError = true;
+        this.rows = [];
         this.paginationMeta = null;
       })
       .then(() => { this.initializeUI(); })
@@ -329,31 +315,37 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
       if (!hidden || !list) return;
 
       const cfg = this.findSsConfig(targetId);
+      let searchDebounce = 0;
 
-      const renderItems = (query: string): void => {
+      // Items are already filtered server-side (?search=), so just render them.
+      const renderItems = (): void => {
         const items = this._ssItems[targetId] || [];
-        const q = query.toLowerCase();
-        const filtered = q
-          ? items.filter(function (it: { id: number; name: string }) { return it.name.toLowerCase().indexOf(q) !== -1; })
-          : items;
-        if (!filtered.length) { list.style.display = 'none'; return; }
-        list.innerHTML = filtered.map(function (it: { id: number; name: string }) {
+        if (!items.length) { list.style.display = 'none'; return; }
+        list.innerHTML = items.map(function (it: { id: number; name: string }) {
           return '<li data-id="' + it.id + '">' + it.name + '</li>';
         }).join('');
         list.style.display = 'block';
       };
 
       input.addEventListener('input', () => {
-        if (!input.value.trim()) hidden.value = '';
-        renderItems(input.value.trim());
+        const q = input.value.trim();
+        if (!q) { hidden.value = ''; delete hidden.dataset.name; }
+        if (!cfg) return;
+        clearTimeout(searchDebounce);
+        searchDebounce = window.setTimeout(() => {
+          this.searchSsField(cfg, q)
+            .then(() => { if (document.activeElement === input) renderItems(); })
+            .catch(() => {});
+        }, 300);
       });
       input.addEventListener('focus', () => {
         // Kick off page 1 the first time this field is actually used, rather
         // than blocking the whole modal up front — keeps modal-open instant.
+        // Also resets to the unfiltered list if a previous search is active.
         if (cfg) {
-          this.ensureSsFieldFirstPage(cfg).then(() => { renderItems(input.value.trim()); });
+          this.ensureSsFieldFirstPage(cfg).then(() => { renderItems(); });
         }
-        renderItems(input.value.trim());
+        renderItems();
       });
 
       list.addEventListener('mousedown', (e: Event) => {
@@ -362,18 +354,21 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
         e.preventDefault();
         hidden.value = li.getAttribute('data-id') || '';
         input.value = li.textContent || '';
+        hidden.dataset.name = input.value;
         list.style.display = 'none';
       });
 
       input.addEventListener('blur', () => {
         setTimeout(() => {
           list.style.display = 'none';
-          // Selection-only: revert display to the selected item's name
+          // Selection-only: revert display to the selected item's name.
+          // Fall back to the stored name — the selected item may not be in
+          // the current (server-filtered) result set.
           const selectedId = hidden.value;
           if (selectedId) {
             const items = this._ssItems[targetId] || [];
             const match = items.filter(function (it: { id: number; name: string }) { return String(it.id) === selectedId; })[0];
-            input.value = match ? match.name : '';
+            input.value = match ? match.name : (hidden.dataset.name || '');
           } else {
             input.value = '';
           }
@@ -401,7 +396,7 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
           list.appendChild(loadingLi);
 
           this.fetchSsFieldNextPage(cfg)
-            .then(() => { renderItems(input.value.trim()); })
+            .then(() => { renderItems(); })
             .catch(() => {})
             .then(() => { loadingMore = false; });
         });
@@ -444,9 +439,11 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
           ' <span class="text-muted text-sm">' + u.mail + '</span></li>';
       }).join('');
 
-      // Always append "Not available in AD" option so user can use typed text
+      // Append "Not available in AD" option only when the typed text has no exact AD match
       var typedVal = query || input.value.trim();
-      if (typedVal) {
+      var typedLower = typedVal.toLowerCase();
+      var hasExactMatch = items.some(function (u) { return (u.mail || '').toLowerCase() === typedLower; });
+      if (typedVal && !hasExactMatch) {
         html += '<li data-mail="' + typedVal + '" class="nemko-not-in-ad">' +
           '<span class="text-muted fst-italic">' + typedVal + '</span>' +
           ' <span class="text-muted text-sm">— Not available in AD</span></li>';
@@ -515,7 +512,13 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
     personalStatusId?: number | null,
     columnTextSearches?: Array<{ columnName: string; searchText: string }> | null
   ): Promise<void> {
-    if (!this.apiClient) return;
+    this._loadError = false;
+    if (!this.apiClient) {
+      this._loadError = true;
+      this.rows = [];
+      this.paginationMeta = null;
+      return;
+    }
     const qs = new URLSearchParams();
     qs.set('page', String(page));
     if (sortBy) qs.set('sortBy', sortBy);
@@ -529,6 +532,7 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
     const response: HttpClientResponse = await this.apiClient.get(url, AadHttpClient.configurations.v1);
 
     if (!response.ok) {
+      this._loadError = true;
       this.rows = [];
       this.paginationMeta = null;
       return;
@@ -579,13 +583,14 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
 
   // Fetches ONE page of a paginated reference-data endpoint.
   private async fetchRefPage(
-    baseUrl: string, page: number
+    baseUrl: string, page: number, search: string = ''
   ): Promise<{ items: Array<{ id: number; name: string }>; hasMore: boolean }> {
     if (!this.apiClient) return { items: [], hasMore: false };
     const sep = baseUrl.indexOf('?') !== -1 ? '&' : '?';
+    const searchQs = search ? `&search=${encodeURIComponent(search)}` : '';
     try {
       const response: HttpClientResponse = await this.apiClient.get(
-        `${baseUrl}${sep}page=${page}`, AadHttpClient.configurations.v1
+        `${baseUrl}${sep}page=${page}${searchQs}`, AadHttpClient.configurations.v1
       );
       if (!response.ok) return { items: [], hasMore: false };
       const json = await response.json();
@@ -603,11 +608,21 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
   // so re-opening either the "new" or "edit" modal reuses whatever was already
   // fetched instead of re-fetching. Populates _ssItems for both shared targets.
   private async ensureSsFieldFirstPage(cfg: { key: string; url: string; targets: string[] }): Promise<void> {
-    if (this._ssPagination[cfg.key]) return;
-    this._ssPagination[cfg.key] = { page: 1, hasMore: true, loading: true };
-    const { items, hasMore } = await this.fetchRefPage(cfg.url, 1);
+    const pag = this._ssPagination[cfg.key];
+    if (pag && pag.search === '') return;
+    await this.searchSsField(cfg, '');
+  }
+
+  // Fetches page 1 of a search-select field's data source for the given search
+  // term (?search=) and replaces the cached items. reqId guards against an
+  // older, slower response overwriting a newer search.
+  private async searchSsField(cfg: { key: string; url: string; targets: string[] }, search: string): Promise<void> {
+    const reqId = (this._ssPagination[cfg.key]?.reqId || 0) + 1;
+    this._ssPagination[cfg.key] = { page: 1, hasMore: true, loading: true, search, reqId };
+    const { items, hasMore } = await this.fetchRefPage(cfg.url, 1, search);
+    if (this._ssPagination[cfg.key]?.reqId !== reqId) return;
     cfg.targets.forEach(t => { this._ssItems[t] = items; });
-    this._ssPagination[cfg.key] = { page: 1, hasMore, loading: false };
+    this._ssPagination[cfg.key] = { page: 1, hasMore, loading: false, search, reqId };
   }
 
   // Loads the next page for a search-select field (triggered by scrolling its
@@ -617,11 +632,12 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
     if (!pag || pag.loading || pag.hasMore === false) return;
     const nextPage = pag.page + 1;
     this._ssPagination[cfg.key] = { ...pag, loading: true };
-    const { items, hasMore } = await this.fetchRefPage(cfg.url, nextPage);
+    const { items, hasMore } = await this.fetchRefPage(cfg.url, nextPage, pag.search);
+    if (this._ssPagination[cfg.key]?.reqId !== pag.reqId) return;
     const existing = this._ssItems[cfg.targets[0]] || [];
     const merged = existing.concat(items);
     cfg.targets.forEach(t => { this._ssItems[t] = merged; });
-    this._ssPagination[cfg.key] = { page: nextPage, hasMore, loading: false };
+    this._ssPagination[cfg.key] = { ...pag, page: nextPage, hasMore, loading: false };
   }
 
   private findSsConfig(targetId: string): { key: string; url: string; targets: string[] } | null {
@@ -745,7 +761,13 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
       this.apiFilter.columnTextSearches.length ? this.apiFilter.columnTextSearches : null
     )
       .then(() => { this.renderTable(); })
-      .catch((err: unknown) => console.warn('[WpEmployees] filter fetch error:', err));
+      .catch((err: unknown) => {
+        console.warn('[WpEmployees] filter fetch error:', err);
+        this._loadError = true;
+        this.rows = [];
+        this.paginationMeta = null;
+        this.renderTable();
+      });
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -816,18 +838,18 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
         </th>` +
         visCols.map(col => col.sortable
           ? `<th class="sortable-col" data-col-key="${col.key}"
-                style="cursor:pointer;" title="${this.getSortTitle(col.key)}">
+                style="cursor:pointer;${this.nmColWidthStyle(col.key, visCols)}" title="${this.getSortTitle(col.key)}">
               <div class="w-100 d-flex justify-content-between align-items-center gap-1"
                   style="flex-wrap:nowrap;pointer-events:none;">
-                <p class="text-color-3 font-medium text-sm lg-text-base" style="margin:0;">${col.label}</p>
+                <p class="text-color-3 font-medium text-sm" style="margin:0;min-width:0;white-space:normal;">${col.label}</p>
                 <span class="sort-icon ${this.getSortClass(col.key)}"
                     style="display:inline-flex;flex-shrink:0;align-items:center;">
                   ${this.getSortSVG(col.key)}
                 </span>
               </div>
             </th>`
-          : `<th><div class="w-100 d-flex align-items-center">
-              <p class="text-color-3 font-medium text-sm lg-text-base">${col.label}</p>
+          : `<th data-col-key="${col.key}" style="${this.nmColWidthStyle(col.key, visCols)}"><div class="w-100 d-flex align-items-center">
+              <p class="text-color-3 font-medium text-sm" style="white-space:normal;">${col.label}</p>
             </div></th>`
         ).join('');
 
@@ -843,8 +865,19 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
     const tbody = table.querySelector('tbody');
     if (!tbody) return;
 
-    if (!this.rows.length) {
-      tbody.innerHTML = `<tr><td colspan="999" class="text-center text-muted">No records found.</td></tr>`;
+    if (!this.rows.length && this._loadError) {
+      // Load failed: same error state as my-qualifications.js (audit D10 / handover C4)
+      tbody.innerHTML = `<tr><td colspan="999" class="text-center py-4 text-color-3 text-sm font-medium">` +
+        `Could not load data. <a href="#" role="button" class="nemko-table-retry-link">Try again</a></td></tr>`;
+      const retryLink = tbody.querySelector('.nemko-table-retry-link');
+      if (retryLink) {
+        retryLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.applyServerFilters(this.paginationMeta?.pageNumber ?? 1);
+        });
+      }
+    } else if (!this.rows.length) {
+      tbody.innerHTML = `<tr><td colspan="999" class="text-center py-4 text-color-3 text-sm font-medium">No records found. Try adjusting your search criteria.</td></tr>`;
     } else {
       tbody.innerHTML = this.rows.map((row, i) => `
         <tr class="emp-table-row" data-index="${i}" style="cursor:pointer;">
@@ -885,6 +918,21 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
     this.renderPagination();
   }
 
+  // ─── Column widths (audit D4 / handover P7, same pattern as my-qualifications.js) ──
+  // Relative weights shared over the visible columns so the table fits its
+  // container instead of scrolling sideways. The checkbox column is not weighted.
+  private static readonly NM_COL_WEIGHTS: Record<string, number> = {
+    name: 16, personal_status: 10, office: 12, approval_manager: 13,
+    direct_manager: 13, localGM: 12, quality_manager: 13, HR_contact: 12
+  };
+  private nmColWidthStyle(key: string, visCols: Array<{ key: string }>): string {
+    const weights = WpEmployeesWebPart.NM_COL_WEIGHTS;
+    let total = 0;
+    visCols.forEach(c => { total += (weights[c.key] || 10); });
+    const pct = ((weights[key] || 10) / (total || 1)) * 100;
+    return `width:${pct.toFixed(2)}%;min-width:0;`;
+  }
+
   private renderPagination(): void {
     const container = this.domElement.querySelector('#employees-table');
     if (!container) return;
@@ -920,6 +968,8 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
 
     paginationEls.forEach(paginationEl => {
       paginationEl.classList.add('justify-content-start');
+      // Audit D9: hide page navigation when there is nothing to page through
+      paginationEl.style.visibility = total === 0 ? 'hidden' : '';
       paginationEl.innerHTML = paginationHtml;
       paginationEl.querySelectorAll<HTMLElement>('.page-item:not(.disabled)').forEach(item => {
         item.addEventListener('click', () => {
@@ -946,7 +996,7 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
         <label class="dropdown-item d-flex align-items-center gap-2" data-col-key="${col.key}">
           <input type="checkbox" ${col.visible ? 'checked' : ''} class="d-none" name="col-heading" />
           <span class="chkbox-icon ${col.visible ? 'active' : ''}"></span>
-          <p class="font-medium text-sm md-text-base text-color-3">${col.label}</p>
+          <p class="font-medium text-sm text-color-3">${col.label}</p>
         </label>
       </li>
     `).join('');
@@ -1043,10 +1093,11 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
       hidden.value = numId != null ? String(numId) : '';
       const display = hidden.parentElement?.querySelector<HTMLInputElement>('.nemko-ss-display');
       if (display) {
-        if (numId == null) { display.value = ''; return; }
+        if (numId == null) { display.value = ''; delete hidden.dataset.name; return; }
         const items = this._ssItems[id] || [];
         const match = items.filter(function (it: { id: number; name: string }) { return it.id === numId; })[0];
         display.value = match ? match.name : '';
+        hidden.dataset.name = display.value;
       }
       return;
     }
@@ -1076,6 +1127,8 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
       hidden.value = numId != null ? String(numId) : '';
       const display = hidden.parentElement?.querySelector<HTMLInputElement>('.nemko-ss-display');
       if (display) display.value = (numId != null && name) ? name : '';
+      if (numId != null && name) hidden.dataset.name = name;
+      else delete hidden.dataset.name;
 
       if (numId != null && name) {
         const items = this._ssItems[id] || (this._ssItems[id] = []);
@@ -1098,6 +1151,8 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
       const items = this._ssItems[id] || [];
       const match = items.filter(function (it: { id: number; name: string }) { return it.name === text; })[0];
       hidden.value = match ? String(match.id) : '';
+      if (match) hidden.dataset.name = match.name;
+      else delete hidden.dataset.name;
       const display = hidden.parentElement?.querySelector<HTMLInputElement>('.nemko-ss-display');
       if (display) display.value = text || '';
       return;
@@ -1199,7 +1254,7 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
     const modal = this.domElement.querySelector('#empNewModal');
     if (!modal) return;
     modal.querySelectorAll<HTMLInputElement>('input[type="text"], input[type="email"]').forEach(el => { el.value = ''; });
-    modal.querySelectorAll<HTMLInputElement>('input[type="hidden"]').forEach(el => { el.value = ''; });
+    modal.querySelectorAll<HTMLInputElement>('input[type="hidden"]').forEach(el => { el.value = ''; delete el.dataset.name; });
     modal.querySelectorAll<HTMLSelectElement>('select').forEach(el => { el.selectedIndex = 0; });
     const radios = modal.querySelectorAll<HTMLInputElement>('input[name="radioDefault2"]');
     radios.forEach(r => { r.checked = false; });

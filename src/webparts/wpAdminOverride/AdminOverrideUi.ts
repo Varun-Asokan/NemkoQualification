@@ -9,11 +9,11 @@ export default class AdminOverride {
       <div class="container container-nemko px-3 px-lg-4 clearfix py-3">
         <div class="w-100 float-start nemko-inner-page-wrapper py-5 ps-xl-4">
 
-          <h2 class="inner-page-main-title font-bold mb-3" style="font-size: 2.8rem;">Admin Override</h2>
+          <h2 class="inner-page-main-title nm-page-title">Admin Override</h2>
 
           <div id="adminOverrideToolbar" class="w-100 float-start d-flex justify-content-between align-items-center mb-3 gap-3 flex-wrap">
             <div class="d-flex gap-2"></div>
-            <button data-bs-toggle="modal" data-bs-target="#addEmployeeModal" type="button" class="btn nemko-btn-default px-3 nemko-btn-primary text-base md-text-lg">Add Employee</button>
+            <button data-bs-toggle="modal" data-bs-target="#addEmployeeModal" type="button" class="btn nemko-btn-default px-3 nemko-btn-primary text-sm">Add Employee</button>
           </div>
 
           <!-- ── ADMIN OVERRIDE TABLE ── -->
@@ -64,7 +64,7 @@ export default class AdminOverride {
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title fhd-text-xl-combo">Add Employee</h5>
+          <h5 class="modal-title text-lg font-semibold">Add Employee</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body custom-scroll-view">
@@ -111,12 +111,15 @@ export default class AdminOverride {
               </div>
               <div class="invalid-feedback">Qualification reference is required.</div>
             </div>
+            
 
             <!-- Qualification Level(s) — inline multi-select checkboxes -->
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <div class="form-label-cr font-semibold">Qualification Level(s) <span class="text-danger">*</span></div>
+              <div class="form-label-cr font-semibold">Qualification Levels <span class="text-danger">*</span></div>
+              <div class="form-text fst-italic pb-2"><span class="text-danger">*</span>Select All Applicable options</div>
               <div class="w-100 float-start d-flex flex-column form-control-col checkbox-list-main" id="overrideLevelCheckboxes">
               </div>
+              
               <div class="invalid-feedback" id="overrideLevelError" style="display:none;">At least one qualification level is required.</div>
             </div>
 
@@ -158,8 +161,8 @@ export default class AdminOverride {
           </div>
         </div>
         <div class="modal-footer gap-2 justify-content-sm-start justify-content-center">
-          <button type="button" class="btn nemko-btn-default nemko-btn-save text-base md-text-lg m-0" id="submitAdminOverrideBtn">Submit</button>
-          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-base md-text-lg m-0" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-save text-sm m-0" id="submitAdminOverrideBtn">Submit</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-sm m-0" data-bs-dismiss="modal">Cancel</button>
         </div>
       </div>
     </div>
@@ -170,13 +173,13 @@ export default class AdminOverride {
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title fhd-text-xl-combo">Edit Employee</h5>
+          <h5 class="modal-title text-lg font-semibold">Edit Employee</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body custom-scroll-view">
 
           <div id="editEmployeeModalLoading" class="text-center py-4 text-color-3 text-sm font-medium" style="display:none;">Loading...</div>
-          <div id="editEmployeeModalError"   class="text-center py-4 text-sm font-medium" style="display:none;">Failed to load record.</div>
+          <div id="editEmployeeModalError"   class="text-center py-4 text-sm font-medium" style="display:none;">Could not load record.</div>
 
           <div id="editEmployeeModalContent" class="w-100 float-start d-flex flex-column gap-3 nemko-modal-frm py-2">
 
@@ -213,12 +216,14 @@ export default class AdminOverride {
                 <button type="button" class="frm-right-close-btn"></button>
               </div>
             </div>
-
+            
             <!-- Qualification Level(s) -->
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <div class="form-label-cr font-semibold">Qualification Level(s) <span class="text-danger">*</span></div>
+              <div class="form-label-cr font-semibold">Qualification Levels <span class="text-danger">*</span></div>
+               <div class="form-text fst-italic pb-2"><span class="text-danger">*</span>Select All Applicable options</div>
               <div class="w-100 float-start d-flex flex-column form-control-col checkbox-list-main" id="editOverrideLevelCheckboxes">
               </div>
+              
             </div>
 
             <!-- Role -->
@@ -258,9 +263,9 @@ export default class AdminOverride {
           </div>
         </div>
         <div class="modal-footer gap-2 justify-content-sm-start justify-content-center">
-          <button type="button" class="btn nemko-btn-default nemko-btn-save text-base md-text-lg m-0" id="updateAdminOverrideBtn">Update</button>
-          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-base md-text-lg m-0" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-danger nemko-btn-default nemko-btn-delete text-base md-text-lg m-0 ms-auto">Delete</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-save text-sm m-0" id="updateAdminOverrideBtn">Update</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-sm m-0" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-delete text-sm m-0 ms-auto">Delete</button>
         </div>
       </div>
     </div>
@@ -271,7 +276,7 @@ export default class AdminOverride {
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title fhd-text-xl-combo">Select Employee</h5>
+          <h5 class="modal-title text-lg font-semibold">Select Employee</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-frm-search-top w-100 float-start">
@@ -290,8 +295,8 @@ export default class AdminOverride {
           </div>
         </div>
         <div class="modal-footer gap-2 justify-content-sm-start justify-content-center">
-          <button type="button" class="btn nemko-btn-default nemko-btn-save text-base md-text-lg m-0" id="employeeSelectSaveBtn">Save</button>
-          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-base md-text-lg m-0" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-save text-sm m-0" id="employeeSelectSaveBtn">Save</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-sm m-0" data-bs-dismiss="modal">Cancel</button>
         </div>
       </div>
     </div>
@@ -302,7 +307,7 @@ export default class AdminOverride {
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title fhd-text-xl-combo">Select Office</h5>
+          <h5 class="modal-title text-lg font-semibold">Select Office</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-frm-search-top w-100 float-start">
@@ -321,8 +326,8 @@ export default class AdminOverride {
           </div>
         </div>
         <div class="modal-footer gap-2 justify-content-sm-start justify-content-center">
-          <button type="button" class="btn nemko-btn-default nemko-btn-save text-base md-text-lg m-0" id="officeSelectSaveBtn">Save</button>
-          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-base md-text-lg m-0" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-save text-sm m-0" id="officeSelectSaveBtn">Save</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-sm m-0" data-bs-dismiss="modal">Cancel</button>
         </div>
       </div>
     </div>
@@ -333,7 +338,7 @@ export default class AdminOverride {
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title fhd-text-xl-combo" id="selectReferenceModalTitle">Select Qualification Reference</h5>
+          <h5 class="modal-title text-lg font-semibold" id="selectReferenceModalTitle">Select Qualification Reference</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-frm-search-top w-100 float-start">
@@ -352,8 +357,8 @@ export default class AdminOverride {
           </div>
         </div>
         <div class="modal-footer gap-2 justify-content-sm-start justify-content-center">
-          <button type="button" class="btn nemko-btn-default nemko-btn-save text-base md-text-lg m-0" id="referenceSelectSaveBtn">Save</button>
-          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-base md-text-lg m-0" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-save text-sm m-0" id="referenceSelectSaveBtn">Save</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-sm m-0" data-bs-dismiss="modal">Cancel</button>
         </div>
       </div>
     </div>

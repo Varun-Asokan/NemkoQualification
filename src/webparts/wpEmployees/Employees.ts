@@ -7,8 +7,8 @@ export default class employees {
     <div class="w-100 float-start">
       <div class="container container-nemko px-3 px-lg-4 clearfix py-3">
         <div class="w-100 float-start nemko-inner-page-wrapper py-4 ps-xl-4">
-          <h2 class="w-100 float-start fhd-text-size-48-combo text-color-9 font-medium text-capitalize m-0 mb-4">
-            employees</h2>
+          <h2 class="w-100 float-start nm-page-title">
+            Employees</h2>
           <div class="nemko-data-table-wrapper w-100 float-start pt-4">
             <div id="employees-table" class="w-100 float-start">
               <div
@@ -19,11 +19,11 @@ export default class employees {
                     <input type="text" class="nemko-filter-input" data-emp-column="name" />
                   </div>
                   <div class="nemko-filter-list d-flex flex-column gap-1">
-                    <label class="font-medium text-sm text-color-3">quality manager</label>
+                    <label class="font-medium text-sm text-color-3">Quality Manager</label>
                     <input type="text" class="nemko-filter-input" data-emp-column="qualitymanager" />
                   </div>
                   <div class="nemko-filter-list d-flex flex-column gap-1">
-                    <label class="font-medium text-sm text-color-3">personal status</label>
+                    <label class="font-medium text-sm text-color-3">Personal Status</label>
                     <select class="nemko-filter-input" id="empStatusFilter">
                       <option value="">All</option>
                     </select>
@@ -33,32 +33,32 @@ export default class employees {
                     <input type="text" class="nemko-filter-input" data-emp-column="hrcontact" />
                   </div>
                   <div class="nemko-filter-list d-flex flex-column gap-1">
-                    <label class="font-medium text-sm text-color-3">office</label>
+                    <label class="font-medium text-sm text-color-3">Office</label>
                     <input type="text" class="nemko-filter-input" data-emp-column="office" />
                   </div>
                   <div class="nemko-filter-list d-flex flex-column gap-1">
-                    <label class="font-medium text-sm text-color-3">approval manager</label>
+                    <label class="font-medium text-sm text-color-3">Approval Manager</label>
                     <input type="text" class="nemko-filter-input" data-emp-column="approvalmanager" />
                   </div>
                   <div class="nemko-filter-list d-flex flex-column gap-1">
-                    <label class="font-medium text-sm text-color-3">direct manager</label>
+                    <label class="font-medium text-sm text-color-3">Direct Manager</label>
                     <input type="text" class="nemko-filter-input" data-emp-column="directmanager" />
                   </div>
                   <div class="nemko-filter-list d-flex flex-column gap-1">
-                    <label class="font-medium text-sm text-color-3">local GM</label>
+                    <label class="font-medium text-sm text-color-3">Local GM</label>
                     <input type="text" class="nemko-filter-input" data-emp-column="localgm" />
                   </div>
                 </div>
                 <div class="flex-shrink-0 d-flex gap-2 ao-filter-right-btns">
-                  <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-xs m-0">Reset</button>
+                  <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-sm m-0">Reset</button>
                 </div>
               </div>
               <div class="w-100 float-start d-flex align-items-center gap-2 px-4 py-4 flex-wrap ao-table-top-btn">
-                <button type="button" id="emp-new-btn" class="nemko-btn-default nemko-btn-success text-xs px-3 font-medium">new</button>
+                <button type="button" id="emp-new-btn" class="nemko-btn-default nemko-btn-primary text-sm px-3 font-medium">New</button>
                 <!-- No data-bs-toggle/target on New or Edit — controlled entirely by initNewModal / initEditModal -->
-                <button type="button" id="emp-edit-btn" class="nemko-btn-default nemko-btn-edit text-xs px-3 font-medium">Edit</button>
-                <button type="button" class="nemko-btn-default nemko-btn-cancel text-xs px-3 font-medium">Delete</button>
-                <button type="button" class="nemko-btn-default nemko-btn-reject text-xs px-3 font-medium">delete all</button>
+                <button type="button" id="emp-edit-btn" class="nemko-btn-default nemko-btn-secondary text-sm px-3 font-medium">Edit</button>
+                <button type="button" class="nemko-btn-default nemko-btn-cancel nm-btn-danger-outline text-sm px-3 font-medium">Delete</button>
+                <button type="button" class="nemko-btn-default nemko-btn-reject nm-btn-danger-outline text-sm px-3 font-medium">Delete All</button>
               </div>
               <ul class="pagination nemko-pagination justify-content-start align-items-center gap-2 w-100 float-start px-4"></ul>
               <div class="w-100 float-start d-flex flex-column position-relative px-4 pt-2">
@@ -136,7 +136,7 @@ export default class employees {
       <div class="modal-content">
         <div class="modal-header">
           <div class="d-flex align-items-center flex-wrap gap-4">
-            <p data-tab-title="new" class="modal-title cursor-pointer fhd-text-xl-combo modal-title-active">employee new</p>
+            <p data-tab-title="new" class="modal-title cursor-pointer text-lg font-semibold modal-title-active">New Employee</p>
             
           </div>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -144,12 +144,12 @@ export default class employees {
         <div class="modal-body custom-scroll-view">
           <div class="w-100 float-start d-flex flex-column gap-3 nemko-modal-frm py-2">
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="fullName" class="form-label">full name <span class="text-danger">*</span></label>
+              <label for="fullName" class="form-label">Full Name <span class="text-danger">*</span></label>
               <input type="text" class="form-control" id="fullName" />
               <div class="invalid-feedback">Full name is required.</div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="emailIp" class="form-label">email <span class="text-danger">*</span></label>
+              <label for="emailIp" class="form-label">Email <span class="text-danger">*</span></label>
               <div class="nemko-email-autocomplete position-relative">
                 <input type="text" class="form-control" id="emailIp" autocomplete="off" />
                 <ul class="nemko-email-suggestions list-unstyled position-absolute w-100" id="emailIpSuggestions" style="display:none;"></ul>
@@ -157,14 +157,14 @@ export default class employees {
               <div class="invalid-feedback">Email is required.</div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="personalStatus" class="form-label">personal status <span class="text-danger">*</span></label>
+              <label for="personalStatus" class="form-label">Personal Status <span class="text-danger">*</span></label>
               <select class="form-select" id="personalStatus">
                 <option value="" selected disabled></option>
               </select>
               <div class="invalid-feedback">Personal status is required.</div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="office" class="form-label">office <span class="text-danger">*</span></label>
+              <label for="office" class="form-label">Office <span class="text-danger">*</span></label>
               <div class="nemko-search-select position-relative">
                 <input type="text" class="form-control nemko-ss-display" data-target="office" autocomplete="off" />
                 <input type="hidden" id="office" />
@@ -173,7 +173,7 @@ export default class employees {
               <div class="invalid-feedback">Office is required.</div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="approvalManager" class="form-label">approval manager</label>
+              <label for="approvalManager" class="form-label">Approval Manager</label>
               <div class="nemko-search-select position-relative">
                 <input type="text" class="form-control nemko-ss-display" data-target="approvalManager" autocomplete="off" />
                 <input type="hidden" id="approvalManager" />
@@ -181,7 +181,7 @@ export default class employees {
               </div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="directManger" class="form-label">direct manager <span class="text-danger">*</span></label>
+              <label for="directManger" class="form-label">Direct Manager <span class="text-danger">*</span></label>
               <div class="nemko-search-select position-relative">
                 <input type="text" class="form-control nemko-ss-display" data-target="directManger" autocomplete="off" />
                 <input type="hidden" id="directManger" />
@@ -190,7 +190,7 @@ export default class employees {
               <div class="invalid-feedback">Direct manager is required.</div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="localGMList" class="form-label">local GM</label>
+              <label for="localGMList" class="form-label">Local GM</label>
               <div class="nemko-search-select position-relative">
                 <input type="text" class="form-control nemko-ss-display" data-target="localGMList" autocomplete="off" />
                 <input type="hidden" id="localGMList" />
@@ -198,7 +198,7 @@ export default class employees {
               </div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="qualityManger" class="form-label">quality manager</label>
+              <label for="qualityManger" class="form-label">Quality Manager</label>
               <div class="nemko-search-select position-relative">
                 <input type="text" class="form-control nemko-ss-display" data-target="qualityManger" autocomplete="off" />
                 <input type="hidden" id="qualityManger" />
@@ -214,7 +214,7 @@ export default class employees {
               </div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <div class="form-label-cr">leadership function</div>
+              <div class="form-label-cr">Leadership Function</div>
               <div class="d-flex align-items-center gap-3">
                 <label class="nemko-frm-radio d-flex align-items-center gap-1">
                   <input class="form-check-input" type="radio" name="radioDefault2">
@@ -245,7 +245,7 @@ export default class employees {
             </div>
 
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="newEmployeeType" class="form-label">employee type</label>
+              <label for="newEmployeeType" class="form-label">Employee Type</label>
               <select class="form-select" id="newEmployeeType">
                 <option value=""></option>
               </select>
@@ -253,8 +253,8 @@ export default class employees {
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="nemko-btn-default nemko-btn-save text-base md-text-lg">Save</button>
-          <button type="button" class="nemko-btn-default nemko-btn-cancel text-base md-text-lg" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="nemko-btn-default nemko-btn-save text-sm">Save</button>
+          <button type="button" class="nemko-btn-default nemko-btn-cancel text-sm" data-bs-dismiss="modal">Cancel</button>
         </div>
       </div>
     </div>
@@ -266,7 +266,7 @@ export default class employees {
       <div class="modal-content">
         <div class="modal-header">
           <div class="d-flex align-items-center flex-wrap gap-4">
-            <p class="modal-title fhd-text-xl-combo modal-title-active">employee details edit</p>
+            <p class="modal-title text-lg font-semibold modal-title-active">Edit Employee</p>
           </div>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
@@ -274,24 +274,24 @@ export default class employees {
           <div id="empEditModalLoading" class="text-center py-4 text-color-3 text-sm font-medium" style="display:none;">Loading...</div>
           <div id="empEditModalContent" class="w-100 float-start d-flex flex-column gap-3 nemko-modal-frm py-2">
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editFullName" class="form-label">full name <span class="text-danger">*</span></label>
+              <label for="editFullName" class="form-label">Full Name <span class="text-danger">*</span></label>
               <input type="text" class="form-control" id="editFullName" />
               <div class="invalid-feedback">Full name is required.</div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editEmailIp" class="form-label">email <span class="text-danger">*</span></label>
+              <label for="editEmailIp" class="form-label">Email <span class="text-danger">*</span></label>
               <input type="email" class="form-control" id="editEmailIp" readonly/>
               <div class="invalid-feedback">Email is required.</div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editPersonalStatus" class="form-label">personal status <span class="text-danger">*</span></label>
+              <label for="editPersonalStatus" class="form-label">Personal Status <span class="text-danger">*</span></label>
               <select class="form-select" id="editPersonalStatus">
                 <option value="" selected disabled>Select Status</option>
               </select>
               <div class="invalid-feedback">Personal status is required.</div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editOffice" class="form-label">office <span class="text-danger">*</span></label>
+              <label for="editOffice" class="form-label">Office <span class="text-danger">*</span></label>
               <div class="nemko-search-select position-relative">
                 <input type="text" class="form-control nemko-ss-display" data-target="editOffice" autocomplete="off" />
                 <input type="hidden" id="editOffice" />
@@ -300,7 +300,7 @@ export default class employees {
               <div class="invalid-feedback">Office is required.</div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editApprovalManager" class="form-label">approval manager</label>
+              <label for="editApprovalManager" class="form-label">Approval Manager</label>
               <div class="nemko-search-select position-relative">
                 <input type="text" class="form-control nemko-ss-display" data-target="editApprovalManager" autocomplete="off" />
                 <input type="hidden" id="editApprovalManager" />
@@ -308,7 +308,7 @@ export default class employees {
               </div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editDirectManger" class="form-label">direct manager <span class="text-danger">*</span></label>
+              <label for="editDirectManger" class="form-label">Direct Manager <span class="text-danger">*</span></label>
               <div class="nemko-search-select position-relative">
                 <input type="text" class="form-control nemko-ss-display" data-target="editDirectManger" autocomplete="off" />
                 <input type="hidden" id="editDirectManger" />
@@ -317,7 +317,7 @@ export default class employees {
               <div class="invalid-feedback">Direct manager is required.</div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editLocalGMList" class="form-label">local GM</label>
+              <label for="editLocalGMList" class="form-label">Local GM</label>
               <div class="nemko-search-select position-relative">
                 <input type="text" class="form-control nemko-ss-display" data-target="editLocalGMList" autocomplete="off" />
                 <input type="hidden" id="editLocalGMList" />
@@ -325,7 +325,7 @@ export default class employees {
               </div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editQualityManger" class="form-label">quality manager</label>
+              <label for="editQualityManger" class="form-label">Quality Manager</label>
               <div class="nemko-search-select position-relative">
                 <input type="text" class="form-control nemko-ss-display" data-target="editQualityManger" autocomplete="off" />
                 <input type="hidden" id="editQualityManger" />
@@ -341,7 +341,7 @@ export default class employees {
               </div>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <div class="form-label-cr">leadership function</div>
+              <div class="form-label-cr">Leadership Function</div>
               <div class="d-flex align-items-center gap-3">
                 <label class="nemko-frm-radio d-flex align-items-center gap-1">
                   <input class="form-check-input" type="radio" name="editLeadershipFunction">
@@ -372,7 +372,7 @@ export default class employees {
             </div>
 
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editEmployeeType" class="form-label">employee type</label>
+              <label for="editEmployeeType" class="form-label">Employee Type</label>
               <select class="form-select" id="editEmployeeType">
                 <option value=""></option>
               </select>
@@ -382,8 +382,8 @@ export default class employees {
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="nemko-btn-default nemko-btn-save text-base md-text-lg">Save</button>
-          <button type="button" class="nemko-btn-default nemko-btn-cancel text-base md-text-lg" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="nemko-btn-default nemko-btn-save text-sm">Save</button>
+          <button type="button" class="nemko-btn-default nemko-btn-cancel text-sm" data-bs-dismiss="modal">Cancel</button>
         </div>
       </div>
     </div>

@@ -9,7 +9,7 @@ export default class GlobalVerAuth {
     <div class="w-100 float-start">
       <div class="container container-nemko px-3 px-lg-4 clearfix py-3">
         <div class="w-100 float-start nemko-inner-page-wrapper py-4 ps-xl-4">
-          <h2 class="w-100 float-start fhd-text-size-48-combo text-color-9 font-medium text-capitalize m-0 mb-3">Global Employee Verifier and Authorizer</h2>
+          <h2 class="w-100 float-start nm-page-title">Global Employee Verifier and Authorizer</h2>
           <div class="nemko-data-table-wrapper w-100 float-start">
             <div class="w-100 float-start">
               <div class="w-100 float-start px-4 d-flex flex-column flex-sm-row gap-2 gap-xxl-4 py-4">
@@ -41,7 +41,7 @@ export default class GlobalVerAuth {
                 </div>
                 <div class="flex-shrink-0 d-flex gap-2 ao-filter-right-btns">
                   <button type="button" id="gva-add-btn"
-                    class="btn nemko-btn-default nemko-btn-save text-xs m-0">Add Employee</button>
+                    class="btn nemko-btn-default nemko-btn-save text-sm m-0">Add Employee</button>
                 </div>
 
               </div>
@@ -49,6 +49,35 @@ export default class GlobalVerAuth {
           </div>
            <div class="nemko-data-table-wrapper w-100 float-start mt-4">
             <div id="account-overview-table" class="w-100 float-start">
+            <ul class="pagination nemko-pagination justify-content-start align-items-center gap-2 w-100 float-start px-4 py-2">
+                <li class="page-item disabled">
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2.72266 4.53745L8.16766 0.60786L8.16766 8.46704L2.72266 4.53745Z" fill="#989898" />
+                    <rect width="1.815" height="8.1675" fill="#989898" />
+                  </svg>
+                </li>
+                <li class="page-item disabled">
+                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M-1.9834e-07 4.53745L5.445 0.60786L5.445 8.46704L-1.9834e-07 4.53745Z" fill="#989898" />
+                    <path d="M6.35352 4.53745L11.7985 0.60786L11.7985 8.46704L6.35352 4.53745Z" fill="#989898" />
+                  </svg>
+                </li>
+                <li class="page-item">
+                  <span class="font-medium font-inter text-black text-xs">1 to 1 of 1</span>
+                </li>
+                <li class="page-item">
+                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.6125 4.53745L8.1675 0.60786L8.1675 8.46704L13.6125 4.53745Z" fill="#989898" />
+                    <path d="M7.25898 4.53745L1.81398 0.60786L1.81398 8.46704L7.25898 4.53745Z" fill="#989898" />
+                  </svg>
+                </li>
+                <li class="page-item">
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.25984 4.53751L1.81484 0.607921L1.81484 8.4671L7.25984 4.53751Z" fill="#989898" />
+                    <rect width="1.815" height="8.1675" transform="matrix(-1 0 0 1 9.9825 0)" fill="#989898" />
+                  </svg>
+                </li>
+              </ul>
               <div class="w-100 float-start d-flex flex-column position-relative px-4 pt-2">
                 <div class="col-visibility-btn">
                   <div class="w-100 dropdown position-static">
@@ -74,7 +103,7 @@ export default class GlobalVerAuth {
                   </table>
                 </div>
               </div>
-              <ul class="pagination nemko-pagination justify-content-end align-items-center gap-2 w-100 float-start px-4">
+              <ul class="pagination nemko-pagination justify-content-start align-items-center gap-2 w-100 float-start px-4">
                 <li class="page-item disabled">
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M2.72266 4.53745L8.16766 0.60786L8.16766 8.46704L2.72266 4.53745Z" fill="#989898" />
@@ -115,7 +144,7 @@ export default class GlobalVerAuth {
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title fhd-text-xl-combo">Edit Employee</h5>
+          <h5 class="modal-title text-lg font-semibold">Edit Employee</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body custom-scroll-view">
@@ -143,9 +172,9 @@ export default class GlobalVerAuth {
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="nemko-btn-default nemko-btn-save text-base md-text-lg" id="gvaUpdateBtn">Update</button>
-          <button type="button" class="nemko-btn-default nemko-btn-reject text-base md-text-lg" id="gvaDeleteBtn">Delete</button>
-          <button type="button" class="nemko-btn-default nemko-btn-cancel text-base md-text-lg" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="nemko-btn-default nemko-btn-save text-sm" id="gvaUpdateBtn">Update</button>
+          <button type="button" class="nemko-btn-default nemko-btn-delete text-sm" id="gvaDeleteBtn">Delete</button>
+          <button type="button" class="nemko-btn-default nemko-btn-cancel text-sm" data-bs-dismiss="modal">Cancel</button>
         </div>
       </div>
     </div>

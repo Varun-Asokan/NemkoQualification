@@ -12,14 +12,14 @@ export default class MyQualifications {
       <div class="container container-nemko px-3 px-lg-4 clearfix py-3">
                 <div class="w-100 float-start nemko-inner-page-wrapper py-5 ps-xl-4">
 
-          <h2 class="inner-page-main-title font-bold mb-3" style="font-size: 2.8rem;">Qualifications</h2>
+          <h2 class="inner-page-main-title nm-page-title">Qualifications</h2>
 
           <div id="qualificationsToolbar" class="w-100 float-start d-flex justify-content-between align-items-center mb-3 gap-3 flex-wrap">
             <div class="d-flex gap-2">
-              <button data-tab-id="authorized-table" type="button" class="btn nemko-tab-btn nemko-tab-btn-active px-3 text-base md-text-lg">Authorized</button>
-              <button data-tab-id="requested-table" type="button" class="btn nemko-tab-btn px-3 text-base md-text-lg">Requested</button>
+              <button data-tab-id="authorized-table" type="button" class="btn nemko-tab-btn nemko-tab-btn-active px-3 text-sm">Authorized</button>
+              <button data-tab-id="requested-table" type="button" class="btn nemko-tab-btn px-3 text-sm">Requested</button>
             </div>
-            <button data-bs-toggle="modal" data-bs-target="#addQualificationModal" type="button" class="btn nemko-btn-default px-3 nemko-btn-primary text-base md-text-lg">Add Qualification</button>
+            <button data-bs-toggle="modal" data-bs-target="#addQualificationModal" type="button" class="btn nemko-btn-default px-3 nemko-btn-primary text-sm">Add Qualification</button>
           </div>
 
           <!-- ── AUTHORIZED TABLE ── -->
@@ -253,7 +253,7 @@ export default class MyQualifications {
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title fhd-text-xl-combo">new qualification</h5>
+          <h5 class="modal-title text-lg font-semibold">New Qualification</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body custom-scroll-view">
@@ -290,41 +290,41 @@ export default class MyQualifications {
                 <label class="nemko-frm-chkbox d-none align-items-center gap-2">
                   <input class="form-check-input" type="checkbox" value="report-approver" name="qualificationLevelSub">
                   <span class="chkbox-icon"></span>
-                  <p class="form-check-label">report approver</p>
+                  <p class="form-check-label">Report Approver</p>
                 </label>
                 <label class="nemko-frm-chkbox d-none align-items-center gap-2">
                   <input class="form-check-input" type="checkbox" value="conformity-conformity" name="qualificationLevelSub">
                   <span class="chkbox-icon"></span>
-                  <p class="form-check-label">conformity statement</p>
+                  <p class="form-check-label">Conformity Statement</p>
                 </label>
                 <label class="nemko-frm-chkbox d-none align-items-center gap-2">
                   <input class="form-check-input" type="checkbox" value="certification-decision" name="qualificationLevelSub">
                   <span class="chkbox-icon"></span>
-                  <p class="form-check-label">certification Decision</p>
+                  <p class="form-check-label">Certification Decision</p>
                 </label>
               </div>
             </div>
 
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="remarksTxtarea" class="form-label font-semibold">remarks</label>
-              <textarea class="form-control h-px-90 custom-scroll-view" id="remarksTxtarea"></textarea>
+              <label for="remarksTxtarea" class="form-label font-semibold">Remarks</label>
+              <textarea rows="3" style="resize: vertical;" class="form-control custom-scroll-view" id="remarksTxtarea"></textarea>
             </div>
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="limitationsTxtarea" class="form-label font-semibold">Limitations</label>
-              <textarea class="form-control h-px-90 custom-scroll-view" id="limitationsTxtarea"></textarea>
+              <label for="limitationsTxtarea" class="form-label font-semibold">Limitations by Applicant (reference only)</label>
+              <textarea rows="3" style="resize: vertical;" class="form-control custom-scroll-view" id="limitationsTxtarea"></textarea>
             </div>
 
             <div class="row gy-3">
               <div class="col-12 col-sm-6">
                 <div class="w-100 float-start d-flex flex-column form-control-col">
-                  <label for="targetAchieveDate" class="form-label font-semibold">target achieve date</label>
+                  <label for="targetAchieveDate" class="form-label font-semibold">Target Achieve Date</label>
                   <input type="text" class="form-control has-calendar-icon" id="targetAchieveDate" />
                 </div>
               </div>
             </div>
 
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="toBeVerifiedByIp" class="form-label font-semibold">to be verified by <span class="text-danger">*</span></label>
+              <label for="toBeVerifiedByIp" class="form-label font-semibold">To Be Verified by <span class="text-danger">*</span></label>
               <div class="d-flex align-items-center gap-2">
                 <input type="text" class="form-control flex-grow-1" id="toBeVerifiedByIp" data-emp-ids="" readonly />
                 <button type="button" class="frm-right-arrow-btn select-emp-modal-btn"></button>
@@ -334,7 +334,7 @@ export default class MyQualifications {
             </div>
 
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="toBeAuthorizedByIp" class="form-label font-semibold">to be authorized by</label>
+              <label for="toBeAuthorizedByIp" class="form-label font-semibold">To Be Authorized by</label>
               <div class="d-flex align-items-center gap-2">
                 <input type="text" class="form-control flex-grow-1" id="toBeAuthorizedByIp" data-emp-ids="" readonly />
                 <button type="button" class="frm-right-arrow-btn select-emp-modal-btn"></button>
@@ -346,8 +346,8 @@ export default class MyQualifications {
           </div>
         </div>
         <div class="modal-footer gap-2 justify-content-sm-start justify-content-center">
-          <button type="button" class="btn nemko-btn-default nemko-btn-save text-base md-text-lg m-0" id="submitQualificationBtn">Submit</button>
-          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-base md-text-lg m-0" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-save text-sm m-0" id="submitQualificationBtn">Submit</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-sm m-0" data-bs-dismiss="modal">Cancel</button>
         </div>
       </div>
     </div>
@@ -358,7 +358,7 @@ export default class MyQualifications {
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title fhd-text-xl-combo" id="standardSelectModalTitle">Select Standard</h5>
+          <h5 class="modal-title text-lg font-semibold" id="standardSelectModalTitle">Select Standard</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-frm-search-top w-100 float-start">
@@ -377,8 +377,8 @@ export default class MyQualifications {
           </div>
         </div>
         <div class="modal-footer gap-2 justify-content-sm-start justify-content-center">
-          <button type="button" class="btn nemko-btn-default nemko-btn-save text-base md-text-lg m-0" id="standardSelectSaveBtn">Save</button>
-          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-base md-text-lg m-0" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-save text-sm m-0" id="standardSelectSaveBtn">Save</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-sm m-0" data-bs-dismiss="modal">Cancel</button>
         </div>
       </div>
     </div>
@@ -389,7 +389,7 @@ export default class MyQualifications {
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title fhd-text-xl-combo">Select Employee</h5>
+          <h5 class="modal-title text-lg font-semibold">Select Employee</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-frm-search-top w-100 float-start">
@@ -408,8 +408,8 @@ export default class MyQualifications {
           </div>
         </div>
         <div class="modal-footer gap-2 justify-content-sm-start justify-content-center">
-          <button type="button" class="btn nemko-btn-default nemko-btn-save text-base md-text-lg m-0" id="empSelectSaveBtn">Save</button>
-          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-base md-text-lg m-0" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-save text-sm m-0" id="empSelectSaveBtn">Save</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-sm m-0" data-bs-dismiss="modal">Cancel</button>
         </div>
       </div>
     </div>
@@ -420,13 +420,13 @@ export default class MyQualifications {
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title fhd-text-xl-combo">Edit Qualification</h5>
+          <h5 class="modal-title text-lg font-semibold">Edit Qualification</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body custom-scroll-view">
 
           <div id="editModalLoading" class="text-center py-4 text-color-3 text-sm font-medium" style="display:none;">Loading...</div>
-          <div id="editModalError"   class="text-center py-4 text-sm font-medium" style="display:none;">Failed to load qualification.</div>
+          <div id="editModalError"   class="text-center py-4 text-sm font-medium" style="display:none;">Could not load qualification.</div>
 
           <div id="editModalContent" class="w-100 float-start d-flex flex-column gap-3 nemko-modal-frm py-2">
 
@@ -439,7 +439,7 @@ export default class MyQualifications {
             <!-- Reference field -->
             <div class="quaification-type-standard w-100 float-start">
               <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label for="editStandared" class="form-label font-semibold">Qualification reference <span class="text-danger">*</span></label>
+                <label for="editStandared" class="form-label font-semibold">Qualification Reference <span class="text-danger">*</span></label>
                 <input type="text" class="form-control flex-grow-1" id="editStandared" disabled />
               </div>
             </div>
@@ -466,17 +466,17 @@ export default class MyQualifications {
                   <label class="nemko-frm-chkbox d-none align-items-center gap-2">
                     <input class="form-check-input" type="checkbox" value="report-approver" name="editQualificationLevelSub">
                     <span class="chkbox-icon"></span>
-                    <p class="form-check-label">report approver</p>
+                    <p class="form-check-label">Report Approver</p>
                   </label>
                   <label class="nemko-frm-chkbox d-none align-items-center gap-2">
                     <input class="form-check-input" type="checkbox" value="conformity-conformity" name="editQualificationLevelSub">
                     <span class="chkbox-icon"></span>
-                    <p class="form-check-label">conformity statement</p>
+                    <p class="form-check-label">Conformity Statement</p>
                   </label>
                   <label class="nemko-frm-chkbox d-none align-items-center gap-2">
                     <input class="form-check-input" type="checkbox" value="certification-decision" name="editQualificationLevelSub">
                     <span class="chkbox-icon"></span>
-                    <p class="form-check-label">certification Decision</p>
+                    <p class="form-check-label">Certification Decision</p>
                   </label>
                 </div>
               </div>
@@ -485,42 +485,35 @@ export default class MyQualifications {
 
             <!-- Remarks -->
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editRemarksTxtarea" class="form-label font-semibold">remarks</label>
-              <textarea class="form-control h-px-90 custom-scroll-view" id="editRemarksTxtarea"></textarea>
+              <label for="editRemarksTxtarea" class="form-label font-semibold">Remarks</label>
+              <textarea rows="3" style="resize: vertical;" class="form-control custom-scroll-view" id="editRemarksTxtarea"></textarea>
             </div>
 
             <!-- Limitations -->
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editLimitationsTxtarea" class="form-label font-semibold">Limitations</label>
+              <label for="editLimitationsTxtarea" class="form-label font-semibold">Limitations by Applicant (reference only)</label>
               <p class="frm-readonly-val" id="editLimitationsPara" style="display:none;">-</p>
-              <textarea class="form-control h-px-90 custom-scroll-view" id="editLimitationsTxtarea" disabled></textarea>
+              <textarea rows="3" style="resize: vertical;" class="form-control custom-scroll-view" id="editLimitationsTxtarea" disabled></textarea>
             </div>
 
-            <!-- Limitations (Verifier) -->
-            <div class="w-100 float-start d-flex flex-column form-control-col" id="editLimitationsVerifierRow">
-              <label for="editLimitationsVerifierTxtarea" class="form-label font-semibold">Limitations (Verifier)</label>
-              <p class="frm-readonly-val" id="editLimitationsVerifierPara" style="display:none;">-</p>
-              <textarea class="form-control h-px-90 custom-scroll-view" id="editLimitationsVerifierTxtarea" disabled></textarea>
-            </div>
-
-            <!-- Limitations (Authorizer) - Authorized table only -->
-            <div class="w-100 float-start d-flex flex-column form-control-col" id="editLimitationsAuthorizerRow">
-              <label for="editLimitationsAuthorizerTxtarea" class="form-label font-semibold">Limitations (Authorizer)</label>
-              <p class="frm-readonly-val" id="editLimitationsAuthorizerPara" style="display:none;">-</p>
-              <textarea class="form-control h-px-90 custom-scroll-view" id="editLimitationsAuthorizerTxtarea" disabled></textarea>
+            <!-- Final Limitations -->
+            <div class="w-100 float-start d-flex flex-column form-control-col" id="editFinalLimitationsRow">
+              <label for="editFinalLimitationsTxtarea" class="form-label font-semibold">Final Limitations</label>
+              <p class="frm-readonly-val" id="editFinalLimitationsPara" style="display:none;">-</p>
+              <textarea rows="3" style="resize: vertical;" class="form-control custom-scroll-view" id="editFinalLimitationsTxtarea" disabled></textarea>
             </div>
 
             <!-- Date fields -->
             <div class="row gy-3">
               <div class="col-12 col-sm-6 col-md-6">
                 <div class="w-100 float-start d-flex flex-column form-control-col">
-                  <label for="editTargetAchieveDate" class="form-label font-semibold">target achieve date</label>
+                  <label for="editTargetAchieveDate" class="form-label font-semibold">Target Achieve Date</label>
                   <input type="text" class="form-control has-calendar-icon edit-target-achieve-date-input" id="editTargetAchieveDate" />
                 </div>
               </div>
               <div class="col-12 col-sm-6 col-md-6">
                 <div class="w-100 float-start d-flex flex-column form-control-col">
-                  <label for="editQualifiedDate" class="form-label font-semibold">qualified date</label>
+                  <label for="editQualifiedDate" class="form-label font-semibold">Qualified Date</label>
                   <input type="text" class="form-control has-calendar-icon" id="editQualifiedDate" disabled/>
                 </div>
               </div>
@@ -528,7 +521,7 @@ export default class MyQualifications {
 
             <!-- Verified By -->
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editToBeVerifiedByIp" class="form-label font-semibold">to be verified by <span class="text-danger">*</span></label>
+              <label for="editToBeVerifiedByIp" class="form-label font-semibold">To Be Verified by <span class="text-danger">*</span></label>
               <div class="d-flex align-items-center gap-2">
                 <input type="text" class="form-control flex-grow-1" id="editToBeVerifiedByIp" readonly/>
                 <button type="button" class="frm-right-arrow-btn select-emp-modal-btn"></button>
@@ -538,7 +531,7 @@ export default class MyQualifications {
 
             <!-- Authorized By -->
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editToBeAuthorizedByIp" class="form-label font-semibold">to be authorized by</label>
+              <label for="editToBeAuthorizedByIp" class="form-label font-semibold">To Be Authorized by</label>
               <div class="d-flex align-items-center gap-2">
                 <input type="text" class="form-control flex-grow-1" id="editToBeAuthorizedByIp" readonly/>
                 <button type="button" class="frm-right-arrow-btn select-emp-modal-btn"></button>
@@ -549,8 +542,8 @@ export default class MyQualifications {
           </div>
         </div>
         <div class="modal-footer gap-2 justify-content-sm-start justify-content-center">
-          <button type="button" class="btn nemko-btn-default nemko-btn-save text-base md-text-lg m-0">Update</button>
-          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-base md-text-lg m-0" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-save text-sm m-0">Update</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-sm m-0" data-bs-dismiss="modal">Cancel</button>
         </div>
       </div>
     </div>
@@ -561,13 +554,13 @@ export default class MyQualifications {
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title fhd-text-xl-combo">Edit Qualification</h5>
+          <h5 class="modal-title text-lg font-semibold">Edit Qualification</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body custom-scroll-view">
 
           <div id="editModalLoading" class="text-center py-4 text-color-3 text-sm font-medium" style="display:none;">Loading...</div>
-          <div id="editModalError"   class="text-center py-4 text-sm font-medium" style="display:none;">Failed to load qualification.</div>
+          <div id="editModalError"   class="text-center py-4 text-sm font-medium" style="display:none;">Could not load qualification.</div>
 
           <div id="editModalContent" class="w-100 float-start d-flex flex-column gap-3 nemko-modal-frm py-2">
 
@@ -580,7 +573,7 @@ export default class MyQualifications {
             <!-- Reference field -->
             <div class="quaification-type-standard w-100 float-start">
               <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label for="editStandared" class="form-label font-semibold">Qualification reference <span class="text-danger">*</span></label>
+                <label for="editStandared" class="form-label font-semibold">Qualification Reference <span class="text-danger">*</span></label>
                 <input type="text" class="form-control flex-grow-1" id="editStandared" disabled />
               </div>
             </div>
@@ -607,17 +600,17 @@ export default class MyQualifications {
                   <label class="nemko-frm-chkbox d-none align-items-center gap-2">
                     <input class="form-check-input" type="checkbox" value="report-approver" name="editQualificationLevelSub">
                     <span class="chkbox-icon"></span>
-                    <p class="form-check-label">report approver</p>
+                    <p class="form-check-label">Report Approver</p>
                   </label>
                   <label class="nemko-frm-chkbox d-none align-items-center gap-2">
                     <input class="form-check-input" type="checkbox" value="conformity-conformity" name="editQualificationLevelSub">
                     <span class="chkbox-icon"></span>
-                    <p class="form-check-label">conformity statement</p>
+                    <p class="form-check-label">Conformity Statement</p>
                   </label>
                   <label class="nemko-frm-chkbox d-none align-items-center gap-2">
                     <input class="form-check-input" type="checkbox" value="certification-decision" name="editQualificationLevelSub">
                     <span class="chkbox-icon"></span>
-                    <p class="form-check-label">certification Decision</p>
+                    <p class="form-check-label">Certification Decision</p>
                   </label>
                 </div>
               </div>
@@ -626,36 +619,36 @@ export default class MyQualifications {
 
             <!-- Remarks -->
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editRemarksTxtarea" class="form-label font-semibold">remarks</label>
-              <textarea class="form-control h-px-90 custom-scroll-view" id="editRemarksTxtarea"></textarea>
+              <label for="editRemarksTxtarea" class="form-label font-semibold">Remarks</label>
+              <textarea rows="3" style="resize: vertical;" class="form-control custom-scroll-view" id="editRemarksTxtarea"></textarea>
             </div>
 
             <!-- Limitations -->
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editLimitationsTxtarea" class="form-label font-semibold">Limitations</label>
+              <label for="editLimitationsTxtarea" class="form-label font-semibold">Limitations by Applicant (reference only)</label>
               <p class="frm-readonly-val" id="editLimitationsPara" style="display:none;">-</p>
-              <textarea class="form-control h-px-90 custom-scroll-view" id="editLimitationsTxtarea" disabled></textarea>
+              <textarea rows="3" style="resize: vertical;" class="form-control custom-scroll-view" id="editLimitationsTxtarea" disabled></textarea>
             </div>
 
-            <!-- Limitations (Verifier) -->
-            <div class="w-100 float-start d-flex flex-column form-control-col" id="editLimitationsVerifierRow">
-              <label for="editLimitationsVerifierTxtarea" class="form-label font-semibold">Limitations (Verifier)</label>
-              <p class="frm-readonly-val" id="editLimitationsVerifierPara" style="display:none;">-</p>
-              <textarea class="form-control h-px-90 custom-scroll-view" id="editLimitationsVerifierTxtarea" disabled></textarea>
+            <!-- Final Limitations -->
+            <div class="w-100 float-start d-flex flex-column form-control-col" id="editFinalLimitationsRow">
+              <label for="editFinalLimitationsTxtarea" class="form-label font-semibold">Final Limitations</label>
+              <p class="frm-readonly-val" id="editFinalLimitationsPara" style="display:none;">-</p>
+              <textarea rows="3" style="resize: vertical;" class="form-control custom-scroll-view" id="editFinalLimitationsTxtarea" disabled></textarea>
             </div>
 
             <!-- Rejection Reason -->
             <div class="w-100 float-start d-flex flex-column form-control-col" id="editRejectionReasonRow">
               <label for="editRejectionReasonTxtarea" class="form-label font-semibold">Rejection Reason</label>
               <p class="frm-readonly-val" id="editRejectionReasonPara" style="display:none;">-</p>
-              <textarea class="form-control h-px-90 custom-scroll-view" id="editRejectionReasonTxtarea" disabled></textarea>
+              <textarea rows="3" style="resize: vertical;" class="form-control custom-scroll-view" id="editRejectionReasonTxtarea" disabled></textarea>
             </div>
 
             <!-- Date fields -->
             <div class="row gy-3">
               <div class="col-12 col-sm-6 col-md-6">
                 <div class="w-100 float-start d-flex flex-column form-control-col">
-                  <label for="editTargetAchieveDateRequested" class="form-label font-semibold">target achieve date</label>
+                  <label for="editTargetAchieveDateRequested" class="form-label font-semibold">Target Achieve Date</label>
                   <input type="text" class="form-control has-calendar-icon edit-target-achieve-date-input" id="editTargetAchieveDateRequested" />
                 </div>
               </div>
@@ -663,7 +656,7 @@ export default class MyQualifications {
 
             <!-- Verified By -->
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editToBeVerifiedByIp" class="form-label font-semibold">to be verified by <span class="text-danger">*</span></label>
+              <label for="editToBeVerifiedByIp" class="form-label font-semibold">To Be Verified by <span class="text-danger">*</span></label>
               <div class="d-flex align-items-center gap-2">
                 <input type="text" class="form-control flex-grow-1" id="editToBeVerifiedByIp" readonly/>
                 <button type="button" class="frm-right-arrow-btn select-emp-modal-btn"></button>
@@ -673,7 +666,7 @@ export default class MyQualifications {
 
             <!-- Authorized By -->
             <div class="w-100 float-start d-flex flex-column form-control-col">
-              <label for="editToBeAuthorizedByIp" class="form-label font-semibold">to be authorized by</label>
+              <label for="editToBeAuthorizedByIp" class="form-label font-semibold">To Be Authorized by</label>
               <div class="d-flex align-items-center gap-2">
                 <input type="text" class="form-control flex-grow-1" id="editToBeAuthorizedByIp" readonly/>
                 <button type="button" class="frm-right-arrow-btn select-emp-modal-btn"></button>
@@ -684,9 +677,9 @@ export default class MyQualifications {
           </div>
         </div>
         <div class="modal-footer gap-2 justify-content-sm-start justify-content-center">
-          <button type="button" class="btn nemko-btn-default nemko-btn-save text-base md-text-lg m-0">Update</button>
-          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-base md-text-lg m-0" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-danger nemko-btn-default nemko-btn-delete text-base md-text-lg m-0 ms-auto">Delete</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-save text-sm m-0">Update</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-sm m-0" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger nemko-btn-default nemko-btn-delete text-sm m-0 ms-auto">Delete</button>
         </div>
       </div>
     </div>
@@ -700,14 +693,14 @@ export default class MyQualifications {
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title fhd-text-xl-combo">Qualification Details</h5>
+        <h5 class="modal-title text-lg font-semibold">Qualification Details</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body custom-scroll-view">
         <div class="w-100 float-start d-flex flex-column gap-3 nemko-modal-frm py-2">
 
           <div id="detailsModalLoading" class="text-center py-4 text-color-3 text-sm font-medium" style="display:none;">Loading...</div>
-          <div id="detailsModalError"   class="text-center py-4 text-sm font-medium" style="display:none;">Failed to load details.</div>
+          <div id="detailsModalError"   class="text-center py-4 text-sm font-medium" style="display:none;">Could not load qualification details.</div>
 
           <div id="detailsModalContent" style="display:none;">
             <div class="d-flex flex-column gap-3">
@@ -715,16 +708,17 @@ export default class MyQualifications {
               <div class="row gy-3">
                 <div class="col-12 col-sm-6 col-md-6">
                   <div class="w-100 float-start d-flex flex-column form-control-col">
-                    <label class="form-label font-semibold">Requested by</label>
-                    <input type="text" class="form-control" id="detailsRequestedBy" readonly />
+                    <label class="form-label font-semibold">Qualification ID</label>
+                    <input type="text" class="form-control" id="detailsQualificationId" readonly />
                   </div>
                 </div>
                 <div class="col-12 col-sm-6 col-md-6">
                   <div class="w-100 float-start d-flex flex-column form-control-col">
-                    <label class="form-label font-semibold">Email address</label>
-                    <input type="email" class="form-control" id="detailsReqEmail" readonly />
+                    <label class="form-label font-semibold">Requested by</label>
+                    <input type="text" class="form-control" id="detailsRequestedBy" readonly />
                   </div>
                 </div>
+                
               </div>
 
               <div class="row gy-3">
@@ -736,10 +730,11 @@ export default class MyQualifications {
                 </div>
                 <div class="col-12 col-sm-6 col-md-6">
                   <div class="w-100 float-start d-flex flex-column form-control-col">
-                    <label class="form-label font-semibold">Qualification ID</label>
-                    <input type="text" class="form-control" id="detailsQualificationId" readonly />
+                    <label class="form-label font-semibold">Email Address</label>
+                    <input type="email" class="form-control" id="detailsReqEmail" readonly />
                   </div>
                 </div>
+                
               </div>
 
               <div class="row gy-3">
@@ -749,6 +744,15 @@ export default class MyQualifications {
                     <input type="text" class="form-control" id="detailsQualificationRef" readonly />
                   </div>
                 </div>
+                <div class="col-12 col-sm-6 col-md-6">
+                  <div class="w-100 float-start d-flex flex-column form-control-col">
+                    <label class="form-label font-semibold">Qualification Type</label>
+                    <input type="text" class="form-control" id="detailsQualificationType" readonly />
+                  </div>
+                </div>
+              </div>
+
+              <div class="row gy-3">
                 <div class="col-12 col-sm-6 col-md-6">
                   <div class="w-100 float-start d-flex flex-column form-control-col">
                     <label class="form-label font-semibold">Qualification Level</label>
@@ -776,45 +780,72 @@ export default class MyQualifications {
                     <input type="text" class="form-control" id="detailsConformityStatement" readonly />
                   </div>
                 </div>
-              </div>
-
-              <div class="w-100 float-start d-flex frm-readonly-row py-1">
-                <div class="w-100 float-start d-flex flex-column form-control-col">
-                  <label class="form-label font-semibold">Active Qualification</label>
-                  <p class="frm-readonly-val" id="detailsActiveQualification">-</p>
+                <div class="col-12 col-sm-4 col-md-4">
+                  <div class="w-100 float-start d-flex flex-column form-control-col">
+                    <label class="form-label font-semibold">Certification Decision</label>
+                    <input type="text" class="form-control" id="detailsCertificationDecision" readonly />
+                  </div>
                 </div>
               </div>
 
-              <div class="w-100 float-start d-flex frm-readonly-row py-1">
+              
+
+              <div class="w-100 float-start d-flex py-1" id="detailsRemarksRow">
                 <div class="w-100 float-start d-flex flex-column form-control-col">
-                  <label class="form-label font-semibold">remarks</label>
+                  <label class="form-label font-semibold">Remarks</label>
                   <p class="frm-readonly-val" id="detailsRemarks">-</p>
                   <textarea class="form-control h-px-98 custom-scroll-view" id="detailsRemarksTxtarea" readonly style="display:none;"></textarea>
                 </div>
               </div>
 
-              <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label class="form-label font-semibold">limitations</label>
+              <div class="w-100 float-start d-flex flex-column form-control-col" id="detailsLimitationsRow">
+                <label class="form-label font-semibold">Limitations by Applicant (reference only)</label>
                 <p class="frm-readonly-val" id="detailsLimitationsPara" style="display:none;">-</p>
                 <textarea class="form-control h-px-98 custom-scroll-view" id="detailsLimitationsTxtarea" readonly></textarea>
               </div>
 
-              <div class="w-100 float-start d-flex flex-column form-control-col" id="detailsLimitationsVerifierRow">
-                <label class="form-label font-semibold">Limitations (Verifier)</label>
-                <p class="frm-readonly-val" id="detailsLimitationsVerifierPara" style="display:none;">-</p>
-                <textarea class="form-control h-px-98 custom-scroll-view" id="detailsLimitationsVerifierTxtarea" readonly></textarea>
+              <div class="w-100 float-start d-flex flex-column form-control-col" id="detailsFinalLimitationsRow">
+                <label class="form-label font-semibold">Final Limitations</label>
+                <p class="frm-readonly-val" id="detailsFinalLimitationsPara" style="display:none;">-</p>
+                <textarea class="form-control h-px-98 custom-scroll-view" id="detailsFinalLimitationsTxtarea" readonly></textarea>
               </div>
 
-              <div class="w-100 float-start d-flex flex-column form-control-col" id="detailsLimitationsAuthorizerRow">
-                <label class="form-label font-semibold">Limitations (Authorizer)</label>
-                <p class="frm-readonly-val" id="detailsLimitationsAuthorizerPara" style="display:none;">-</p>
-                <textarea class="form-control h-px-98 custom-scroll-view" id="detailsLimitationsAuthorizerTxtarea" readonly></textarea>
+              <div class="row gy-3" id="detailsWithdrawnByRow" >
+                <div class="col-12 col-sm-6 col-md-6">
+                  <div class="w-100 float-start d-flex flex-column form-control-col">
+                    <label class="form-label font-semibold">Withdrawn by</label>
+                    <input type="text" class="form-control" id="detailsWithdrawnBy" readonly />
+                  </div>
+                </div>
               </div>
 
-              <div class="w-100 float-start d-flex frm-readonly-row py-1">
-                <div class="w-100 float-start d-flex flex-column form-control-col">
-                  <label class="form-label font-semibold">qualified date</label>
-                  <p class="frm-readonly-val" id="detailsQualifiedDateReadonly">-</p>
+              <div class="w-100 float-start d-flex flex-column form-control-col" id="detailsWithdrawnReasonRow" style="display:none;">
+                <label class="form-label font-semibold">Withdrawn Reason</label>
+                <p class="frm-readonly-val" id="detailsWithdrawnReasonPara" style="display:none;">-</p>
+                <textarea class="form-control h-px-98 custom-scroll-view" id="detailsWithdrawnReasonTxtarea" readonly></textarea>
+              </div>
+
+              <div class="row gy-3">
+                <div class="col-12 col-sm-6 col-md-6">
+                  <div class="w-100 float-start d-flex flex-column form-control-col">
+                    <label class="form-label font-semibold">Target Achieve Date</label>
+                    <input type="text" class="form-control" id="detailsTargetAchieveDateReadonly" readonly />
+                  </div>
+                </div>
+              </div>
+
+              <div class="row gy-3">
+                <div class="col-12 col-sm-6 col-md-6">
+                  <div class="w-100 float-start d-flex flex-column form-control-col">
+                    <label class="form-label font-semibold">Qualified Date</label>
+                    <input type="text" class="form-control" id="detailsQualifiedDateReadonly" readonly />
+                  </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-6">
+                  <div class="w-100 float-start d-flex flex-column form-control-col">
+                    <label class="form-label font-semibold">Withdrawn Date</label>
+                    <input type="text" class="form-control" id="detailsWithdrawnDateReadonly" readonly />
+                  </div>
                 </div>
               </div>
 
@@ -839,7 +870,7 @@ export default class MyQualifications {
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-base md-text-lg m-0" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-sm m-0" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -852,14 +883,14 @@ export default class MyQualifications {
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title fhd-text-xl-combo">Qualification Details</h5>
+        <h5 class="modal-title text-lg font-semibold">Qualification Details</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body custom-scroll-view">
         <div class="w-100 float-start d-flex flex-column gap-3 nemko-modal-frm py-2">
 
           <div id="detailsModalLoading" class="text-center py-4 text-color-3 text-sm font-medium" style="display:none;">Loading...</div>
-          <div id="detailsModalError"   class="text-center py-4 text-sm font-medium" style="display:none;">Failed to load details.</div>
+          <div id="detailsModalError"   class="text-center py-4 text-sm font-medium" style="display:none;">Could not load qualification details.</div>
 
           <div id="detailsModalContent" style="display:none;">
             <div class="d-flex flex-column gap-3">
@@ -867,14 +898,14 @@ export default class MyQualifications {
               <div class="row gy-3">
                 <div class="col-12 col-sm-6 col-md-6">
                   <div class="w-100 float-start d-flex flex-column form-control-col">
-                    <label class="form-label font-semibold">Requested by</label>
-                    <input type="text" class="form-control" id="detailsRequestedBy" readonly />
+                    <label class="form-label font-semibold">Qualification ID</label>
+                    <input type="text" class="form-control" id="detailsQualificationId" readonly />
                   </div>
                 </div>
                 <div class="col-12 col-sm-6 col-md-6">
                   <div class="w-100 float-start d-flex flex-column form-control-col">
-                    <label class="form-label font-semibold">Email address</label>
-                    <input type="email" class="form-control" id="detailsReqEmail" readonly />
+                    <label class="form-label font-semibold">Requested by</label>
+                    <input type="text" class="form-control" id="detailsRequestedBy" readonly />
                   </div>
                 </div>
               </div>
@@ -888,10 +919,11 @@ export default class MyQualifications {
                 </div>
                 <div class="col-12 col-sm-6 col-md-6">
                   <div class="w-100 float-start d-flex flex-column form-control-col">
-                    <label class="form-label font-semibold">Qualification ID</label>
-                    <input type="text" class="form-control" id="detailsQualificationId" readonly />
+                    <label class="form-label font-semibold">Email Address</label>
+                    <input type="email" class="form-control" id="detailsReqEmail" readonly />
                   </div>
                 </div>
+                
               </div>
 
               <div class="row gy-3">
@@ -901,6 +933,15 @@ export default class MyQualifications {
                     <input type="text" class="form-control" id="detailsQualificationRef" readonly />
                   </div>
                 </div>
+                <div class="col-12 col-sm-6 col-md-6">
+                  <div class="w-100 float-start d-flex flex-column form-control-col">
+                    <label class="form-label font-semibold">Qualification Type</label>
+                    <input type="text" class="form-control" id="detailsQualificationType" readonly />
+                  </div>
+                </div>
+              </div>
+
+              <div class="row gy-3">
                 <div class="col-12 col-sm-6 col-md-6">
                   <div class="w-100 float-start d-flex flex-column form-control-col">
                     <label class="form-label font-semibold">Qualification Level</label>
@@ -928,33 +969,43 @@ export default class MyQualifications {
                     <input type="text" class="form-control" id="detailsConformityStatement" readonly />
                   </div>
                 </div>
-              </div>
-
-              <div class="w-100 float-start d-flex frm-readonly-row py-1">
-                <div class="w-100 float-start d-flex flex-column form-control-col">
-                  <label class="form-label font-semibold">Active Qualification</label>
-                  <p class="frm-readonly-val" id="detailsActiveQualification">-</p>
+                <div class="col-12 col-sm-4 col-md-4">
+                  <div class="w-100 float-start d-flex flex-column form-control-col">
+                    <label class="form-label font-semibold">Certification Decision</label>
+                    <input type="text" class="form-control" id="detailsCertificationDecision" readonly />
+                  </div>
                 </div>
               </div>
 
-              <div class="w-100 float-start d-flex frm-readonly-row py-1">
+              
+
+              <div class="w-100 float-start d-flex py-1" id="detailsRemarksRow">
                 <div class="w-100 float-start d-flex flex-column form-control-col">
-                  <label class="form-label font-semibold">remarks</label>
+                  <label class="form-label font-semibold">Remarks</label>
                   <p class="frm-readonly-val" id="detailsRemarks">-</p>
                   <textarea class="form-control h-px-98 custom-scroll-view" id="detailsRemarksTxtarea" readonly style="display:none;"></textarea>
                 </div>
               </div>
 
-              <div class="w-100 float-start d-flex flex-column form-control-col">
-                <label class="form-label font-semibold">limitations</label>
+              <div class="w-100 float-start d-flex flex-column form-control-col" id="detailsLimitationsRow">
+                <label class="form-label font-semibold">Limitations by Applicant (reference only)</label>
                 <p class="frm-readonly-val" id="detailsLimitationsPara" style="display:none;">-</p>
                 <textarea class="form-control h-px-98 custom-scroll-view" id="detailsLimitationsTxtarea" readonly></textarea>
               </div>
 
-              <div class="w-100 float-start d-flex flex-column form-control-col" id="detailsLimitationsVerifierRow">
-                <label class="form-label font-semibold">Limitations (Verifier)</label>
-                <p class="frm-readonly-val" id="detailsLimitationsVerifierPara" style="display:none;">-</p>
-                <textarea class="form-control h-px-98 custom-scroll-view" id="detailsLimitationsVerifierTxtarea" readonly></textarea>
+              <div class="w-100 float-start d-flex flex-column form-control-col" id="detailsFinalLimitationsRow">
+                <label class="form-label font-semibold">Final Limitations</label>
+                <p class="frm-readonly-val" id="detailsFinalLimitationsPara" style="display:none;">-</p>
+                <textarea class="form-control h-px-98 custom-scroll-view" id="detailsFinalLimitationsTxtarea" readonly></textarea>
+              </div>
+
+              <div class="row gy-3">
+                <div class="col-12 col-sm-6 col-md-6">
+                  <div class="w-100 float-start d-flex flex-column form-control-col">
+                    <label class="form-label font-semibold">Rejected by</label>
+                    <input type="text" class="form-control" id="detailsRejectedBy" readonly />
+                  </div>
+                </div>
               </div>
 
               <div class="w-100 float-start d-flex flex-column form-control-col" id="detailsRejectionReasonRow">
@@ -963,12 +1014,22 @@ export default class MyQualifications {
                 <textarea class="form-control h-px-98 custom-scroll-view" id="detailsRejectionReasonTxtarea" readonly></textarea>
               </div>
 
-              <div class="w-100 float-start d-flex frm-readonly-row py-1">
-                <div class="w-100 float-start d-flex flex-column form-control-col">
-                  <label class="form-label font-semibold">target achieve date</label>
-                  <p class="frm-readonly-val" id="detailsTargetAchieveDateReadonly">-</p>
+              <div class="row gy-3">
+                <div class="col-12 col-sm-6 col-md-6">
+                  <div class="w-100 float-start d-flex flex-column form-control-col">
+                    <label class="form-label font-semibold">Target Achieve Date</label>
+                    <input type="text" class="form-control" id="detailsTargetAchieveDateReadonly" readonly />
+                  </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-6">
+                  <div class="w-100 float-start d-flex flex-column form-control-col">
+                    <label class="form-label font-semibold">Rejected Date</label>
+                    <input type="text" class="form-control" id="detailsRejectedDateReadonly" readonly />
+                  </div>
                 </div>
               </div>
+
+              
 
               <div class="row gy-3">
                 <div class="col-12 col-sm-6 col-md-6">
@@ -991,7 +1052,7 @@ export default class MyQualifications {
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-base md-text-lg m-0" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-sm m-0" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
