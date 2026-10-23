@@ -275,7 +275,7 @@ export default class SharedSidebar {
   <div class="w-100 float-start px-3">
     <div class="sidebar-brand w-100 float-start d-flex justify-content-center align-items-center">
       <a href="__KEY_HOME_URL__">
-        <img src="__KEY_URL_RESOURCE__/resources/images/logo-white.png" alt="" />
+        <img src="__KEY_URL_RESOURCE__/resources/images/logo.png" style="max-width:100px" alt="" />
       </a>
     </div>
   </div>
@@ -285,10 +285,8 @@ export default class SharedSidebar {
       <li class="w-100 float-start">
         <a href="__KEY_URL_RESOURCE_SITE__/SitePages/MyQualifications.aspx?modal=addQualification" data-nav-key="add-qualification"
            class="sidebar-nav-link nemko-open-add-qualification-modal __ACTIVE_NAV__add-qualification__">
-          <img class="sidemenu-icon"
-               src="__KEY_URL_RESOURCE__/resources/images/icons/sidemenu/add-qualification.png"
-               alt="Add Qualification" />
-          <p class="text-base font-medium">Add Qualification</p>
+          <span class="sidemenu-icon" style="--sm-icon:url('__KEY_URL_RESOURCE__/resources/images/icons/sidemenu/add-qualification.png')" aria-hidden="true"></span>
+          <p class="font-medium">Add Qualification</p>
         </a>
       </li>
 
@@ -298,28 +296,26 @@ export default class SharedSidebar {
         data-bs-toggle="collapse" 
         aria-expanded="__SUBMENU_QUAL_ARIA__"   
         aria-controls="submenuQual">
-        <img class="sidemenu-icon"
-            src="__KEY_URL_RESOURCE__/resources/images/icons/sidemenu/my-qualifications.png"
-            alt="My Qualifications" />
-        <p class="text-base font-medium">My Qualifications</p>
+        <span class="sidemenu-icon" style="--sm-icon:url('__KEY_URL_RESOURCE__/resources/images/icons/sidemenu/my-qualifications.png')" aria-hidden="true"></span>
+        <p class="font-medium">My Qualifications</p>
         <svg class="ms-auto" width="13" height="7" viewBox="0 0 13 7" fill="none">
           <path fill-rule="evenodd" clip-rule="evenodd"
             d="M5.77789 6.72168L-5.87545e-08 1.34415L1.44422 -5.05119e-07L6.5 4.70546L11.5558 -6.31287e-08L13 1.34415L7.22211 6.72168C7.03057 6.89989 6.77083 7 6.5 7C6.22917 7 5.96943 6.89989 5.77789 6.72168Z"
-            fill="white"/>
+            fill="currentColor"/>
         </svg>
       </a>
       <ul class="sidebar-submenu collapse __SUBMENU_QUAL_SHOW__" id="submenuQual">
         <li class="my-2">
           <a href="__KEY_URL_RESOURCE_SITE__/SitePages/MyQualifications.aspx?tab=authorized"
             data-tab-id="authorized-table"
-            class="text-sm font-normal submenu-list-btn __ACTIVE_TAB__authorized-table__">
+            class="font-normal submenu-list-btn __ACTIVE_TAB__authorized-table__">
             Authorized
           </a>
         </li>
         <li class="my-2">
           <a href="__KEY_URL_RESOURCE_SITE__/SitePages/MyQualifications.aspx?tab=requested"
             data-tab-id="requested-table"
-            class="text-sm font-normal submenu-list-btn __ACTIVE_TAB__requested-table__">
+            class="font-normal submenu-list-btn __ACTIVE_TAB__requested-table__">
             Requested
           </a>
         </li>
@@ -329,50 +325,40 @@ export default class SharedSidebar {
       <li class="w-100 float-start">
         <a href="__KEY_URL_RESOURCE_SITE__/SitePages/VerificationAuthorization.aspx?tab=verification" data-nav-key="my-verification" data-tab-id="verif-verification-table"
           class="sidebar-nav-link __ACTIVE_NAV__my-verification__">
-          <img class="sidemenu-icon"
-               src="__KEY_URL_RESOURCE__/resources/images/icons/sidemenu/my-verification.png"
-               alt="My Verification" />
-          <p class="text-base font-medium">My Verification</p>
+          <span class="sidemenu-icon" style="--sm-icon:url('__KEY_URL_RESOURCE__/resources/images/icons/sidemenu/my-verification.png')" aria-hidden="true"></span>
+          <p class="font-medium">My Verification</p>
         </a>
       </li>
 
       <li class="w-100 float-start">
         <a href="__KEY_URL_RESOURCE_SITE__/SitePages/VerificationAuthorization.aspx?tab=authorization" data-nav-key="my-authorizations" data-tab-id="verif-authorization-table"
           class="sidebar-nav-link __ACTIVE_NAV__my-authorizations__">
-          <img class="sidemenu-icon"
-               src="__KEY_URL_RESOURCE__/resources/images/icons/sidemenu/my-authorizations.png"
-               alt="My Authorizations" />
-          <p class="text-base font-medium">My Authorizations</p>
+          <span class="sidemenu-icon" style="--sm-icon:url('__KEY_URL_RESOURCE__/resources/images/icons/sidemenu/my-authorizations.png')" aria-hidden="true"></span>
+          <p class="font-medium">My Authorizations</p>
         </a>
       </li>
 
       <li class="w-100 float-start">
         <a href="__KEY_URL_RESOURCE_SITE__/SitePages/AdvancedSearch.aspx" data-nav-key="advanced-search"
            class="sidebar-nav-link __ACTIVE_NAV__advanced-search__">
-          <img class="sidemenu-icon"
-               src="__KEY_URL_RESOURCE__/resources/images/icons/sidemenu/advanced-search.png"
-               alt="Advanced Search" />
-          <p class="text-base font-medium">Advanced Search</p>
+          <span class="sidemenu-icon" style="--sm-icon:url('__KEY_URL_RESOURCE__/resources/images/icons/sidemenu/advanced-search.png')" aria-hidden="true"></span>
+          <p class="font-medium">Advanced Search</p>
         </a>
       </li>
 
       <li class="w-100 float-start">
         <a href="__KEY_URL_RESOURCE_SITE__/SitePages/Guidelines.aspx" data-nav-key="guidelines"
            class="sidebar-nav-link __ACTIVE_NAV__guidelines__">
-          <img class="sidemenu-icon"
-               src="__KEY_URL_RESOURCE__/resources/images/icons/sidemenu/guidelines.png"
-               alt="Guidelines" />
-          <p class="text-base font-medium">Guidelines</p>
+          <span class="sidemenu-icon" style="--sm-icon:url('__KEY_URL_RESOURCE__/resources/images/icons/sidemenu/guidelines.png')" aria-hidden="true"></span>
+          <p class="font-medium">Guidelines</p>
         </a>
       </li>
 
       <li class="w-100 float-start">
         <a href="__KEY_URL_RESOURCE_SITE__/SitePages/AdvancedSearch.aspx?open=create-standard" data-nav-key="add-new-standard"
            class="sidebar-nav-link __ACTIVE_NAV__add-new-standard__">
-          <img class="sidemenu-icon"
-               src="__KEY_URL_RESOURCE__/resources/images/icons/sidemenu/add-new-standared.png"
-               alt="Add new Standard" />
-          <p class="text-base font-medium">Add new Standard</p>
+          <span class="sidemenu-icon" style="--sm-icon:url('__KEY_URL_RESOURCE__/resources/images/icons/sidemenu/add-new-standared.png')" aria-hidden="true"></span>
+          <p class="font-medium">Add New Standard</p>
         </a>
       </li>
 
@@ -382,7 +368,6 @@ export default class SharedSidebar {
   `;
 
  
-
 
 }
 
