@@ -103,7 +103,7 @@ export default class SharedSidebar {
 
     const TAB_DRIVEN_KEYS = new Set(Object.keys(NAV_TAB_PARAMS));
 
-    // ── On load: auto-expand submenu if a child tab is active ────────────────
+    // On load: auto-expand submenu if a child tab is active 
     const activeSubmenuBtn = domElement.querySelector<HTMLElement>('.submenu-list-btn.active-submenu');
     if (activeSubmenuBtn) {
       const parentSubmenu = activeSubmenuBtn.closest<HTMLElement>('.sidebar-submenu');
@@ -119,7 +119,7 @@ export default class SharedSidebar {
       }
     }
 
-    // ── On load: highlight active nav link for simple pages (guidelines etc.) ─
+     
     // Checks current URL pathname against each route to set active state
     const currentPath = window.location.pathname.toLowerCase();
     domElement.querySelectorAll<HTMLElement>('.sidebar-nav-link[data-nav-key]').forEach(link => {
@@ -138,9 +138,8 @@ export default class SharedSidebar {
       } catch { }
     });
 
-    // ── Click handlers ────────────────────────────────────────────────────────
-    // href already carries the correct URL (with ?tab= where needed).
-    // Only preventDefault when a registered in-page handler takes over.
+    //Click handlers
+
     domElement.querySelectorAll<HTMLElement>('.sidebar-nav-link[data-nav-key]').forEach(link => {
       const key = link.getAttribute('data-nav-key') ?? '';
       if (!NAV_ROUTES[key]) return;
@@ -156,7 +155,7 @@ export default class SharedSidebar {
           link.classList.add('active-sm-link');
           handler(key);
         }
-        // else: let the href navigate naturally
+       
       });
     });
   }
@@ -186,7 +185,7 @@ export default class SharedSidebar {
           e.preventDefault();
           SharedSidebar.activateTab(domElement, tabId);
         }
-        // else: let href navigate to MyQualifications.aspx?tab=...
+        
       });
     });
 
@@ -199,7 +198,7 @@ export default class SharedSidebar {
         const verifTabIds = ['verif-verification-table', 'verif-authorization-table'];
 
         if (qualTabIds.indexOf(tabId) !== -1) {
-          // My Qualifications page — sync submenu active state
+          // My Qualifications page  sync submenu active state
           domElement.querySelectorAll<HTMLElement>('.submenu-list-btn').forEach(b => {
             b.classList.toggle('active-submenu', b.getAttribute('data-tab-id') === tabId);
           });
@@ -211,7 +210,7 @@ export default class SharedSidebar {
           if (matchingNavLink) matchingNavLink.classList.add('active-sm-link');
 
         } else if (verifTabIds.indexOf(tabId) !== -1) {
-          // My Verification / My Authorization page — sync sidebar nav link
+          // My Verification / My Authorization page  sync sidebar nav link
           const navKey = tabId === 'verif-authorization-table' ? 'my-authorizations' : 'my-verification';
           domElement.querySelectorAll<HTMLElement>('.sidebar-nav-link')
             .forEach(l => l.classList.remove('active-sm-link'));
@@ -226,17 +225,17 @@ export default class SharedSidebar {
   }
 
   private static activateTab(domElement: HTMLElement, tabId: string): void {
-    // 1. Sidebar submenu links
+    //  Sidebar submenu links
     domElement.querySelectorAll<HTMLElement>('.submenu-list-btn').forEach(b => {
       b.classList.toggle('active-submenu', b.getAttribute('data-tab-id') === tabId);
     });
 
-    // 2. Top tab buttons
+    //  Top tab buttons
     domElement.querySelectorAll<HTMLElement>('.nemko-tab-btn').forEach(tb => {
       tb.classList.toggle('nemko-tab-btn-active', tb.getAttribute('data-tab-id') === tabId);
     });
 
-    // 3. Tab panels — only toggle if panels actually exist on this page
+    //  Tab panels only toggle if panels actually exist on this page
     const panels = domElement.querySelectorAll<HTMLElement>('[id$="-table"]');
     if (panels.length > 0) {
       panels.forEach(panel => {
@@ -244,7 +243,7 @@ export default class SharedSidebar {
       });
     }
 
-    // 4. Highlight parent nav link
+    //  Highlight parent nav link
     const activeBtn = domElement.querySelector<HTMLElement>(
       `.submenu-list-btn[data-tab-id="${tabId}"]`
     );
@@ -264,7 +263,7 @@ export default class SharedSidebar {
     }
   }
 
-  // ... sidebarTemplate and globalModalsHtml unchanged
+
 
 
   // ─────────────────────────────────────────────────────────────────────────

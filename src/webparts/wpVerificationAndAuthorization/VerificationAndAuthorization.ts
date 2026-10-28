@@ -140,10 +140,11 @@ export default class VerificationAndAuthorization {
           </div>
 
           <!-- TABLE -->
+          <ul class="pagination nemko-pagination justify-content-start align-items-center gap-2 w-100 float-start px-4"></ul>
           <div class="w-100 float-start d-flex flex-column position-relative px-4 pt-2">
 
             <div class="col-visibility-btn">
-              <div class="w-100 dropdown position-static">
+              <div class="w-100 dropdown">
 
                 <svg data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside"
                     class="cursor-pointer" width="28" height="14" viewBox="0 0 14 12" fill="none"
@@ -160,8 +161,6 @@ export default class VerificationAndAuthorization {
 
               </div>
             </div>
-
-            <ul class="pagination nemko-pagination justify-content-start align-items-center gap-2 w-100 float-start px-4"></ul>
 
             <div class="table-responsive nemko-table-container my-qualifcation-table">
               <table id="ver-table" class="table">
@@ -301,10 +300,11 @@ export default class VerificationAndAuthorization {
 </div>
 
           <!-- TABLE -->
+          <ul class="pagination nemko-pagination justify-content-start align-items-center gap-2 w-100 float-start px-4"></ul>
           <div class="w-100 float-start d-flex flex-column position-relative px-4 pt-2">
 
             <div class="col-visibility-btn">
-              <div class="w-100 dropdown position-static">
+              <div class="w-100 dropdown">
 
                 <svg data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside"
                     class="cursor-pointer" width="28" height="14" viewBox="0 0 14 12" fill="none"
@@ -321,8 +321,6 @@ export default class VerificationAndAuthorization {
 
               </div>
             </div>
-
-            <ul class="pagination nemko-pagination justify-content-start align-items-center gap-2 w-100 float-start px-4"></ul>
 
             <div class="table-responsive nemko-table-container my-qualifcation-table-requested">
               <table id="auth-table" class="table">
@@ -517,15 +515,7 @@ export default class VerificationAndAuthorization {
             <div class="col-12 col-sm-6 col-md-6">
               <div class="w-100 float-start d-flex flex-column form-control-col">
                 <label for="targetAchieveDate" class="form-label font-semibold">Target Achieve Date</label>
-                <div class="d-flex align-items-center gap-2 date-picker-input-row position-relative" id="targetAchieveDateWrapper">
-                  <input type="text" class="form-control flex-grow-1 date-picker-input" id="targetAchieveDate" placeholder="YYYY-MM-DD" readonly style="cursor:pointer;" />
-                  <button type="button" class="date-picker-icon" id="targetAchieveDateIcon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-calendar2-fill" viewBox="0 0 16 16">
-                      <path d="M4 .5a.5.5 0 0 0-1 0V1H2a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-1V.5a.5.5 0 0 0-1 0V1H4z"/>
-                    </svg>
-                  </button>
-                  <div id="nemko-cal-popup" style="display:none;position:absolute;top:100%;left:0;z-index:9999;background:#fff;border:1px solid #ccc;border-radius:6px;padding:10px;min-width:280px;box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
-                </div>
+                <input type="text" class="form-control has-calendar-icon" id="targetAchieveDate" readonly />
               </div>
             </div>
           </div>
@@ -571,7 +561,7 @@ export default class VerificationAndAuthorization {
 
       <!-- Footer -->
       <div class="modal-footer">
-        <button type="button" id="qd-verify-btn" class="nemko-btn-default nemko-btn-save text-sm">Verify</button>
+        <button type="button" id="qd-verify-btn" class="nemko-btn-default nemko-btn-success text-sm">Verify</button>
         <button type="button" id="qd-reject-btn" class="nemko-btn-default nemko-btn-reject text-sm">Reject</button>
         <button type="button" id="qd-withdraw-btn" class="btn nemko-btn-default nemko-btn-withdraw text-sm" style="display:none;">Withdraw</button>
       </div>
@@ -851,7 +841,7 @@ export default class VerificationAndAuthorization {
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="nemko-btn-default nemko-btn-save text-sm" id="auth-modal-authorize-btn">Authorize</button>
+        <button type="button" class="nemko-btn-default nemko-btn-success text-sm" id="auth-modal-authorize-btn">Authorize</button>
         <button type="button" class="nemko-btn-default nemko-btn-reject text-sm" id="auth-modal-reject-btn">Reject</button>
       </div>
     </div>
@@ -1062,7 +1052,6 @@ export default class VerificationAndAuthorization {
 
       <div class="modal-footer">
         <button type="button" id="wd-withdraw-btn" class="btn nemko-btn-default nemko-btn-withdraw text-sm" style="display:none;">Withdraw</button>
-        <button type="button" class="nemko-btn-default nemko-btn-save text-sm withdraw-back-btn" >Back</button>
       </div>
     </div>
   </div>

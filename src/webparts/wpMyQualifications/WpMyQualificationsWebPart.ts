@@ -1564,6 +1564,55 @@ private async fetchRefData(apiUrl: string, windowKey: string, mapFn: (item: any)
     ]);
   }
 
+  // Loads jQuery UI with a plain <script> tag instead of SPComponentLoader. Through
+  // SPComponentLoader, jQuery UI's AMD wrapper asks for a "jquery" module the loader may
+  // never resolve, so the load intermittently hangs. The page also keeps a global
+  // define.amd (SPFx loader), which would make jQuery UI register as an AMD module instead
+  // of attaching to jQuery, so define.amd is hidden only while this one script loads.
+  // One shared load per page; a failed load can be retried later.
+  private loadJqueryUi(url: string, timeoutMs: number = 15000): Promise<void> {
+    const w = window as any;
+    if (w.jQuery?.fn?.datepicker) return Promise.resolve();
+    if (w.__nemkoJqueryUiLoad) return w.__nemkoJqueryUiLoad;
+
+    const load = new Promise<void>((resolve, reject) => {
+      const start = Date.now();
+      const inject = (): void => {
+        if (!w.jQuery) {
+          if (Date.now() - start > timeoutMs) {
+            reject(new Error('Global jQuery not found; jquery-ui.js not loaded'));
+            return;
+          }
+          setTimeout(inject, 100);
+          return;
+        }
+        const amd = w.define?.amd;
+        if (amd) w.define.amd = undefined;
+        const restoreAmd = (): void => { if (amd) w.define.amd = amd; };
+
+        const script = document.createElement('script');
+        script.src = url;
+        script.onload = () => {
+          restoreAmd();
+          if (w.jQuery?.fn?.datepicker) resolve();
+          else reject(new Error('jquery-ui.js loaded but datepicker is not attached to jQuery'));
+        };
+        script.onerror = () => {
+          restoreAmd();
+          reject(new Error(`Failed to load ${url}`));
+        };
+        document.head.appendChild(script);
+      };
+      inject();
+    });
+
+    w.__nemkoJqueryUiLoad = load.catch(err => {
+      w.__nemkoJqueryUiLoad = null;
+      throw err;
+    });
+    return w.__nemkoJqueryUiLoad;
+  }
+
   private loadHomeScripts(renderGen: number): void {
     const siteAssetsUrl = `${this.siteUrl}/SiteAssets`;
 
@@ -1574,10 +1623,16 @@ private async fetchRefData(apiUrl: string, windowKey: string, mapFn: (item: any)
     // the two files, only a "both must be present before init() runs" one,
     // which Promise.all still guarantees. This turns two sequential network
     // round trips into one, roughly halving script-load time on a cold cache.
-    const scriptsPromise = Promise.all([
-      this.loadScriptWithTimeout(`${siteAssetsUrl}/resources/js/jquery-ui.js`),
-      this.loadScriptWithTimeout(`${siteAssetsUrl}/resources/js/my-qualifications.js`),
-    ]);
+    // jquery-ui.js is NOT awaited, so the table never waits on it, and is loaded via a plain
+    // <script> tag (loadJqueryUi) because SPComponentLoader can intermittently never resolve it.
+    // initDatepickers() already waits for $.fn.datepicker.
+    this.loadJqueryUi(`${siteAssetsUrl}/resources/js/jquery-ui.js`)
+      .catch(err => console.error('[NEMKO] jquery-ui.js failed to load:', err));
+
+    // Skip reloading my-qualifications.js if it is already on the page (e.g. "Try again" re-render).
+    const scriptsPromise = typeof (window as any).initMyQualifications === 'function'
+      ? Promise.resolve()
+      : this.loadScriptWithTimeout(`${siteAssetsUrl}/resources/js/my-qualifications.js`);
 
     // Guarantees the toolbar/filters are re-enabled exactly once no matter
     // which path finishes first — success, an error, or (as a last resort)

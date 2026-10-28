@@ -116,8 +116,8 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
       });
 
       // Inactive is an admin-only status filter, same as the withdraw button.
-      const statusInactiveOption = this.domElement.querySelector<HTMLOptionElement>('#f-status option[value="inactive"]');
-      if (statusInactiveOption) statusInactiveOption.remove();
+      //const statusInactiveOption = this.domElement.querySelector<HTMLOptionElement>('#f-status option[value="inactive"]');
+      //if (statusInactiveOption) statusInactiveOption.remove();
 
       // Database tabs: non-admins have no New/Import buttons, so move each
       // Export To Excel button onto the filter row and hide the empty toolbar.
@@ -1902,13 +1902,68 @@ export default class WpAdvancedSearchWebPart extends BaseClientSideWebPart<IWpAd
     });
   }
 
+  // Loads jQuery UI with a plain <script> tag instead of SPComponentLoader. Through
+  // SPComponentLoader, jQuery UI's AMD wrapper asks for a "jquery" module the loader may
+  // never resolve, so the load intermittently hangs. The page also keeps a global
+  // define.amd (SPFx loader), which would make jQuery UI register as an AMD module instead
+  // of attaching to jQuery, so define.amd is hidden only while this one script loads.
+  // One shared load per page; a failed load can be retried later.
+  private loadJqueryUi(url: string, timeoutMs: number = 15000): Promise<void> {
+    const w = window as any;
+    if (w.jQuery?.fn?.datepicker) return Promise.resolve();
+    if (w.__nemkoJqueryUiLoad) return w.__nemkoJqueryUiLoad;
+
+    const load = new Promise<void>((resolve, reject) => {
+      const start = Date.now();
+      const inject = (): void => {
+        if (!w.jQuery) {
+          if (Date.now() - start > timeoutMs) {
+            reject(new Error('Global jQuery not found; jquery-ui.js not loaded'));
+            return;
+          }
+          setTimeout(inject, 100);
+          return;
+        }
+        const amd = w.define?.amd;
+        if (amd) w.define.amd = undefined;
+        const restoreAmd = (): void => { if (amd) w.define.amd = amd; };
+
+        const script = document.createElement('script');
+        script.src = url;
+        script.onload = () => {
+          restoreAmd();
+          if (w.jQuery?.fn?.datepicker) resolve();
+          else reject(new Error('jquery-ui.js loaded but datepicker is not attached to jQuery'));
+        };
+        script.onerror = () => {
+          restoreAmd();
+          reject(new Error(`Failed to load ${url}`));
+        };
+        document.head.appendChild(script);
+      };
+      inject();
+    });
+
+    w.__nemkoJqueryUiLoad = load.catch(err => {
+      w.__nemkoJqueryUiLoad = null;
+      throw err;
+    });
+    return w.__nemkoJqueryUiLoad;
+  }
+
   private loadHomeScripts(renderGen: number): void {
     const siteAssetsUrl = `${this.siteUrl}/SiteAssets`;
 
-    const scriptsPromise = Promise.all([
-      this.loadScriptWithTimeout(`${siteAssetsUrl}/resources/js/jquery-ui.js`),
-      this.loadScriptWithTimeout(`${siteAssetsUrl}/resources/js/advanced-search.js`),
-    ]);
+    // jquery-ui.js is NOT awaited, so the table never waits on it, and is loaded via a plain
+    // <script> tag (loadJqueryUi) because SPComponentLoader can intermittently never resolve it.
+    // advanced-search.js does not use jQuery UI.
+    this.loadJqueryUi(`${siteAssetsUrl}/resources/js/jquery-ui.js`)
+      .catch(err => console.error('[NEMKO] jquery-ui.js failed to load:', err));
+
+    // Skip reloading advanced-search.js if it is already on the page (e.g. "Try again" re-render).
+    const scriptsPromise = typeof (window as any).initAdvancedSearch === 'function'
+      ? Promise.resolve()
+      : this.loadScriptWithTimeout(`${siteAssetsUrl}/resources/js/advanced-search.js`);
 
     if (this._initFailed) {
       scriptsPromise

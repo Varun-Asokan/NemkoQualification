@@ -4,8 +4,8 @@ export default class HomePage {
 
          <div class="main-wrapper min-h-screen-container">
     <div class="w-100 float-start home-page">
-      <div class="container container-nemko px-3 px-lg-4 clearfix py-3">
-        <div class="nm-hero-section w-100 float-start py-3 mt-4">
+      <div class="container container-nemko px-3 px-lg-4 clearfix">
+        <div class="nm-hero-section w-100 float-start mt-4">
           <div id="homePageContent" class="row gy-4">
             
           </div>

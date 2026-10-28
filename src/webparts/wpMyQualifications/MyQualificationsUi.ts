@@ -12,7 +12,7 @@ export default class MyQualifications {
       <div class="container container-nemko px-3 px-lg-4 clearfix py-3">
                 <div class="w-100 float-start nemko-inner-page-wrapper py-5 ps-xl-4">
 
-          <h2 class="inner-page-main-title nm-page-title">Qualifications</h2>
+          <h2 class="inner-page-main-title nm-page-title">My Qualifications</h2>
 
           <div id="qualificationsToolbar" class="w-100 float-start d-flex justify-content-between align-items-center mb-3 gap-3 flex-wrap">
             <div class="d-flex gap-2">

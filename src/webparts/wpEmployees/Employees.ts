@@ -57,8 +57,8 @@ export default class employees {
                 <button type="button" id="emp-new-btn" class="nemko-btn-default nemko-btn-primary text-sm px-3 font-medium">New</button>
                 <!-- No data-bs-toggle/target on New or Edit — controlled entirely by initNewModal / initEditModal -->
                 <button type="button" id="emp-edit-btn" class="nemko-btn-default nemko-btn-secondary text-sm px-3 font-medium">Edit</button>
-                <button type="button" class="nemko-btn-default nemko-btn-cancel nm-btn-danger-outline text-sm px-3 font-medium">Delete</button>
-                <button type="button" class="nemko-btn-default nemko-btn-reject nm-btn-danger-outline text-sm px-3 font-medium">Delete All</button>
+                <button id="emp-delete-btn" type="button" class="nemko-btn-default  nemko-btn-delete text-sm px-3 font-medium">Delete</button>
+                <button id="emp-delete-all-btn" type="button" class="nemko-btn-default nemko-btn-delete text-sm px-3 font-medium">Delete All</button>
               </div>
               <ul class="pagination nemko-pagination justify-content-start align-items-center gap-2 w-100 float-start px-4"></ul>
               <div class="w-100 float-start d-flex flex-column position-relative px-4 pt-2">

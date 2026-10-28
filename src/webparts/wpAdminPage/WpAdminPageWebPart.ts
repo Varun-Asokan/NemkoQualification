@@ -19,7 +19,7 @@ const API_BASE_URL =
   'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net';
 
 //  AAD App ID — same as the AdvancedSearch / Verification & Authorization webparts
-const AAD_APP_ID = 'api://a341e8d3-c8cb-4cc8-8e25-5a37386ac482';
+const AAD_APP_ID = 'api://66eda48a-d5f9-4db0-a911-0d936f8ce92b';
 
 export default class WpAdminPageWebPart extends BaseClientSideWebPart<IWpAdminPageWebPartProps> {
 

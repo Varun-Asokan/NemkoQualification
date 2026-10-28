@@ -70,7 +70,7 @@ public async onInit(): Promise<void> {
     SPComponentLoader.loadCss(basePath + "/css/variable.css");
     SPComponentLoader.loadCss(basePath + "/css/font-size.css");
     SPComponentLoader.loadCss(basePath + "/css/swiper-bundle.min.css");
-    SPComponentLoader.loadCss(basePath + "/css/custom.css?v=1");
+    SPComponentLoader.loadCss(basePath + "/css/custom.css");
     SPComponentLoader.loadCss(basePath + "/css/home.css");
     SPComponentLoader.loadCss(basePath + "/css/sp-custom.css");
   }

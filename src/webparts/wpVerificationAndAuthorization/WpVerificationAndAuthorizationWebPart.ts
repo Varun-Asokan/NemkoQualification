@@ -213,10 +213,6 @@ export default class WpVerificationAndAuthorizationWebPart
   // True when the last table load failed (one error pattern, audit D10 / handover C4)
   private _loadError: boolean = false;
 
-  // ── Calendar ───────────────────────────────────────────────────────────────
-  private calViewYear: number = 0;
-  private calViewMonth: number = 0;
-
   // ── Modal helpers ──────────────────────────────────────────────────────────
   private activeDetailsRowId: number = -1;
   private rejectReasonConfirmCallback: ((reason: string) => void) | null = null;
@@ -237,6 +233,9 @@ export default class WpVerificationAndAuthorizationWebPart
     this.siteUrl = this.context.pageContext.web.absoluteUrl;
     this.currentUserEmail = this.context.pageContext.user.email.toLowerCase();
     this.loadCss();
+    // jQuery is loaded globally; jQuery UI provides the Target Achieve Date datepicker
+    this.loadJqueryUi(this.siteUrl + '/SiteAssets/resources/js/jquery-ui.js')
+      .catch(err => console.error('[NEMKO] jquery-ui.js failed to load:', err));
 
     return this.context.aadHttpClientFactory
       .getClient(AAD_APP_ID)
@@ -330,9 +329,59 @@ export default class WpVerificationAndAuthorizationWebPart
     }, 100);
   }
 
+  // Loads jQuery UI with a plain <script> tag instead of SPComponentLoader. Through
+  // SPComponentLoader, jQuery UI's AMD wrapper asks for a "jquery" module the loader may
+  // never resolve, so the load intermittently hangs. The page also keeps a global
+  // define.amd (SPFx loader), which would make jQuery UI register as an AMD module instead
+  // of attaching to jQuery, so define.amd is hidden only while this one script loads.
+  // One shared load per page; a failed load can be retried later.
+  private loadJqueryUi(url: string, timeoutMs: number = 15000): Promise<void> {
+    const w = window as any;
+    if (w.jQuery?.fn?.datepicker) return Promise.resolve();
+    if (w.__nemkoJqueryUiLoad) return w.__nemkoJqueryUiLoad;
+
+    const load = new Promise<void>((resolve, reject) => {
+      const start = Date.now();
+      const inject = (): void => {
+        if (!w.jQuery) {
+          if (Date.now() - start > timeoutMs) {
+            reject(new Error('Global jQuery not found; jquery-ui.js not loaded'));
+            return;
+          }
+          setTimeout(inject, 100);
+          return;
+        }
+        const amd = w.define?.amd;
+        if (amd) w.define.amd = undefined;
+        const restoreAmd = (): void => { if (amd) w.define.amd = amd; };
+
+        const script = document.createElement('script');
+        script.src = url;
+        script.onload = () => {
+          restoreAmd();
+          if (w.jQuery?.fn?.datepicker) resolve();
+          else reject(new Error('jquery-ui.js loaded but datepicker is not attached to jQuery'));
+        };
+        script.onerror = () => {
+          restoreAmd();
+          reject(new Error(`Failed to load ${url}`));
+        };
+        document.head.appendChild(script);
+      };
+      inject();
+    });
+
+    w.__nemkoJqueryUiLoad = load.catch(err => {
+      w.__nemkoJqueryUiLoad = null;
+      throw err;
+    });
+    return w.__nemkoJqueryUiLoad;
+  }
+
   // ── CSS / JS ───────────────────────────────────────────────────────────────
   private loadCss(): void {
     const base = this.siteUrl + '/SiteAssets/resources/css';
+    SPComponentLoader.loadCss(base + '/jquery-ui.css');
     SPComponentLoader.loadCss(base + '/qualification-db.css');
     SPComponentLoader.loadCss(base + '/nemko-modal.css');
   }
@@ -871,8 +920,7 @@ export default class WpVerificationAndAuthorizationWebPart
     this.bindRejectReasonModal();
     this.bindWithdrawReasonModal();
 
-    this.initCustomCalendar('targetAchieveDate', 'targetAchieveDateIcon', 'targetAchieveDateWrapper', 'nemko-cal-popup', true);
-    this.initCustomCalendar('approvalDate', 'approvalDateIcon', 'approvalDateWrapper', 'approval-cal-popup', true);
+    this.initDatepickers();
   }
 
   // ── Main Tabs ──────────────────────────────────────────────────────────────
@@ -2365,7 +2413,7 @@ this.apiVerifyQualification(Number(row.QualificationId), toBeAuthorizedByIds, fi
     const authModal = this.domElement.querySelector('#authorizationDetailsModal') as HTMLElement;
     if (!authModal) return;
 
-    const authorizeBtn = authModal.querySelector('.nemko-btn-save') as HTMLElement;
+    const authorizeBtn = authModal.querySelector('.nemko-btn-success') as HTMLElement;
     if (authorizeBtn) {
       const nb = authorizeBtn.cloneNode(true) as HTMLElement;
       authorizeBtn.parentNode!.replaceChild(nb, authorizeBtn);
@@ -2921,122 +2969,68 @@ this.apiAuthorizeQualification(Number(row.QualificationId), toBeAuthorizedByEmpl
     }
   }
 
-  // ── Calendar ───────────────────────────────────────────────────────────────
-  private initCustomCalendar(inputId: string, buttonId: string, wrapperId: string, popupId: string, disablePast: boolean = false): void {
+  // ── Calendar (jQuery UI Datepicker — same as My Qualifications) ──────────
+  // jquery-ui.js is loaded in onInit(); wait for $.fn.datepicker before binding.
+  private initDatepickers(): void {
+    const $ = (window as any).$;
+    if (!$ || typeof $.fn.datepicker === 'undefined') {
+      let retries = 0;
+      const iv = setInterval(() => {
+        retries++;
+        const jq = (window as any).$;
+        if (jq && typeof jq.fn.datepicker !== 'undefined') {
+          clearInterval(iv);
+          this.bindDatepickers();
+        } else if (retries >= 10) {
+          clearInterval(iv);
+        }
+      }, 200);
+      return;
+    }
+    this.bindDatepickers();
+  }
+
+  private bindDatepickers(): void {
+    const $ = (window as any).$;
     const self = this;
-    const input = this.domElement.querySelector('#' + inputId) as HTMLInputElement;
-    const wrapper = this.domElement.querySelector('#' + wrapperId) as HTMLElement;
-    const popup = this.domElement.querySelector('#' + popupId) as HTMLElement;
-    const button = this.domElement.querySelector('#' + buttonId) as HTMLElement;
-    if (!input || !wrapper || !popup) return;
-
-    const openCalendar = (e: Event) => {
-      e.preventDefault(); e.stopPropagation();
-      const today = new Date();
-      if (input.value?.length === 10) {
-        const p = input.value.split('-');
-        self.calViewYear = parseInt(p[0], 10) || today.getFullYear();
-        self.calViewMonth = (parseInt(p[1], 10) - 1) || today.getMonth();
-      } else {
-        self.calViewYear = today.getFullYear();
-        self.calViewMonth = today.getMonth();
-      }
-      self.renderCalendarPopup(input, popup, disablePast);
-      popup.hidden = false;
-      popup.style.display = 'block';
-    };
-
-    input.addEventListener('click', openCalendar);
-    button?.addEventListener('click', openCalendar);
-    button?.querySelectorAll('*').forEach(c => c.addEventListener('click', openCalendar));
-
-    document.addEventListener('click', (e: Event) => {
-      if (!wrapper.contains(e.target as Node)) { popup.hidden = true; popup.style.display = 'none'; }
+    const $target = $(this.domElement).find('#targetAchieveDate');
+    if (!$target.length) return;
+    if ($target.hasClass('hasDatepicker')) $target.datepicker('destroy');
+    $target.datepicker({
+      dateFormat: 'yy-mm-dd',
+      minDate: 0,
+      beforeShow: function (input: HTMLInputElement, inst: any) {
+        // Field is locked (pointer-events:none) outside the pending view — don't open on keyboard focus
+        if (input.style.pointerEvents === 'none') return false;
+        $(inst.dpDiv).addClass('nemko-input-datepicker');
+        self.repositionDatepicker(input);
+        return {};
+      },
     });
   }
 
-  private renderCalendarPopup(input: HTMLInputElement, popup: HTMLElement, disablePast: boolean = false): void {
-    const self = this;
-    const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-    const year = self.calViewYear;
-    const month = self.calViewMonth;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    let selY = -1, selM = -1, selD = -1;
-    if (input.value?.length === 10) {
-      const p = input.value.split('-');
-      selY = +p[0]; selM = +p[1] - 1; selD = +p[2];
-    }
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
+  // Mirrors nemkoRepositionDatepicker() in my-qualifications.js: jQuery UI's
+  // built-in positioning miscalculates inside scrollable modal bodies.
+  private repositionDatepicker(input: HTMLInputElement): void {
+    const $ = (window as any).$;
+    setTimeout(() => {
+      const $picker = $('#ui-datepicker-div');
+      if (!$picker.length || !$picker.is(':visible')) return;
 
-    let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">` +
-      `<button type="button" id="cal-prev" style="width:28px;height:28px;border:none;background:var(--nemko-blue);color:#fff;border-radius:4px;">‹</button>` +
-      `<span style="font-weight:600;">${MONTHS[month]} ${year}</span>` +
-      `<button type="button" id="cal-next" style="width:28px;height:28px;border:none;background:var(--nemko-blue);color:#fff;border-radius:4px;">›</button>` +
-      `</div><table style="width:100%;border-collapse:collapse;"><thead><tr>` +
-      DAYS.map(d => `<th style="padding:4px;text-align:center;font-size:12px;">${d}</th>`).join('') +
-      `</tr></thead><tbody>`;
+      const rect = input.getBoundingClientRect();
+      const pickerHeight = $picker.outerHeight();
+      const pickerWidth = $picker.outerWidth();
+      const gap = 4;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      const openAbove = spaceBelow < pickerHeight + gap && spaceAbove > spaceBelow;
 
-    let day = 1;
-    for (let row = 0; row < 6; row++) {
-      html += '<tr>';
-      for (let col = 0; col < 7; col++) {
-        if ((row === 0 && col < firstDay) || day > daysInMonth) { html += '<td></td>'; }
-        else {
-          const cellDate = new Date(year, month, day);
-          const isPast = disablePast && cellDate < today;
-          const isTd = year === today.getFullYear() && month === today.getMonth() && day === today.getDate();
-          const isSel = !isPast && year === selY && month === selM && day === selD;
-          let style = 'padding:6px;text-align:center;border-radius:4px;';
-          if (isPast) {
-            style += 'color:#ccc;cursor:not-allowed;pointer-events:none;';
-          } else if (isSel) {
-            style += 'background:var(--nemko-blue);color:#fff;cursor:pointer;';
-          } else if (isTd) {
-            style += 'background:#fff3cd;cursor:pointer;';
-          } else {
-            style += 'cursor:pointer;';
-          }
-          const cls = isPast ? 'cal-day-disabled' : 'cal-day';
-          html += `<td class="${cls}" data-day="${day}" style="${style}">${day}</td>`;
-          day++;
-        }
-      }
-      html += '</tr>';
-      if (day > daysInMonth) break;
-    }
-    html += '</tbody></table>';
-    popup.innerHTML = html;
+      let top = openAbove ? rect.top - pickerHeight - gap : rect.bottom + gap;
+      top = Math.max(0, Math.min(top, window.innerHeight - pickerHeight));
+      const left = Math.max(0, Math.min(rect.left, window.innerWidth - pickerWidth));
 
-    popup.querySelector('#cal-prev')?.addEventListener('click', (e: Event) => {
-      e.stopPropagation();
-      if (--self.calViewMonth < 0) { self.calViewMonth = 11; self.calViewYear--; }
-      self.renderCalendarPopup(input, popup, disablePast);
-    });
-    popup.querySelector('#cal-next')?.addEventListener('click', (e: Event) => {
-      e.stopPropagation();
-      if (++self.calViewMonth > 11) { self.calViewMonth = 0; self.calViewYear++; }
-      self.renderCalendarPopup(input, popup, disablePast);
-    });
-    popup.querySelectorAll('.cal-day').forEach(cell => {
-      cell.addEventListener('click', (e: Event) => {
-        e.stopPropagation();
-        const d = parseInt(cell.getAttribute('data-day') || '0', 10);
-        if (!d) return;
-        const mmRaw = self.calViewMonth + 1;
-        const mm = mmRaw < 10 ? '0' + mmRaw : String(mmRaw);
-        const dd = d < 10 ? '0' + d : String(d);
-        const dateValue = `${self.calViewYear}-${mm}-${dd}`;
-        input.value = dateValue;
-
-        const readonlyDateEl = self.domElement.querySelector('#auth-approval-date-readonly') as HTMLElement;
-        if (readonlyDateEl) readonlyDateEl.textContent = dateValue;
-
-        popup.style.display = 'none';
-      });
-    });
+      $picker.css({ position: 'fixed', top: top + 'px', left: left + 'px', zIndex: 20000 });
+    }, 0);
   }
 
   // ── Utility ────────────────────────────────────────────────────────────────

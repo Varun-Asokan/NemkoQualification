@@ -324,7 +324,7 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
         list.innerHTML = items.map(function (it: { id: number; name: string }) {
           return '<li data-id="' + it.id + '">' + it.name + '</li>';
         }).join('');
-        list.style.display = 'block';
+        if (document.activeElement === input) list.style.display = 'block';
       };
 
       input.addEventListener('input', () => {
@@ -349,9 +349,9 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
       });
 
       list.addEventListener('mousedown', (e: Event) => {
+        e.preventDefault(); // keep focus on the input (also covers scrollbar clicks/drags)
         const li = (e.target as HTMLElement).closest('li');
         if (!li || li.classList.contains('nemko-ss-loading-more')) return;
-        e.preventDefault();
         hidden.value = li.getAttribute('data-id') || '';
         input.value = li.textContent || '';
         hidden.dataset.name = input.value;
@@ -1387,8 +1387,8 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
     const wrapper = this.domElement.querySelector('#employees-table');
     if (!wrapper) return;
 
-    const btnDelete = wrapper.querySelector('.ao-table-top-btn .nemko-btn-cancel') as HTMLButtonElement;
-    const btnDeleteAll = wrapper.querySelector('.ao-table-top-btn .nemko-btn-reject') as HTMLButtonElement;
+    const btnDelete = wrapper.querySelector('#emp-delete-btn') as HTMLButtonElement;
+    const btnDeleteAll = wrapper.querySelector('#emp-delete-all-btn') as HTMLButtonElement;
 
     btnDelete?.addEventListener('click', () => {
       const table = wrapper.querySelector('.nemko-table-container .table');
