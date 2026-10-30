@@ -1613,6 +1613,23 @@ private async fetchRefData(apiUrl: string, windowKey: string, mapFn: (item: any)
     return w.__nemkoJqueryUiLoad;
   }
 
+  // The page's jQuery comes from the HfNemko extension, which loads it asynchronously (not
+  // awaited in its onInit), so on a hard refresh this web part can be ready first. The page
+  // script uses $ while it executes, so it must not run before jQuery exists.
+  private waitForGlobalJquery(timeoutMs: number = 15000): Promise<void> {
+    const w = window as any;
+    if (w.jQuery && w.$) return Promise.resolve();
+    return new Promise<void>((resolve, reject) => {
+      const start = Date.now();
+      const check = (): void => {
+        if (w.jQuery && w.$) { resolve(); return; }
+        if (Date.now() - start > timeoutMs) { reject(new Error('Global jQuery not available')); return; }
+        setTimeout(check, 100);
+      };
+      check();
+    });
+  }
+
   private loadHomeScripts(renderGen: number): void {
     const siteAssetsUrl = `${this.siteUrl}/SiteAssets`;
 
@@ -1632,7 +1649,7 @@ private async fetchRefData(apiUrl: string, windowKey: string, mapFn: (item: any)
     // Skip reloading my-qualifications.js if it is already on the page (e.g. "Try again" re-render).
     const scriptsPromise = typeof (window as any).initMyQualifications === 'function'
       ? Promise.resolve()
-      : this.loadScriptWithTimeout(`${siteAssetsUrl}/resources/js/my-qualifications.js`);
+      : this.waitForGlobalJquery().then(() => this.loadScriptWithTimeout(`${siteAssetsUrl}/resources/js/my-qualifications.js`));
 
     // Guarantees the toolbar/filters are re-enabled exactly once no matter
     // which path finishes first — success, an error, or (as a last resort)
