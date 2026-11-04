@@ -110,27 +110,27 @@ export default class AdvancedSearch {
                           </div>
                         </div>
                       </div>
-                      <div class="col-12 col-sm-6 col-md-4">
-                        <div class="d-flex gap-2">
-                          <div class="flex-shrink-0 float-start d-flex flex-column form-control-col min-w-120">
-                            <label for="f-status" class="form-label">Status</label>
-                            <select class="form-select" id="f-status">
-                              <option value="active" selected>Active</option>
-                              <option value="inactive">Inactive</option>
-                              <option value="withdraw">Withdrawn</option>
-                            </select>
-                          </div>
-                          <div class="flex-grow-1 min-w-0 float-start d-flex flex-column form-control-col">
-                            <label for="f-level" class="form-label">Level</label>
-                            <select class="form-select" id="f-level">
-                              <option value="">All</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                     <div class="row gy-4">
-                      <div class="col-12 col-sm-4 col-md-4">
+                      <div class="col-12 col-sm-6 col-lg">
+                        <div class="w-100 float-start d-flex flex-column form-control-col">
+                          <label for="f-status" class="form-label">Status</label>
+                          <select class="form-select" id="f-status">
+                            <option value="active" selected>Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="withdraw">Withdrawn</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-6 col-lg">
+                        <div class="w-100 float-start d-flex flex-column form-control-col">
+                          <label for="f-level" class="form-label">Level</label>
+                          <select class="form-select" id="f-level">
+                            <option value="">All</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-6 col-lg">
                         <div class="w-100 float-start" id="conformity_statement" style="display: none;">
                           <div class="w-100 float-start d-flex flex-column form-control-col">
                             <label for="f-conformity" class="form-label">Conformity Statement</label>
@@ -142,27 +142,27 @@ export default class AdvancedSearch {
                           </div>
                         </div>
                       </div>
-                      <div class="col-12 col-sm-8 col-md-6 col-xxl-4">
-                        <div class="d-flex gap-2 flex-wrap">
-                          <div class="flex-bs-1" id="report_approver" style="display: none;">
-                            <div class="w-100 float-start d-flex flex-column form-control-col">
-                              <label for="f-reportApprover" class="form-label text-nowrap">Report Approver</label>
-                              <select class="form-select" id="f-reportApprover">
-                                <option value="">All</option>
-                                <option value="true">Yes</option>
-                                <option value="false">No</option>
-                              </select>
-                            </div>
+                      <div class="col-12 col-sm-6 col-lg">
+                        <div class="w-100 float-start" id="report_approver" style="display: none;">
+                          <div class="w-100 float-start d-flex flex-column form-control-col">
+                            <label for="f-reportApprover" class="form-label text-nowrap">Report Approver</label>
+                            <select class="form-select" id="f-reportApprover">
+                              <option value="">All</option>
+                              <option value="true">Yes</option>
+                              <option value="false">No</option>
+                            </select>
                           </div>
-                          <div class="flex-bs-1" id="certificate_decision" style="display: none;">
-                            <div class="w-100 float-start d-flex flex-column form-control-col">
-                              <label for="f-certDecision" class="form-label text-nowrap">Certification Decision</label>
-                              <select class="form-select" id="f-certDecision">
-                                <option value="">All</option>
-                                <option value="true">Yes</option>
-                                <option value="false">No</option>
-                              </select>
-                            </div>
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-6 col-lg">
+                        <div class="w-100 float-start" id="certificate_decision" style="display: none;">
+                          <div class="w-100 float-start d-flex flex-column form-control-col">
+                            <label for="f-certDecision" class="form-label text-nowrap">Certification Decision</label>
+                            <select class="form-select" id="f-certDecision">
+                              <option value="">All</option>
+                              <option value="true">Yes</option>
+                              <option value="false">No</option>
+                            </select>
                           </div>
                         </div>
                       </div>

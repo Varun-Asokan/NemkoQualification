@@ -35,23 +35,6 @@ export default class WpHomePageWebPart extends BaseClientSideWebPart<IWpHomePage
 
     const resourceUrl = `${this.siteUrl}/SiteAssets`;
 
-    // Fetch dashboard data; fall back to zero counts on failure
-    const dashboard = await this.fetchDashboard();
-    const verificationPending = dashboard?.myVerificationPending ?? 0;
-    const authorizationPending = dashboard?.myAuthorizationsPending ?? 0;
-
-    // Build conditional badge + pending-count HTML for Verification
-    const verificationBadge = verificationPending > 0 ? HomePage.pendingBadgeHtml : '';
-    const verificationPendingHtml = verificationPending > 0
-      ? HomePage.pendingCountHtml.replace('__KEY_PENDING_COUNT__', String(verificationPending))
-      : '';
-
-    // Build conditional badge + pending-count HTML for Authorization
-    const authorizationBadge = authorizationPending > 0 ? HomePage.pendingBadgeHtml : '';
-    const authorizationPendingHtml = authorizationPending > 0
-      ? HomePage.pendingCountHtml.replace('__KEY_PENDING_COUNT__', String(authorizationPending))
-      : '';
-
     this.domElement.innerHTML = HomePage.allElementsHtml
       .replace(/__KEY_URL_RESOURCE__/g, resourceUrl)
       .replace('__KEY_ADD_QUALIFICATION_URL__', `${this.siteUrl}/SitePages/MyQualifications.aspx?modal=addQualification&env=WebViewList`)
@@ -61,16 +44,41 @@ export default class WpHomePageWebPart extends BaseClientSideWebPart<IWpHomePage
       .replace('__KEY_ADVANCED_SEARCH_URL__', `${this.siteUrl}/SitePages/AdvancedSearch.aspx?env=WebViewList`)
       .replace('__KEY_GUIDELINES_URL__', `${this.siteUrl}/SitePages/Guidelines.aspx?env=WebViewList`)
       .replace('__KEY_ADD_NEW_STANDARD_URL__', `${this.siteUrl}/SitePages/AdvancedSearch.aspx?open=create-standard&env=WebViewList`)
-      // Verification card
-      .replace('__KEY_VERIFICATION_BADGE__', verificationBadge)
-      .replace('__KEY_VERIFICATION_PENDING__', verificationPendingHtml)
-      // Authorization card
-      .replace('__KEY_AUTHORIZATION_BADGE__', authorizationBadge)
-      .replace('__KEY_AUTHORIZATION_PENDING__', authorizationPendingHtml);
+      // Verification card (filled after dashboard API responds)
+      .replace('__KEY_VERIFICATION_BADGE__', '<div id="qm-verification-badge" style="display:contents"></div>')
+      .replace('__KEY_VERIFICATION_PENDING__', '<div id="qm-verification-pending" style="display:contents"></div>')
+      // Authorization card (filled after dashboard API responds)
+      .replace('__KEY_AUTHORIZATION_BADGE__', '<div id="qm-authorization-badge" style="display:contents"></div>')
+      .replace('__KEY_AUTHORIZATION_PENDING__', '<div id="qm-authorization-pending" style="display:contents"></div>');
 
-    await this.renderHomeContents();
     this.loadHomeScripts();
     this.applyAdminVisibility().catch(() => { /* keep tile hidden */ });
+    this.renderHomeContents().catch(() => { /* keep default content */ });
+    this.renderPendingCounts().catch(() => { /* no badges */ });
+  }
+
+  private async renderPendingCounts(): Promise<void> {
+    // Fetch dashboard data; fall back to zero counts on failure
+    const dashboard = await this.fetchDashboard();
+    const verificationPending = dashboard?.myVerificationPending ?? 0;
+    const authorizationPending = dashboard?.myAuthorizationsPending ?? 0;
+
+    const setSlot = (selector: string, html: string): void => {
+      const slot = this.domElement.querySelector(selector);
+      if (slot) slot.innerHTML = html;
+    };
+
+    // Verification card
+    setSlot('#qm-verification-badge', verificationPending > 0 ? HomePage.pendingBadgeHtml : '');
+    setSlot('#qm-verification-pending', verificationPending > 0
+      ? HomePage.pendingCountHtml.replace('__KEY_PENDING_COUNT__', String(verificationPending))
+      : '');
+
+    // Authorization card
+    setSlot('#qm-authorization-badge', authorizationPending > 0 ? HomePage.pendingBadgeHtml : '');
+    setSlot('#qm-authorization-pending', authorizationPending > 0
+      ? HomePage.pendingCountHtml.replace('__KEY_PENDING_COUNT__', String(authorizationPending))
+      : '');
   }
 
   private async applyAdminVisibility(): Promise<void> {
