@@ -133,27 +133,27 @@ export default class WpEmployeesWebPart extends BaseClientSideWebPart<IWpEmploye
   private _emailDebounceTimer: number = 0;
   private _filterDebounceTimer: number = 0;
 
-  private static readonly APP_ID_URI = 'api://66eda48a-d5f9-4db0-a911-0d936f8ce92b';
+  private static readonly APP_ID_URI = 'api://a341e8d3-c8cb-4cc8-8e25-5a37386ac482';
   private static readonly API_URL =
-    'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/admin/employees';
+    'https://nemko-mendix-api-prod-ne-ane7abfvazhpe0ec.norwayeast-01.azurewebsites.net/api/admin/employees';
   private static readonly PERSONAL_STATUS_URL =
-    'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/personal-status';
+    'https://nemko-mendix-api-prod-ne-ane7abfvazhpe0ec.norwayeast-01.azurewebsites.net/api/reference-data/personal-status';
   private static readonly OFFICES_URL =
-    'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/office';
+    'https://nemko-mendix-api-prod-ne-ane7abfvazhpe0ec.norwayeast-01.azurewebsites.net/api/reference-data/office';
   // private static readonly APPROVAL_MANAGERS_URL =
-  //   'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/approval-managers';
+  //   'https://nemko-mendix-api-prod-ne-ane7abfvazhpe0ec.norwayeast-01.azurewebsites.net/api/reference-data/approval-managers';
   // private static readonly DIRECT_MANAGERS_URL =
-  //   'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/direct-managers';
+  //   'https://nemko-mendix-api-prod-ne-ane7abfvazhpe0ec.norwayeast-01.azurewebsites.net/api/reference-data/direct-managers';
   // private static readonly LOCAL_GM_URL =
-  //   'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/local-gm';
+  //   'https://nemko-mendix-api-prod-ne-ane7abfvazhpe0ec.norwayeast-01.azurewebsites.net/api/reference-data/local-gm';
   // private static readonly QUALITY_MANAGER_URL =
-  //   'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/quality-manager';
+  //   'https://nemko-mendix-api-prod-ne-ane7abfvazhpe0ec.norwayeast-01.azurewebsites.net/api/reference-data/quality-manager';
   // private static readonly HR_CONTACT_URL =
-  //   'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/hr-contact';
+  //   'https://nemko-mendix-api-prod-ne-ane7abfvazhpe0ec.norwayeast-01.azurewebsites.net/api/reference-data/hr-contact';
   private static readonly EMPLOYEE_REF_URL =
-    'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/Employee';
+    'https://nemko-mendix-api-prod-ne-ane7abfvazhpe0ec.norwayeast-01.azurewebsites.net/api/reference-data/Employee';
   private static readonly EMPLOYEE_TYPE_URL =
-    'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/reference-data/EmployeeType';
+    'https://nemko-mendix-api-prod-ne-ane7abfvazhpe0ec.norwayeast-01.azurewebsites.net/api/reference-data/EmployeeType';
 
   // Office/approval-manager/direct-manager/local-GM/quality-manager/HR-contact
   // are paginated search-selects. Each data source is shared between its "new"

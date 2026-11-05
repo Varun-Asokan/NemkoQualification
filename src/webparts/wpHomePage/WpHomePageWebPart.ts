@@ -117,7 +117,7 @@ export default class WpHomePageWebPart extends BaseClientSideWebPart<IWpHomePage
     };
 
     return this.context.aadHttpClientFactory
-      .getClient('api://66eda48a-d5f9-4db0-a911-0d936f8ce92b')
+      .getClient('api://a341e8d3-c8cb-4cc8-8e25-5a37386ac482')
       .then(client => {
         this.apiClient = client;
         
@@ -143,7 +143,7 @@ export default class WpHomePageWebPart extends BaseClientSideWebPart<IWpHomePage
    */
   private async fetchDashboard(): Promise<IDashboardData | null> {
     const apiUrl =
-      'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net/api/dashboard';
+      'https://nemko-mendix-api-prod-ne-ane7abfvazhpe0ec.norwayeast-01.azurewebsites.net/api/dashboard';
 
     if (!this.apiClient) {
 

@@ -117,10 +117,10 @@ interface IBulkUpdateResult {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const API_BASE_URL =
-  'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net';
+  'https://nemko-mendix-api-prod-ne-ane7abfvazhpe0ec.norwayeast-01.azurewebsites.net';
 
 
-const AAD_APP_ID = 'api://66eda48a-d5f9-4db0-a911-0d936f8ce92b';
+const AAD_APP_ID = 'api://a341e8d3-c8cb-4cc8-8e25-5a37386ac482';
 
 const DEFAULT_PAGE_SIZE = 10;
 

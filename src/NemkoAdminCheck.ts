@@ -6,7 +6,7 @@ declare global {
   }
 }
 
-const ADMIN_GROUP_ID = 19;
+const ADMIN_GROUP_ID = 12;
 
 export default class NemkoAdminCheck {
   public static isAdmin(siteUrl: string): Promise<boolean> {

@@ -14,7 +14,7 @@ export interface IWpGlobalVerAuthWebPartProps {
   description: string;
 }
 
-const API_BASE = 'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net';
+const API_BASE = 'https://nemko-mendix-api-prod-ne-ane7abfvazhpe0ec.norwayeast-01.azurewebsites.net';
 const GVA_URL = `${API_BASE}/api/admin/DefaultAuthorizerVerifier`;
 const EMPLOYEE_REF_URL = `${API_BASE}/api/reference-data/Employee`;
 
@@ -78,7 +78,7 @@ export default class WpGlobalVerAuthWebPart extends BaseClientSideWebPart<IWpGlo
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         this.apiClient = await this.context.aadHttpClientFactory
-          .getClient('api://66eda48a-d5f9-4db0-a911-0d936f8ce92b');
+          .getClient('api://a341e8d3-c8cb-4cc8-8e25-5a37386ac482');
         this._initFailed = false;
         return;
       } catch (err) {

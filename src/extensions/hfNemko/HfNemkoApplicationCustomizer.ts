@@ -15,7 +15,7 @@ import { SPComponentLoader } from '@microsoft/sp-loader';
 import { SPHttpClient, AadHttpClient } from '@microsoft/sp-http';
 
 const LOG_SOURCE: string = 'HfNemkoApplicationCustomizer';
-const DASHBOARD_API_BASE = 'https://nemko-mendix-api-dev-ne-h2byesf0a8d5b4by.norwayeast-01.azurewebsites.net';
+const DASHBOARD_API_BASE = 'https://nemko-mendix-api-prod-ne-ane7abfvazhpe0ec.norwayeast-01.azurewebsites.net';
 
 export interface IHfNemkoApplicationCustomizerProperties {
   testMessage: string;
@@ -87,7 +87,7 @@ public async onInit(): Promise<void> {
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         this._apiClient = await this.context.aadHttpClientFactory
-          .getClient('api://66eda48a-d5f9-4db0-a911-0d936f8ce92b');
+          .getClient('api://a341e8d3-c8cb-4cc8-8e25-5a37386ac482');
         return;
       } catch (err) {
         console.error(`[HfNemko] AAD client init attempt ${attempt + 1}/${retries + 1} failed:`, err);
