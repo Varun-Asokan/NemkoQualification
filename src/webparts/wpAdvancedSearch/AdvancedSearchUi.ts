@@ -112,7 +112,7 @@ export default class AdvancedSearch {
                       </div>
                     </div>
                     <div class="row gy-4">
-                      <div class="col-12 col-sm-6 col-lg">
+                      <div class="col-12 col-sm-4 col-md-3 col-lg-2">
                         <div class="w-100 float-start d-flex flex-column form-control-col">
                           <label for="f-status" class="form-label">Status</label>
                           <select class="form-select" id="f-status">
@@ -122,7 +122,7 @@ export default class AdvancedSearch {
                           </select>
                         </div>
                       </div>
-                      <div class="col-12 col-sm-6 col-lg">
+                      <div class="col-12 col-sm-4 col-md-3 col-lg-2">
                         <div class="w-100 float-start d-flex flex-column form-control-col">
                           <label for="f-level" class="form-label">Level</label>
                           <select class="form-select" id="f-level">
@@ -130,7 +130,7 @@ export default class AdvancedSearch {
                           </select>
                         </div>
                       </div>
-                      <div class="col-12 col-sm-6 col-lg">
+                      <div class="col-12 col-sm-4 col-md-3 col-lg-2">
                         <div class="w-100 float-start" id="conformity_statement" style="display: none;">
                           <div class="w-100 float-start d-flex flex-column form-control-col">
                             <label for="f-conformity" class="form-label">Conformity Statement</label>
@@ -142,7 +142,7 @@ export default class AdvancedSearch {
                           </div>
                         </div>
                       </div>
-                      <div class="col-12 col-sm-6 col-lg">
+                      <div class="col-12 col-sm-4 col-md-3 col-lg-2">
                         <div class="w-100 float-start" id="report_approver" style="display: none;">
                           <div class="w-100 float-start d-flex flex-column form-control-col">
                             <label for="f-reportApprover" class="form-label text-nowrap">Report Approver</label>
@@ -154,7 +154,7 @@ export default class AdvancedSearch {
                           </div>
                         </div>
                       </div>
-                      <div class="col-12 col-sm-6 col-lg">
+                      <div class="col-12 col-sm-4 col-md-3 col-lg-2">
                         <div class="w-100 float-start" id="certificate_decision" style="display: none;">
                           <div class="w-100 float-start d-flex flex-column form-control-col">
                             <label for="f-certDecision" class="form-label text-nowrap">Certification Decision</label>

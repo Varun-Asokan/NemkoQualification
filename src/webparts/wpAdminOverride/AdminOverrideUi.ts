@@ -101,8 +101,25 @@ export default class AdminOverride {
               <div class="invalid-feedback">Qualification type is required.</div>
             </div>
 
+            <!-- Rule Scope — shown only when Qualification Type = Standard (id 2) -->
+            <div class="w-100 float-start d-flex flex-column form-control-col" id="overrideRuleScopeWrap" style="display:none !important;">
+              <div class="form-label-cr font-semibold">Rule Scope <span class="text-danger">*</span></div>
+              <div class="d-flex flex-wrap gap-4 align-items-center">
+                <label class="nemko-frm-radio d-flex align-items-center gap-2">
+                  <input class="form-check-input" type="radio" name="overrideRuleScope" value="QualificationReference" checked>
+                  <span class="radio-icon radio-icon-lg"></span>
+                  <p class="form-check-label">Qualification Reference</p>
+                </label>
+                <label class="nemko-frm-radio d-flex align-items-center gap-2">
+                  <input class="form-check-input" type="radio" name="overrideRuleScope" value="StandardCategory">
+                  <span class="radio-icon radio-icon-lg"></span>
+                  <p class="form-check-label">Standard Category</p>
+                </label>
+              </div>
+            </div>
+
             <!-- Qualification Reference (multi-select search, "All" included) -->
-            <div class="w-100 float-start d-flex flex-column form-control-col">
+            <div class="w-100 float-start d-flex flex-column form-control-col" id="overrideReferenceWrap">
               <label for="overrideReferenceIp" class="form-label font-semibold" id="overrideReferenceFieldLabel">Qualification Reference <span class="text-danger">*</span></label>
               <div class="d-flex align-items-center gap-2">
                 <input type="text" class="form-control flex-grow-1" id="overrideReferenceIp" data-ref-ids="" readonly />
@@ -110,6 +127,17 @@ export default class AdminOverride {
                 <button type="button" class="frm-right-close-btn"></button>
               </div>
               <div class="invalid-feedback">Qualification reference is required.</div>
+            </div>
+
+            <!-- Standard Category (multi-select search, no "All") — shown when Rule Scope = Standard Category -->
+            <div class="w-100 float-start d-flex flex-column form-control-col" id="overrideCategoryWrap" style="display:none !important;">
+              <label for="overrideCategoryIp" class="form-label font-semibold">Standard Category <span class="text-danger">*</span></label>
+              <div class="d-flex align-items-center gap-2">
+                <input type="text" class="form-control flex-grow-1" id="overrideCategoryIp" data-cat-ids="" readonly />
+                <button type="button" class="frm-right-arrow-btn select-category-modal-btn"></button>
+                <button type="button" class="frm-right-close-btn"></button>
+              </div>
+              <div class="invalid-feedback">Standard category is required.</div>
             </div>
             
 
@@ -207,12 +235,39 @@ export default class AdminOverride {
               </select>
             </div>
 
+            <!-- Rule Scope — shown only when Qualification Type = Standard (id 2) -->
+            <div class="w-100 float-start d-flex flex-column form-control-col" id="editOverrideRuleScopeWrap" style="display:none !important;">
+              <div class="form-label-cr font-semibold">Rule Scope <span class="text-danger">*</span></div>
+              <div class="d-flex flex-wrap gap-4 align-items-center">
+                <label class="nemko-frm-radio d-flex align-items-center gap-2">
+                  <input class="form-check-input" type="radio" name="editOverrideRuleScope" value="QualificationReference" checked>
+                  <span class="radio-icon radio-icon-lg"></span>
+                  <p class="form-check-label">Qualification Reference</p>
+                </label>
+                <label class="nemko-frm-radio d-flex align-items-center gap-2">
+                  <input class="form-check-input" type="radio" name="editOverrideRuleScope" value="StandardCategory">
+                  <span class="radio-icon radio-icon-lg"></span>
+                  <p class="form-check-label">Standard Category</p>
+                </label>
+              </div>
+            </div>
+
             <!-- Qualification Reference -->
-            <div class="w-100 float-start d-flex flex-column form-control-col">
+            <div class="w-100 float-start d-flex flex-column form-control-col" id="editOverrideReferenceWrap">
               <label for="editOverrideReferenceIp" class="form-label font-semibold" id="editOverrideReferenceFieldLabel">Qualification Reference <span class="text-danger">*</span></label>
               <div class="d-flex align-items-center gap-2">
                 <input type="text" class="form-control flex-grow-1" id="editOverrideReferenceIp" data-ref-ids="" readonly />
                 <button type="button" class="frm-right-arrow-btn select-reference-modal-btn"></button>
+                <button type="button" class="frm-right-close-btn"></button>
+              </div>
+            </div>
+
+            <!-- Standard Category (multi-select search, no "All") — shown when Rule Scope = Standard Category -->
+            <div class="w-100 float-start d-flex flex-column form-control-col" id="editOverrideCategoryWrap" style="display:none !important;">
+              <label for="editOverrideCategoryIp" class="form-label font-semibold">Standard Category <span class="text-danger">*</span></label>
+              <div class="d-flex align-items-center gap-2">
+                <input type="text" class="form-control flex-grow-1" id="editOverrideCategoryIp" data-cat-ids="" readonly />
+                <button type="button" class="frm-right-arrow-btn select-category-modal-btn"></button>
                 <button type="button" class="frm-right-close-btn"></button>
               </div>
             </div>
@@ -358,6 +413,37 @@ export default class AdminOverride {
         </div>
         <div class="modal-footer gap-2 justify-content-sm-start justify-content-center">
           <button type="button" class="btn nemko-btn-default nemko-btn-save text-sm m-0" id="referenceSelectSaveBtn">Save</button>
+          <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-sm m-0" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SELECT STANDARD CATEGORY MODAL (multi-select checkbox, no "All") ── -->
+  <div class="modal nemko-modal nemko-modal-default standared-select-modal" id="selectCategoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-lg font-semibold">Select Standard Category</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-frm-search-top w-100 float-start">
+          <div class="w-100 float-start d-flex flex-column form-control-col">
+            <div class="d-flex align-items-center gap-2">
+              <input type="text" class="form-control flex-grow-1 modal-search-input" id="selectCategorySearch" placeholder="Search" />
+              <button type="button" class="frm-right-close-btn"></button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-body custom-scroll-view pt-0">
+          <div class="w-100 float-start d-flex flex-column gap-3 nemko-modal-frm">
+            <div class="w-100 float-start d-flex flex-column form-control-col checkbox-list-main" id="categorySelectList">
+              <div class="text-center py-3 text-color-3 text-sm">Loading...</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer gap-2 justify-content-sm-start justify-content-center">
+          <button type="button" class="btn nemko-btn-default nemko-btn-save text-sm m-0" id="categorySelectSaveBtn">Save</button>
           <button type="button" class="btn nemko-btn-default nemko-btn-cancel text-sm m-0" data-bs-dismiss="modal">Cancel</button>
         </div>
       </div>
