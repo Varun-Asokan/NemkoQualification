@@ -238,6 +238,9 @@ export default class WpAdminOverrideWebPart extends BaseClientSideWebPart<IWpAdm
     const officeArr: any[]   = Array.isArray(item.office)   ? item.office   : [];
     const levels: any[]      = Array.isArray(item.level)        ? item.level        : [];
     const qualifications: any[] = Array.isArray(item.qualification) ? item.qualification : [];
+    const categories: any[] = Array.isArray(item.standardCategory) ? item.standardCategory : [];
+    // Case-insensitive: the API may return "qualificationReference" / "StandardCategory".
+    const ruleScope: string = String(item.ruleScope ?? '').toLowerCase() === 'standardcategory' ? 'StandardCategory' : 'QualificationReference';
     const role = item.role || {};
     const roleKeys: string[] = [];
     if (role.isVerifier)   roleKeys.push('verifier');
@@ -259,6 +262,10 @@ export default class WpAdminOverrideWebPart extends BaseClientSideWebPart<IWpAdm
       qualificationTypeIdNum: item.type?.id ?? '',
       qualificationTypeName:  item.type?.name ?? '',
       qualificationType:      mapTypeName(item.type?.name),
+      ruleScope:        ruleScope,
+      ruleScopeLabel:   ruleScope === 'StandardCategory' ? 'Standard Category' : 'Qualification Reference',
+      standardCategories:  categories.map((c: any) => c.name).join(', '),
+      standardCategoryIds: categories.map((c: any) => c.id),
       role:             roleLabels.join(', '),
       roleKeys:         roleKeys,
       levels:           levels.map((l: any) => l.name).join(', '),
@@ -607,6 +614,47 @@ export default class WpAdminOverrideWebPart extends BaseClientSideWebPart<IWpAdm
     );
   }
 
+  // ── Standard Category / product categories (multi-select search, no "All") ─
+  private async fetchProductCategories(search: string = ''): Promise<void> {
+    await this.fetchPaginated(
+      (page) => {
+        const qs = new URLSearchParams();
+        qs.set('page', String(page));
+        if (search) qs.set('search', search);
+        return `${API_BASE}/api/reference-data/product-categories?${qs.toString()}`;
+      },
+      'nemkoCategoryItems',
+      'nemkoCategoryPagination',
+      (item: any) => ({ id: item.id, title: item.name ?? '' }),
+      1,
+      { search },
+      false,
+      false
+    );
+  }
+
+  private async fetchProductCategoriesNextPage(): Promise<void> {
+    const pag = (window as any).nemkoCategoryPagination;
+    if (!pag || pag.loading || pag.hasMore === false) return;
+    const nextPage = (pag.page ?? 1) + 1;
+    const search = pag.search;
+    await this.fetchPaginated(
+      (page) => {
+        const qs = new URLSearchParams();
+        qs.set('page', String(page));
+        if (search) qs.set('search', search);
+        return `${API_BASE}/api/reference-data/product-categories?${qs.toString()}`;
+      },
+      'nemkoCategoryItems',
+      'nemkoCategoryPagination',
+      (item: any) => ({ id: item.id, title: item.name ?? '' }),
+      nextPage,
+      { search },
+      true,
+      false
+    );
+  }
+
   // ═════════════════════════════════════════════════════════════════════════
   // ── Globals exposed to admin-override.js ───────────────────────────────────
   // ═════════════════════════════════════════════════════════════════════════
@@ -633,6 +681,9 @@ export default class WpAdminOverrideWebPart extends BaseClientSideWebPart<IWpAdm
 
     (window as any).nemkoFetchOffices = (search?: string): Promise<void> => this.fetchOffices(search);
     (window as any).nemkoFetchOfficesNextPage = (): Promise<void> => this.fetchOfficesNextPage();
+
+    (window as any).nemkoFetchProductCategories = (search?: string): Promise<void> => this.fetchProductCategories(search);
+    (window as any).nemkoFetchProductCategoriesNextPage = (): Promise<void> => this.fetchProductCategoriesNextPage();
 
     console.log('[NEMKO] bindAdminOverrideEvents ran. nemkoFetchAdminOverrideById is:', typeof (window as any).nemkoFetchAdminOverrideById);
   }
