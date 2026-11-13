@@ -12,7 +12,7 @@ export default class Guidelines {
             <div class="w-100 float-start guidelines-accordion-wrapper d-flex flex-column gap-4">
               <div class="accordion d-flex flex-column gap-2" id="guidelines-accordion">
               </div>
-              <p class="text-sm font-normal text-color-17 my-2 px-3">For any other specific questions, you can contact Kenny Ho for clarification and coordination.</p>
+              <p class="text-sm font-normal text-color-17 my-2 px-3">For any other specific questions, you can contact <span id="guidelines-admin-name"></span> for clarification and coordination.</p>
             </div>
           </div>
         </div>
