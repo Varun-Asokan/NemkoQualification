@@ -369,6 +369,13 @@ private _applySidebarMode(hasSidebar: boolean): void {
     const container = this._topPlaceholder?.domElement;
     if (!container) return;
 
+    NemkoAdminCheck.isAdmin(this.context.pageContext.web.absoluteUrl)
+      .then(isAdmin => {
+        const adminLi = container.querySelector<HTMLElement>('#nav-admin-li');
+        if (adminLi) adminLi.style.display = isAdmin ? '' : 'none';
+      })
+      .catch(err => console.error('[HfNemko] Failed to check Admin group:', err));
+
     // Default to Graph displayName; override with the Dashboard API's
     // employeeName if that call succeeds and returns a non-empty value.
     let displayName: string = '';
@@ -403,14 +410,6 @@ private _applySidebarMode(hasSidebar: boolean): void {
       });
     } catch {
       // keep avatar.png fallback
-    }
-
-    try {
-      const isAdmin = await NemkoAdminCheck.isAdmin(this.context.pageContext.web.absoluteUrl);
-      const adminLi = container.querySelector<HTMLElement>('#nav-admin-li');
-      if (adminLi) adminLi.style.display = isAdmin ? '' : 'none';
-    } catch (err) {
-      console.error('[HfNemko] Failed to check Admin group:', err);
     }
   }
 
