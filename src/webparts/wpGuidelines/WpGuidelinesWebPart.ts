@@ -77,11 +77,18 @@ export default class WpGuidelinesWebPart extends BaseClientSideWebPart<IWpGuidel
           .replace(/__KEY_NUMBER__/g, String(num))
           .replace(/__KEY_TITLE__/g, item.Title || '')
           .replace(/__KEY_SHOW_CLASS__/g, isFirst ? 'show' : '')
-          .replace(/__KEY_DESCRIPTION__/g, item.Description || '');
+          .replace(/__KEY_DESCRIPTION__/g, this.cleanRichText(item.Description || ''));
       });
     } catch (e) {
       console.error('Guidelines fetch error:', e);
     }
+  }
+
+  private cleanRichText(html: string): string {
+    const emptyContent = '(?:\\s|&nbsp;|&#160;|&#8203;|\\u200B|<br[^>]*>)*';
+    return html
+      .replace(new RegExp(`<p[^>]*>${emptyContent}</p>`, 'gi'), '')
+      .replace(new RegExp(`<div[^>]*>${emptyContent}</div>`, 'gi'), '');
   }
 
   private async fetchAndRenderAdmin(): Promise<void> {
