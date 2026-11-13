@@ -46,7 +46,7 @@ export default class WpGuidelinesWebPart extends BaseClientSideWebPart<IWpGuidel
     Guidelines.allElementsHtml.replace(/__KEY_URL_RESOURCE__/g, resourceUrl);
 
   this.loadCSS();
-  await this.fetchAndRenderGuidelines();
+  await Promise.all([this.fetchAndRenderGuidelines(), this.fetchAndRenderAdmin()]);
   SharedSidebar.initBehavior(this.domElement, this.siteUrl);
   this.loadScripts();
 }
@@ -77,11 +77,40 @@ export default class WpGuidelinesWebPart extends BaseClientSideWebPart<IWpGuidel
           .replace(/__KEY_NUMBER__/g, String(num))
           .replace(/__KEY_TITLE__/g, item.Title || '')
           .replace(/__KEY_SHOW_CLASS__/g, isFirst ? 'show' : '')
-          .replace(/__KEY_DESCRIPTION__/g, item.Description || '');
+          .replace(/__KEY_DESCRIPTION__/g, this.cleanRichText(item.Description || ''));
       });
     } catch (e) {
       console.error('Guidelines fetch error:', e);
     }
+  }
+
+  private cleanRichText(html: string): string {
+    const emptyContent = '(?:\\s|&nbsp;|&#160;|&#8203;|\\u200B|<br[^>]*>)*';
+    return html
+      .replace(new RegExp(`<p[^>]*>${emptyContent}</p>`, 'gi'), '')
+      .replace(new RegExp(`<div[^>]*>${emptyContent}</div>`, 'gi'), '');
+  }
+
+  private async fetchAndRenderAdmin(): Promise<void> {
+    let adminName = 'Admin';
+
+    try {
+      const apiUrl =
+        `${this.siteUrl}/_api/web/lists/getbytitle('GuidelinesAdmin')/items` +
+        `?$select=Title&$orderby=Created desc&$top=1`;
+
+      const response = await this.context.spHttpClient.get(apiUrl, SPHttpClient.configurations.v1);
+      if (response.ok) {
+        const data = await response.json();
+        const name = data.value?.[0]?.Title?.trim();
+        if (name) adminName = name;
+      }
+    } catch (e) {
+      console.error('Guidelines admin fetch error:', e);
+    }
+
+    const adminEl = this.domElement.querySelector('#guidelines-admin-name');
+    if (adminEl) adminEl.textContent = adminName;
   }
 
   private loadCSS(): void {
