@@ -176,7 +176,7 @@ export default class AdvancedSearch {
               </div>
 
               <!-- Advanced Search pagination (top) -->
-              <ul class="pagination nemko-pagination justify-content-start align-items-center gap-2 w-100 float-start px-4"></ul>
+              <ul class="pagination nemko-pagination justify-content-start align-items-center gap-2 w-100 float-start px-4 pt-2"></ul>
 
               <!-- Advanced Search table + col-visibility dropdown -->
               <div class="w-100 float-start d-flex flex-column position-relative px-4 pt-2">
