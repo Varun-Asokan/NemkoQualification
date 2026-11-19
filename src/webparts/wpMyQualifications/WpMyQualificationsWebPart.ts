@@ -330,9 +330,11 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
     operator?: string;
     sortBy?: string | null;
     sortOrder?: string | null;
+    pageSize?: number;
   }): Promise<void> {
     const qs = new URLSearchParams();
     qs.set('page', String(page));
+    qs.set('pageSize', String(filters?.pageSize ?? 20));
     if (filters) {
       if (filters.status !== null && filters.status !== undefined)               qs.set('status',               String(filters.status));
       if (filters.conformityStatement !== null && filters.conformityStatement !== undefined) qs.set('conformityStatement', String(filters.conformityStatement));
@@ -453,6 +455,16 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
    * GET /api/qualifications/requested
    * Response: { data: { items: [ QualificationItem ], pagination: {...} } }
    */
+  // Re-fetches both tables after add/edit/delete/withdraw from page 1, keeping
+  // the filters, sort and page size currently selected.
+  private async refreshTablesWithCurrentFilters(): Promise<void> {
+    const getFilter = (window as any).nemkoGetApiFilter;
+    await Promise.all([
+      this.fetchQualifications(1, typeof getFilter === 'function' ? getFilter('authorized-table') : undefined),
+      this.fetchRequestedQualifications(1, typeof getFilter === 'function' ? getFilter('requested-table') : undefined),
+    ]);
+  }
+
   private async fetchRequestedQualifications(page: number = 1, filters?: {
     status?: boolean | null;
     conformityStatement?: boolean | null;
@@ -464,9 +476,11 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
     operator?: string;
     sortBy?: string | null;
     sortOrder?: string | null;
+    pageSize?: number;
   }): Promise<void> {
     const qs = new URLSearchParams();
     qs.set('page', String(page));
+    qs.set('pageSize', String(filters?.pageSize ?? 20));
     if (filters) {
       if (filters.status !== null && filters.status !== undefined)               qs.set('status',               String(filters.status));
       if (filters.conformityStatement !== null && filters.conformityStatement !== undefined) qs.set('conformityStatement', String(filters.conformityStatement));
@@ -880,9 +894,12 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
         const verifierName = verifiedByEl?.value?.trim() || '';
         this.closeModal('addQualificationModal');
         // Refresh both tables so the new qualification appears
-        await Promise.all([this.fetchQualifications(), this.fetchRequestedQualifications()]);
+        await this.refreshTablesWithCurrentFilters();
         if (typeof (window as any).initMyQualifications === 'function') {
           (window as any).initMyQualifications();
+        }
+        if (typeof (window as any).nemkoSyncFilterUi === 'function') {
+          (window as any).nemkoSyncFilterUi();
         }
         alert('Your request has been submitted for review to - ' + verifierName);
       } else {
@@ -995,9 +1012,12 @@ export default class WpMyQualificationsWebPart extends BaseClientSideWebPart<IWp
       if (response.ok) {
         const verifierName = verifiedEl?.value?.trim() || '';
         this.closeModal(modal.id);
-        await Promise.all([this.fetchQualifications(), this.fetchRequestedQualifications()]);
+        await this.refreshTablesWithCurrentFilters();
         if (typeof (window as any).initMyQualifications === 'function') {
           (window as any).initMyQualifications();
+        }
+        if (typeof (window as any).nemkoSyncFilterUi === 'function') {
+          (window as any).nemkoSyncFilterUi();
         }
         alert('Your request has been submitted for review to - ' + verifierName);
       } else {
@@ -1751,9 +1771,12 @@ private async fetchRefData(apiUrl: string, windowKey: string, mapFn: (item: any)
       });
       if (response.ok) {
         this.closeModal('editQualificationModalRequested');
-        await Promise.all([this.fetchQualifications(), this.fetchRequestedQualifications()]);
+        await this.refreshTablesWithCurrentFilters();
         if (typeof (window as any).initMyQualifications === 'function') {
           (window as any).initMyQualifications();
+        }
+        if (typeof (window as any).nemkoSyncFilterUi === 'function') {
+          (window as any).nemkoSyncFilterUi();
         }
         alert('Request has been deleted.');
       } else {
@@ -1783,9 +1806,12 @@ private async fetchRefData(apiUrl: string, windowKey: string, mapFn: (item: any)
       });
       const json = await response.json().catch(() => ({}));
       if (response.ok) {
-        await Promise.all([this.fetchQualifications(), this.fetchRequestedQualifications()]);
+        await this.refreshTablesWithCurrentFilters();
         if (typeof (window as any).initMyQualifications === 'function') {
           (window as any).initMyQualifications();
+        }
+        if (typeof (window as any).nemkoSyncFilterUi === 'function') {
+          (window as any).nemkoSyncFilterUi();
         }
         alert('Qualification has been withdrawn successfully.');
       } else {

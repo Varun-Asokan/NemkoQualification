@@ -124,6 +124,10 @@ const AAD_APP_ID = 'api://a341e8d3-c8cb-4cc8-8e25-5a37386ac482';
 
 const DEFAULT_PAGE_SIZE = 10;
 
+// Items-per-page dropdown options (top pagination) — the selected value is sent as pageSize
+const PAGE_SIZE_OPTIONS = [20, 50, 100, 200];
+const DEFAULT_SELECTED_PAGE_SIZE = 20;
+
 
 const SORT_KEY_TO_API_FIELD: { [key: string]: string } = {
   Employee: 'employee',
@@ -201,6 +205,8 @@ export default class WpVerificationAndAuthorizationWebPart
 
   // ── Pagination State ───────────────────────────────────────────────────────
   private paginationState: { [tabKey: string]: IPaginationMeta } = {};
+  // Selected items-per-page per tab (verification/authorization × pending/me)
+  private pageSizeState: { [tabKey: string]: number } = {};
 
   // ── Sort State ─────────────────────────────────────────────────────────────
   private sortState: { key: string; direction: 'asc' | 'desc' | 'default' } = {
@@ -437,6 +443,9 @@ export default class WpVerificationAndAuthorizationWebPart
     if (options.page !== undefined && !isNaN(options.page))
       qs.set('page', String(options.page));
 
+    if (options.pageSize !== undefined && !isNaN(options.pageSize))
+      qs.set('pageSize', String(options.pageSize));
+
     if (options.sortBy && options.sortBy.trim())
       qs.set('sortBy', options.sortBy.trim());
 
@@ -651,6 +660,10 @@ export default class WpVerificationAndAuthorizationWebPart
     return this.currentMainTab + '_' + this.currentSubTab;
   }
 
+  private getPageSize(tabKey: string): number {
+    return this.pageSizeState[tabKey] ?? DEFAULT_SELECTED_PAGE_SIZE;
+  }
+
   private getPagination(tabKey: string): IPaginationMeta {
     if (!this.paginationState[tabKey]) {
       this.paginationState[tabKey] = {
@@ -696,7 +709,7 @@ export default class WpVerificationAndAuthorizationWebPart
             search,
             operator,
             page: paging.currentPage,
-            pageSize: paging.pageSize,
+            pageSize: this.getPageSize(tabKey),
             sortBy,
             sortOrder,
             statusBool: this.verFilters.status ?? undefined,
@@ -715,7 +728,7 @@ export default class WpVerificationAndAuthorizationWebPart
             search,
             operator,
             page: paging.currentPage,
-            pageSize: paging.pageSize,
+            pageSize: this.getPageSize(tabKey),
             sortBy,
             sortOrder,
             statusBool: this.verFilters.status ?? undefined,
@@ -734,7 +747,7 @@ export default class WpVerificationAndAuthorizationWebPart
         if (this.currentSubTab === 'pending') {
           const result = await this.fetchAuthorizations({
             status: 'pending',
-            search, operator, page: paging.currentPage, sortBy, sortOrder,
+            search, operator, page: paging.currentPage, pageSize: this.getPageSize(tabKey), sortBy, sortOrder,
             statusBool: this.authFilters.status ?? undefined,
             conformityStatement: this.authFilters.conformityStatement ?? undefined,
             certificationDecision: this.authFilters.certificationDecision ?? undefined,
@@ -748,7 +761,7 @@ export default class WpVerificationAndAuthorizationWebPart
         } else {
           const result = await this.fetchAuthorizations({
             status: 'me',
-            search, operator, page: paging.currentPage, sortBy, sortOrder,
+            search, operator, page: paging.currentPage, pageSize: this.getPageSize(tabKey), sortBy, sortOrder,
             statusBool: this.authFilters.status ?? undefined,
             conformityStatement: this.authFilters.conformityStatement ?? undefined,
             certificationDecision: this.authFilters.certificationDecision ?? undefined,
@@ -884,11 +897,34 @@ export default class WpVerificationAndAuthorizationWebPart
         </button>
       </li>`;
 
-    paginationEls.forEach(paginationEl => {
+    // Items-per-page dropdown — top pagination only; value is sent as pageSize
+    const selectedPageSize = this.getPageSize(tabKey);
+    const pageSizeId = panelId.replace('#', '') + '-page-size';
+    const pageSizeHtml =
+      `<li class="page-item ms-3">
+        <div class="w-100 float-start d-flex flex-row align-items-center gap-2">
+          <label for="${pageSizeId}" class="font-medium font-inter text-black text-xs text-nowrap mb-0">Items per page</label>
+          <select id="${pageSizeId}" class="form-select form-select-sm text-xs py-0" style="width: auto;">
+            ${PAGE_SIZE_OPTIONS.map(size => `<option value="${size}"${size === selectedPageSize ? ' selected' : ''}>${size}</option>`).join('')}
+          </select>
+        </div>
+      </li>`;
+
+    paginationEls.forEach((paginationEl, index) => {
       paginationEl.classList.add('justify-content-start');
       // Audit D9: hide page navigation when there is nothing to page through
       paginationEl.style.visibility = totalCount === 0 ? 'hidden' : '';
-      paginationEl.innerHTML = paginationHtml;
+      paginationEl.innerHTML = paginationHtml + (index === 0 ? pageSizeHtml : '');
+
+      const pageSizeSelect = paginationEl.querySelector<HTMLSelectElement>('#' + pageSizeId);
+      if (pageSizeSelect) {
+        pageSizeSelect.addEventListener('change', function () {
+          const key = self.currentTabKey();
+          self.pageSizeState[key] = parseInt(this.value, 10) || DEFAULT_SELECTED_PAGE_SIZE;
+          self.getPagination(key).currentPage = 1;
+          self.fetchAndRefresh();
+        });
+      }
 
       paginationEl.querySelectorAll('[data-pg-action]').forEach(btn => {
         btn.addEventListener('click', function () {
@@ -980,6 +1016,7 @@ export default class WpVerificationAndAuthorizationWebPart
     search?: string;
     operator?: string;
     page?: number;
+    pageSize?: number;
     sortBy?: string;
     sortOrder?: string;
     statusBool?: boolean;
@@ -1006,6 +1043,7 @@ export default class WpVerificationAndAuthorizationWebPart
       if (options.search?.trim()) qs.set('search', options.search.trim());
       if (options.operator?.trim()) qs.set('operator', options.operator.trim());
       if (options.page !== undefined) qs.set('page', String(options.page));
+      if (options.pageSize !== undefined) qs.set('pageSize', String(options.pageSize));
       if (options.sortBy?.trim()) qs.set('sortBy', options.sortBy.trim());
       if (options.sortOrder && options.sortOrder !== 'default') qs.set('sortOrder', options.sortOrder);
       if (options.statusBool !== undefined) qs.set('status', String(options.statusBool));
