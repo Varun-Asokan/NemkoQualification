@@ -4,7 +4,6 @@ import {
   PropertyPaneTextField
 } from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
-import { SPComponentLoader } from '@microsoft/sp-loader'
 import HomePage from './HomePageUi';
 import NemkoAdminCheck from '../../NemkoAdminCheck';
 import { SPHttpClient, SPHttpClientResponse, AadHttpClient } from '@microsoft/sp-http'
@@ -51,7 +50,6 @@ export default class WpHomePageWebPart extends BaseClientSideWebPart<IWpHomePage
       .replace('__KEY_AUTHORIZATION_BADGE__', '<div id="qm-authorization-badge" style="display:contents"></div>')
       .replace('__KEY_AUTHORIZATION_PENDING__', '<div id="qm-authorization-pending" style="display:contents"></div>');
 
-    this.loadHomeScripts();
     this.applyAdminVisibility().catch(() => { /* keep tile hidden */ });
     this.renderHomeContents().catch(() => { /* keep default content */ });
     this.renderPendingCounts().catch(() => { /* no badges */ });
@@ -109,7 +107,6 @@ export default class WpHomePageWebPart extends BaseClientSideWebPart<IWpHomePage
 
   protected onInit(): Promise<void> {
     this.siteUrl = this.context.pageContext.web.absoluteUrl;
-    this.loadCSS();
 
     // Listen for browser Back/Forward navigation
     window.onpopstate = () => {
@@ -125,16 +122,6 @@ export default class WpHomePageWebPart extends BaseClientSideWebPart<IWpHomePage
       .catch(err => {
         console.error('[NEMKO] AAD client init failed:', err);
       })
-  }
-
-  private loadCSS(): void {
-    SPComponentLoader.loadCss(`${this.siteUrl}/SiteAssets/resources/css/jquery-ui.css`);
-  }
-
-  private loadHomeScripts(): void {
-    const siteAssetsUrl = `${this.siteUrl}/SiteAssets`;
-    SPComponentLoader.loadScript(`${siteAssetsUrl}/resources/js/jquery-ui.js`)
-      .catch(err => console.error('JS Load Error:', err));
   }
 
   /**
