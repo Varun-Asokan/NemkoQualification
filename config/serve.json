@@ -7,7 +7,7 @@
     "default": {
       "pageUrl": "https://o365nemko.sharepoint.com/sites/Qualification/_layouts/workbench.aspx",
       "customActions": {
-        "c1e6c798-2df3-437e-8980-c1bd943cb295": {
+        "53a4bc49-993c-4071-85e1-86c9935df2e2": {
           "location": "ClientSideExtension.ApplicationCustomizer",
           "properties": {
             "testMessage": "Test message"
@@ -18,7 +18,7 @@
     "hfNemko": {
       "pageUrl": "https://neologixdemo.sharepoint.com/sites/NemkoDev/SitePages/myPage.aspx",
       "customActions": {
-        "c1e6c798-2df3-437e-8980-c1bd943cb295": {
+        "53a4bc49-993c-4071-85e1-86c9935df2e2": {
           "location": "ClientSideExtension.ApplicationCustomizer",
           "properties": {
             "testMessage": "Test message"

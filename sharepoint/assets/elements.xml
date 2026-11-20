@@ -3,7 +3,7 @@
     <CustomAction
         Title="HfNemko"
         Location="ClientSideExtension.ApplicationCustomizer"
-        ClientSideComponentId="c1e6c798-2df3-437e-8980-c1bd943cb295"
+        ClientSideComponentId="53a4bc49-993c-4071-85e1-86c9935df2e2"
         ClientSideComponentProperties="{&quot;testMessage&quot;:&quot;Test message&quot;}">
     </CustomAction>
 </Elements>

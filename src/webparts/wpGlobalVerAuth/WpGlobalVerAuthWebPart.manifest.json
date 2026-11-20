@@ -1,6 +1,6 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
-  "id": "b3487973-935e-4306-82fa-58a028e1fe4a",
+  "id": "48ce40e3-1441-4819-84ba-e990c7aa9707",
   "alias": "WpGlobalVerAuthWebPart",
   "componentType": "WebPart",
 

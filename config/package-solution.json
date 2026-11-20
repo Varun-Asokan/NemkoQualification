@@ -2,8 +2,8 @@
   "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
   "solution": {
     "name": "nemko-intranet-client-side-solution",
-    "id": "77ff7a37-1b04-43ef-b937-cd2dca8598e0",
-    "version": "1.0.0.4",
+    "id": "8970cbc9-35a7-4f26-b8ed-b8d2fa4ea942",
+    "version": "1.0.0.6",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
@@ -39,7 +39,7 @@
       {
         "title": "nemko-intranet Feature",
         "description": "The feature that activates elements of the nemko-intranet solution.",
-        "id": "c305cb92-92ee-4040-8330-32567f20139c",
+        "id": "897d2d8d-ac80-4773-b451-47b88389f198",
         "version": "1.0.0.0",
         "assets": {
           "elementManifests": [
@@ -51,6 +51,6 @@
     ]
   },
   "paths": {
-    "zippedPackage": "solution/nemko-intranet.sppkg"
+    "zippedPackage": "solution/nemko-intranet-dev.sppkg"
   }
 }

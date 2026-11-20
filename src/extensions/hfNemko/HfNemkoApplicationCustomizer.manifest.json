@@ -1,7 +1,7 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-extension-manifest.schema.json",
 
-  "id": "c1e6c798-2df3-437e-8980-c1bd943cb295",
+  "id": "53a4bc49-993c-4071-85e1-86c9935df2e2",
   "alias": "HfNemkoApplicationCustomizer",
   "componentType": "Extension",
   "extensionType": "ApplicationCustomizer",
